@@ -278,4 +278,4 @@ install-gitleaks:
     curl -sSfL \
         "https://github.com/gitleaks/gitleaks/releases/download/${TAG}/gitleaks_${VERSION}_${OS}_${ARCH}.tar.gz" \
         | tar -xz -C {{home}}/.local/bin gitleaks; \
-    gitleaks protect --staged
+    {{home}}/.local/bin/gitleaks protect --staged

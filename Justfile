@@ -28,6 +28,7 @@ link:
         mv {{home}}/.gitconfig {{home}}/.gitconfig.backup.$(date +%s); \
     fi
     stow -v -R -t {{home}} bash nvim git
+    source ~/.bashrc
 
 # -----------------------------------------------------------------------------
 # 📁 Projects & Git Identity

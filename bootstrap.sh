@@ -61,10 +61,6 @@ just setup
 # -l: ログインシェルとして起動し、確実に設定ファイルを読み込ませる
 exec bash -l
 
-# 作業用Dirを作成する
-mkdir -p ~/projects/personal
-mkdir -p ~/projects/company
-
 # --- 完了 ---
 # ここまで到達すれば成功
 log_success "🎉 Bootstrap finished! Please restart your shell to apply changes."

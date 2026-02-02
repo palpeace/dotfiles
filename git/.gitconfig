@@ -1,0 +1,16 @@
+# Managed by dotfiles (stow).
+# Identity is selected by repo location.
+[includeIf "gitdir:~/projects/personal/"]
+    path = ~/.gitconfig-personal
+[includeIf "gitdir:~/dotfiles/"]
+    path = ~/.gitconfig-personal
+[includeIf "gitdir:~/projects/company/"]
+    path = ~/.gitconfig-company
+[include]
+    path = ~/.config/git/config
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential

@@ -1,0 +1,26 @@
+# Essentials (基本ツール)
+build-essential
+curl
+wget
+unzip
+git
+zsh
+gnupg
+ca-certificates
+xz-utils
+
+# Locale (日本語化)
+language-pack-ja
+
+# Config Management (Stow)
+stow
+
+# Rust Build Deps (Arcus開発用)
+pkg-config
+libssl-dev
+protobuf-compiler
+
+# Editors & Tools (便利ツール)
+tmux
+ripgrep
+fd-find

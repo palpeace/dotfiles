@@ -1,0 +1,9 @@
+\.git
+\.gitignore
+\.stow-local-ignore
+\.github
+Justfile
+bootstrap.sh
+pkglist.txt
+README.md
+LICENSE

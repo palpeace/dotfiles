@@ -1,100 +1,64 @@
 # dotfiles
-**Automated Development Environment for WSL2 (Ubuntu)**
-Focused on Rust, SaaS Development, and AI-Powered Workflows.
+**WSL2 (Ubuntu) 向け開発環境セットアップ**
 
-このリポジトリは、WSL2 上での開発環境を **"One Command"** で構築・管理するための設定集です。
-`Just` タスクランナーと `GNU Stow` を組み合わせることで、**冪等性（何度実行しても壊れない）** と **再現性** を担保しています。
+このリポジトリは `Justfile` と `GNU Stow` を使って、WSL2 上の開発環境を一括構築します。
 
-## ✨ Key Features
+## Features
+- `just setup` で主要ツールを一括導入
+- Stow による dotfiles のリンク管理
+- Rust / Node (Volta) / Python (uv) の導入
+- Neovim 最新版を `~/.local/opt/nvim` に配置
+- Lazygit + delta で side-by-side diff
+- pre-commit + gitleaks で秘密情報検出
+- GitHub (gh) と GitBucket (libsecret) をホストで切替
 
-* **⚡ Automated Setup**: `Justfile` による一括セットアップと依存関係解決。
-* **🔗 Config Management**: `GNU Stow` を使用し、ホームディレクトリを汚さずに設定をシンボリックリンクで管理。
-* **🦀 Rust Ready**: `rustup`, `pkg-config`, `openssl`, `protobuf` など、開発に必要なツールチェーンを完備。
-* **🐍 Python & Node**:
-    * **Python**: `uv` による超高速な環境分離（システムPythonを破壊しません）。
-    * **Node.js**: `Volta` によるプロジェクトごとのバージョン固定と高速な切り替え。
-* **📝 Neovim (LazyVim)**: 最新の Neovim バイナリと LazyVim スターターを自動配置。
-* **🤖 AI Integrated**: GitHub Copilot, OpenAI Codex, Kiro CLI を標準装備。
-* **🇯🇵 WSL Optimized**: 日本語ロケール生成、Windowsクリップボード共有 (`win32yank`) 設定済み。
-
-## 📂 Directory Structure
-
-`GNU Stow` の仕組みにより、リポジトリ内のディレクトリ構造がそのままホームディレクトリにマッピングされます。
-
+## Directory Structure
 ```text
 ~/dotfiles/
-├── bash/
-│   └── .bashrc          -> ~/.bashrc (Shell config)
-├── git/
-│   └── .gitconfig       -> ~/.gitconfig (Include by repo location)
-├── nvim/
-│   └── .config/
-│       └── nvim/        -> ~/.config/nvim/ (LazyVim config)
-├── Justfile             # Task runner definition (The Commander)
-├── pkglist.txt          # Apt packages list
-├── bootstrap.sh         # Entry point script
-└── README.md            # This file
+├── bash/       -> ~/.bashrc
+├── git/        -> ~/.gitconfig
+├── lazygit/    -> ~/.config/lazygit/
+├── nvim/       -> ~/.config/nvim/
+├── Justfile
+├── pkglist.txt
+└── README.md
 ```
 
-## 🛠️ Usage (Maintenance)
+## Commands (Justfile)
+- `just default` — `just --list` を表示
+- `just setup` — 主要インストール工程を実行
+- `just link` — dotfiles のリンクを再接続
+- `just setup-projects` — `~/projects/personal` / `~/projects/company` を作成
+- `just setup-personal-git` — 個人用の Git 設定ファイルを作成
+- `just setup-company-git` — 会社用の Git 設定ファイルを作成
+- `just update-system` — `apt update & upgrade` を実行
+- `just install-gh` — GitHub CLI を導入
+- `just install-apt` — `pkglist.txt` のパッケージを導入
+- `just setup-pre-commit` — pre-commit フックを有効化
+- `just gh-personal-login` — GitHub 個人アカウント認証
+- `just gh-company-login` — GitHub 会社アカウント認証
+- `just gh-switch-personal` — GitHub アカウントを個人に切替
+- `just gh-switch-company` — GitHub アカウントを会社に切替
+- `just install-git-credential-libsecret` — libsecret helper を導入
+- `just gitbucket-login` — GitBucket 認証情報を登録
+- `just start-keyring` — keyring 起動コマンド断片を出力
+- `just setup-fd` — `fd` シンボリックリンクを作成
+- `just setup-locale` — 日本語ロケールを生成
+- `just install-rust` — rustup を導入/更新
+- `just install-python` — uv / Python 3.11 を導入
+- `just install-node` — Volta / Node / npm / pnpm を導入
+- `just install-ai` — Copilot / Codex / Kiro を導入
+- `just install-nvim` — Neovim を導入
+- `just install-clipboard` — win32yank を導入
+- `just install-gitleaks` — gitleaks を導入
+- `just install-lazygit` — Lazygit を導入
 
-インストール後のメンテナンスは `just` コマンドで行います。
-認証（GitHub/AI CLI）は `just setup` 後に個別で対応が必要です。
+## Git Bucket Notes
+- keyring はこのセッションで起動する必要あり
 
-| Command | Description |
-| :--- | :--- |
-| **`just setup`** | 全インストール工程を実行（非対話でOK） |
-| **`just link`** | 設定ファイル（.bashrc, nvimなど）のリンクを再接続 |
-| **`just update-system`** | `apt update & upgrade` を実行 |
-| **`just install-apt`** | `pkglist.txt` に追加したパッケージをインストール |
-| **`just install-rust`** | Rustツールチェーン (`rustup`) の更新 |
-| **`just gh-personal-login`** | 個人アカウントで GitHub 認証を設定（初回はこちら） |
-| **`just gh-company-login`** | 会社アカウントで GitHub 認証を追加 |
-| **`just gh-switch-personal`** | GitHub アカウントを個人に切り替え |
-| **`just gh-switch-company`** | GitHub アカウントを会社に切り替え |
-
-コマンド一覧の確認:
 ```bash
-just --list
+eval "$(just start-keyring)"
 ```
 
-## 🔐 Git Identity Split (Personal / Company)
-
-`~/projects/personal/**` と `~/projects/company/**` で `user.name` / `user.email` を切り替えます。
-
-1) `just link` を実行して `~/.gitconfig` を配置  
-2) `just setup-projects` を実行（ディレクトリ作成のみ）  
-3) 個人/会社の Git 設定は手動で実行  
-   - `just setup-personal-git`  
-   - `just setup-company-git`  
-   - 既存の `~/.gitconfig-personal` / `~/.gitconfig-company` がある場合は不要
-4) 認証は GitHub CLI (`gh`) を使用  
-   - 初回: `just gh-personal-login`  
-   - 会社追加: `just gh-company-login`  
-   - 切り替え: `just gh-switch-personal` / `just gh-switch-company`  
-   - 認証情報は `~/.config/gh/hosts.yml` に保存され、**このリポジトリには含めない**
-   - Public 運用のため、`hosts.yml` は絶対にコミットしない
-
-## 📦 Included Tools
-
-### Core
-* **Git, curl, wget, unzip**: Essentials.
-* **zsh**: (Installed for compatibility, bash is default).
-* **Stow**: Dotfile manager.
-
-### Development Runtimes
-* **Rust**: `rustup`, `cargo`, `rustc`
-* **Node.js**: `volta`, `node`, `npm`, `pnpm`
-* **Python**: `uv` (Fastest pip alternative), Python 3.11 (User-space)
-
-### Tools & Editors
-* **Neovim**: Latest stable release (via GitHub Releases).
-* **LazyVim**: Full-featured IDE layer for Neovim.
-* **ripgrep (rg)**: Super fast grep replacement.
-* **fd**: Simple/fast alternative to find.
-* **tmux**: Terminal multiplexer.
-
-### AI CLI Tools
-* **GitHub Copilot CLI**
-* **OpenAI Codex CLI**
-* **Kiro CLI**
+- 認証登録は `just gitbucket-login`
+- helper 設定は `~/.config/git/config` に保存（dotfiles には含めない）

@@ -116,8 +116,6 @@ alias pip='uv run pip'
 . "$HOME/.cargo/env"
 
 . "$HOME/.local/bin/env"
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
 
 # GitBucket helper (start keyring once per session)
 gbsk() {
@@ -126,3 +124,5 @@ gbsk() {
     "$@"
   fi
 }
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"

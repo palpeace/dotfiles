@@ -326,17 +326,17 @@ install-ai:
 install-nvim:
     @echo "📝 Installing Neovim (Latest)..."
     @NVIM_HOME="{{home}}/.local/opt/nvim"; \
-    if [ ! -x "$$NVIM_HOME/bin/nvim" ]; then \
+    if [ ! -x "$NVIM_HOME/bin/nvim" ]; then \
         echo "Clean install needed. Running..."; \
-        rm -rf "$$NVIM_HOME"; \
+        rm -rf "$NVIM_HOME"; \
         mkdir -p {{home}}/.local/opt; \
         curl -fL --retry 3 --retry-delay 1 -o nvim-linux64.tar.gz \
           https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz; \
         tar -tzf nvim-linux64.tar.gz >/dev/null; \
         tar -C {{home}}/.local/opt -xzf nvim-linux64.tar.gz; \
-        mv {{home}}/.local/opt/nvim-linux-x86_64 "$$NVIM_HOME"; \
+        mv {{home}}/.local/opt/nvim-linux-x86_64 "$NVIM_HOME"; \
         mkdir -p {{home}}/.local/bin; \
-        ln -sf "$$NVIM_HOME/bin/nvim" {{home}}/.local/bin/nvim; \
+        ln -sf "$NVIM_HOME/bin/nvim" {{home}}/.local/bin/nvim; \
         rm -f nvim-linux64.tar.gz; \
     else \
         echo "✅ Neovim is already installed correctly."; \
@@ -402,8 +402,9 @@ install-lazygit:
         *) echo "Unsupported arch: $ARCH"; exit 1 ;; \
     esac; \
     mkdir -p {{home}}/.local/bin; \
-    curl -sSfL -o lazygit.tar.gz \
+    TMPDIR=$(mktemp -d); \
+    trap 'rm -rf "$TMPDIR"' EXIT; \
+    curl -sSfL -o "$TMPDIR/lazygit.tar.gz" \
         "https://github.com/jesseduffield/lazygit/releases/download/${TAG}/lazygit_${VERSION}_${OS}_${ARCH}.tar.gz"; \
-    tar -xf lazygit.tar.gz lazygit; \
-    install -m 0755 lazygit {{home}}/.local/bin/lazygit; \
-    rm -f lazygit lazygit.tar.gz
+    tar -xf "$TMPDIR/lazygit.tar.gz" -C "$TMPDIR" lazygit; \
+    install -m 0755 "$TMPDIR/lazygit" {{home}}/.local/bin/lazygit

@@ -9,7 +9,7 @@ default:
     @just --list
 
 # 🚀 Setup Everything
-setup: update-system install-gh install-apt link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks setup-projects
+setup: update-system install-gh install-apt link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
     @echo "🎉 All Setup Complete! Please restart your shell."
 
 # -----------------------------------------------------------------------------
@@ -169,7 +169,10 @@ gh-switch-company:
     gh auth switch -h github.com -u "$COMPANY_GH"
 
 setup-fd:
-    @if ! command -v fd >/dev/null; then sudo ln -s $(which fdfind) /usr/local/bin/fd; fi
+    @if ! command -v fd >/dev/null; then \
+        mkdir -p {{home}}/.local/bin; \
+        ln -sf $(which fdfind) {{home}}/.local/bin/fd; \
+    fi
 
 setup-locale:
     @echo "🇯🇵 Generating Japanese locale..."
@@ -235,14 +238,18 @@ install-ai:
 
 install-nvim:
     @echo "📝 Installing Neovim (Latest)..."
-    @if [ ! -f "/opt/nvim/bin/nvim" ]; then \
+    @NVIM_HOME="{{home}}/.local/opt/nvim"; \
+    if [ ! -x "$$NVIM_HOME/bin/nvim" ]; then \
         echo "Clean install needed. Running..."; \
-        sudo rm -rf /opt/nvim; \
+        rm -rf "$$NVIM_HOME"; \
+        mkdir -p {{home}}/.local/opt; \
         curl -fL --retry 3 --retry-delay 1 -o nvim-linux64.tar.gz \
           https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz; \
         tar -tzf nvim-linux64.tar.gz >/dev/null; \
-        sudo tar -C /opt -xzf nvim-linux64.tar.gz; \
-        sudo mv /opt/nvim-linux-x86_64 /opt/nvim; \
+        tar -C {{home}}/.local/opt -xzf nvim-linux64.tar.gz; \
+        mv {{home}}/.local/opt/nvim-linux-x86_64 "$$NVIM_HOME"; \
+        mkdir -p {{home}}/.local/bin; \
+        ln -sf "$$NVIM_HOME/bin/nvim" {{home}}/.local/bin/nvim; \
         rm -f nvim-linux64.tar.gz; \
     else \
         echo "✅ Neovim is already installed correctly."; \
@@ -250,8 +257,12 @@ install-nvim:
 
 install-clipboard:
     @if ! command -v win32yank.exe >/dev/null; then \
+        mkdir -p {{home}}/.local/bin; \
         curl -L --fail -o win32yank.zip https://github.com/equalsraf/win32yank/releases/download/v0.0.4/win32yank-x64.zip; \
-        unzip -p win32yank.zip win32yank.exe > win32yank.exe; chmod +x win32yank.exe; sudo mv win32yank.exe /usr/local/bin/; rm win32yank.zip; \
+        unzip -p win32yank.zip win32yank.exe > win32yank.exe; \
+        chmod +x win32yank.exe; \
+        mv win32yank.exe {{home}}/.local/bin/; \
+        rm win32yank.zip; \
     fi
 
 install-gitleaks:
@@ -280,3 +291,32 @@ install-gitleaks:
         "https://github.com/gitleaks/gitleaks/releases/download/${TAG}/gitleaks_${VERSION}_${OS}_${ARCH}.tar.gz" \
         | tar -xz -C {{home}}/.local/bin gitleaks; \
     {{home}}/.local/bin/gitleaks protect --staged
+
+install-lazygit:
+    @echo "🦥 Installing Lazygit (Latest)..."
+    @VERSION="${LAZYGIT_VERSION:-}"; \
+    if [ -z "$VERSION" ]; then \
+        LATEST_URL=$(curl -sL -o /dev/null -w '%{url_effective}' https://github.com/jesseduffield/lazygit/releases/latest); \
+        VERSION=${LATEST_URL##*/tag/v}; \
+        VERSION=${VERSION%%/*}; \
+    fi; \
+    if [ -z "$VERSION" ]; then \
+        echo "Failed to determine lazygit version."; \
+        echo "Latest URL: ${LATEST_URL:-<empty>}"; \
+        exit 1; \
+    fi; \
+    VERSION=${VERSION#v}; \
+    TAG="v${VERSION}"; \
+    OS=Linux; \
+    ARCH=$(uname -m); \
+    case "$ARCH" in \
+        x86_64) ARCH=x86_64 ;; \
+        aarch64|arm64) ARCH=arm64 ;; \
+        *) echo "Unsupported arch: $ARCH"; exit 1 ;; \
+    esac; \
+    mkdir -p {{home}}/.local/bin; \
+    curl -sSfL -o lazygit.tar.gz \
+        "https://github.com/jesseduffield/lazygit/releases/download/${TAG}/lazygit_${VERSION}_${OS}_${ARCH}.tar.gz"; \
+    tar -xf lazygit.tar.gz lazygit; \
+    install -m 0755 lazygit {{home}}/.local/bin/lazygit; \
+    rm -f lazygit lazygit.tar.gz

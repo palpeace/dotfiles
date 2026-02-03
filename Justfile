@@ -9,7 +9,7 @@ default:
     @just --list
 
 # 🚀 Setup Everything
-setup: update-system install-gh install-apt install-gnome-keyring install-git-credential-libsecret link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
+setup: update-system install-gh install-apt install-git-credential-libsecret setup-pre-commit link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
     @echo "🎉 All Setup Complete! Please restart your shell."
 
 # -----------------------------------------------------------------------------
@@ -98,7 +98,14 @@ install-gh:
 install-apt:
     @echo "📦 Installing APT packages..."
     sudo apt update
-    sudo apt install -y $(cat pkglist.txt | grep -v "^#" | tr '\n' ' ')
+    grep -vE '^\s*(#|$)' pkglist.txt | xargs -r sudo apt install -y
+
+setup-pre-commit:
+    @if ! command -v pre-commit >/dev/null; then \
+        echo "pre-commit not found. Run: just install-apt"; \
+        exit 1; \
+    fi
+    pre-commit install
 
 gh-personal-login:
     @if ! command -v gh >/dev/null; then \
@@ -194,10 +201,6 @@ install-git-credential-libsecret:
         exit 1; \
     fi
 
-install-gnome-keyring:
-    @echo "🔐 Installing gnome-keyring (Secret Service)..."
-    @sudo apt update
-    @sudo apt install -y gnome-keyring
 
 gitbucket-login:
     @if ! command -v git-credential-libsecret >/dev/null; then \

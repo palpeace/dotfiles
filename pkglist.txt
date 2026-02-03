@@ -27,3 +27,4 @@ fd-find
 dbus-x11
 gnome-keyring
 pre-commit
+git-delta

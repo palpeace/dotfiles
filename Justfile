@@ -27,7 +27,7 @@ link:
         echo "Backing up existing .gitconfig..."; \
         mv {{home}}/.gitconfig {{home}}/.gitconfig.backup.$(date +%s); \
     fi
-    stow -v -R -t {{home}} bash nvim git
+    stow -v -R -t {{home}} bash nvim git lazygit
     source ~/.bashrc
 
 # -----------------------------------------------------------------------------

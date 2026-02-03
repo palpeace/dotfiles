@@ -9,7 +9,7 @@ default:
     @just --list
 
 # 🚀 Setup Everything
-setup: update-system install-gh install-apt link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
+setup: update-system install-gh install-apt install-gnome-keyring install-git-credential-libsecret link setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
     @echo "🎉 All Setup Complete! Please restart your shell."
 
 # -----------------------------------------------------------------------------
@@ -167,6 +167,90 @@ gh-switch-company:
         exit 1; \
     fi; \
     gh auth switch -h github.com -u "$COMPANY_GH"
+
+install-git-credential-libsecret:
+    @echo "🔐 Installing git-credential-libsecret..."
+    @if ! command -v git >/dev/null; then \
+        echo "git not found. Install git first."; \
+        exit 1; \
+    fi
+    @if command -v git-credential-libsecret >/dev/null; then \
+        echo "✅ git-credential-libsecret already installed."; \
+        exit 0; \
+    fi
+    @sudo apt update
+    @sudo apt install -y git-credential-libsecret 2>/dev/null || \
+      sudo apt install -y libsecret-1-0 libsecret-1-dev build-essential pkg-config
+    @if command -v git-credential-libsecret >/dev/null; then \
+        echo "✅ git-credential-libsecret installed."; \
+        exit 0; \
+    fi
+    @if [ -f /usr/share/doc/git/contrib/credential/libsecret/Makefile ]; then \
+        sudo make -C /usr/share/doc/git/contrib/credential/libsecret; \
+        sudo install -m 0755 /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret /usr/local/bin/; \
+        echo "✅ git-credential-libsecret installed to /usr/local/bin."; \
+    else \
+        echo "libsecret helper source not found. Install git contrib or check distro package."; \
+        exit 1; \
+    fi
+
+install-gnome-keyring:
+    @echo "🔐 Installing gnome-keyring (Secret Service)..."
+    @sudo apt update
+    @sudo apt install -y gnome-keyring
+
+gitbucket-login:
+    @if ! command -v git-credential-libsecret >/dev/null; then \
+        echo "git-credential-libsecret not found. Run: just install-git-credential-libsecret"; \
+        exit 1; \
+    fi
+    @if [ ! -f {{home}}/.gitconfig-company ]; then \
+        echo "{{home}}/.gitconfig-company not found. Run: just setup-company-git"; \
+        echo "Continuing and creating an empty file..."; \
+        touch {{home}}/.gitconfig-company; \
+    fi
+    @if [ -z "$$DBUS_SESSION_BUS_ADDRESS" ]; then \
+        echo "DBus session not found. Run: eval \"\\$$(just start-keyring)\""; \
+        exit 1; \
+    fi
+    @read -r -p "GitBucket URL (e.g. https://git.example.com/gitbucket): " GITBUCKET_URL </dev/tty; \
+    read -r -p "GitBucket username: " GITBUCKET_USER </dev/tty; \
+    read -r -s -p "GitBucket PAT: " GITBUCKET_PAT </dev/tty; \
+    echo >/dev/tty; \
+    if [ -z "$GITBUCKET_URL" ] || [ -z "$GITBUCKET_USER" ] || [ -z "$GITBUCKET_PAT" ]; then \
+        echo "Host/username/PAT are required."; \
+        exit 1; \
+    fi; \
+    URL_NO_SCHEME=${GITBUCKET_URL#http://}; \
+    URL_NO_SCHEME=${URL_NO_SCHEME#https://}; \
+    URL_NO_SCHEME=${URL_NO_SCHEME%/}; \
+    GITBUCKET_HOST=${URL_NO_SCHEME%%/*}; \
+    GITBUCKET_PATH=${URL_NO_SCHEME#*/}; \
+    if [ "$GITBUCKET_HOST" = "$URL_NO_SCHEME" ]; then \
+        GITBUCKET_PATH=""; \
+    fi; \
+    KEY_URL="https://$GITBUCKET_HOST"; \
+    mkdir -p {{home}}/.config/git; \
+    git config --file {{home}}/.config/git/config credential.$KEY_URL.helper libsecret; \
+    git config --file {{home}}/.config/git/config credential.$KEY_URL.username "$GITBUCKET_USER"; \
+    git config --file {{home}}/.config/git/config credential.$KEY_URL.useHttpPath false; \
+    printf "protocol=https\nhost=%s\nusername=%s\npassword=%s\n\n" "$GITBUCKET_HOST" "$GITBUCKET_USER" "$GITBUCKET_PAT" | git credential approve
+
+start-keyring:
+    @if [ -z "$$DBUS_SESSION_BUS_ADDRESS" ]; then \
+        if command -v dbus-launch >/dev/null; then \
+            dbus-launch --sh-syntax; \
+        else \
+            echo "dbus-launch not found. Install: sudo apt install -y dbus-x11"; \
+            exit 1; \
+        fi; \
+    fi; \
+    if command -v gnome-keyring-daemon >/dev/null; then \
+        gnome-keyring-daemon --start --components=secrets 2>/dev/null; \
+    else \
+        echo "gnome-keyring-daemon not found. Run: just install-gnome-keyring"; \
+        exit 1; \
+    fi
 
 setup-fd:
     @if ! command -v fd >/dev/null; then \

@@ -103,7 +103,6 @@ export LANG=ja_JP.UTF-8
 export PATH="$HOME/.local/bin:$PATH"
 
 # Neovim
-export PATH="$PATH:/opt/nvim/bin"
 export EDITOR=nvim
 alias v='nvim'
 alias vim='nvim'
@@ -119,3 +118,11 @@ alias pip='uv run pip'
 . "$HOME/.local/bin/env"
 export VOLTA_HOME="$HOME/.volta"
 export PATH="$VOLTA_HOME/bin:$PATH"
+
+# GitBucket helper (start keyring once per session)
+gbsk() {
+  eval "$(just -f ~/dotfiles/Justfile start-keyring)" || return $?
+  if [ "$#" -gt 0 ]; then
+    "$@"
+  fi
+}

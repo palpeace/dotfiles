@@ -24,3 +24,4 @@ protobuf-compiler
 tmux
 ripgrep
 fd-find
+dbus-x11

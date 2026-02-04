@@ -14,3 +14,9 @@ export PATH="$VOLTA_HOME/bin:$PATH"
 
 # Kiro CLI
 [ -d "$HOME/.kiro/bin" ] && export PATH="$HOME/.kiro/bin:$PATH"
+
+# Sync dotfiles from anywhere and update AI tools.
+dtsync() (
+  cd "$HOME/dotfiles" || exit 1
+  just ops-sync-ai
+)

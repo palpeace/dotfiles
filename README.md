@@ -33,6 +33,7 @@
 - `just ops-sync` — `git pull --rebase` + 更新時のみ `just ops-link`
 - `just ops-link` — dotfiles のリンクを再接続（`ops-migrate-rc` を含む）
 - `just ops-migrate-rc` — 既存の rc ファイルを安全に退避
+- `just ops-sync-ai` — `ops-sync` + `update-ai`
 
 ### Setup (First-time)
 - `just setup` — 主要インストール工程を実行（初期専用）
@@ -66,6 +67,9 @@
 - `just install-clipboard` — win32yank を導入
 - `just install-gitleaks` — gitleaks を導入
 - `just install-lazygit` — Lazygit を導入
+
+### Update
+- `just update-ai` — codex / copilot / kiro を更新し、前後のバージョンを表示
 
 ## Daily Flow (Zero Conflicts)
 1. `just ops-sync`（pull + 更新時のみ link）

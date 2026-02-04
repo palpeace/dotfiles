@@ -43,6 +43,35 @@ ops-sync:
     fi; \
     just ops-link
 
+ops-sync-ai: ops-sync update-ai
+
+update-ai:
+    @echo "[update-ai] AI tool versions (before)"
+    @if command -v volta >/dev/null; then \
+        volta list @openai/codex @github/copilot 2>/dev/null || true; \
+    else \
+        echo "volta not found"; \
+    fi
+    @if command -v kiro >/dev/null; then \
+        kiro --version 2>/dev/null || true; \
+    else \
+        echo "kiro not found"; \
+    fi
+    @echo "[update-ai] Updating AI tools..."
+    @if command -v volta >/dev/null; then \
+        volta install @openai/codex @github/copilot; \
+    fi
+    @if command -v curl >/dev/null; then \
+        curl -fsSL https://cli.kiro.dev/install | bash; \
+    fi
+    @echo "[update-ai] AI tool versions (after)"
+    @if command -v volta >/dev/null; then \
+        volta list @openai/codex @github/copilot 2>/dev/null || true; \
+    fi
+    @if command -v kiro >/dev/null; then \
+        kiro --version 2>/dev/null || true; \
+    fi
+
 setup-local:
     @echo "📝 Creating local config stubs..."
     @if [ ! -f {{home}}/.bashrc.local ]; then \

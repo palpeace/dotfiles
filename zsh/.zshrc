@@ -16,6 +16,10 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Plugins (keep minimal)
 plugins=(git)
 
+if [ -f "$HOME/.config/shell/env" ]; then
+  source "$HOME/.config/shell/env"
+fi
+
 if [ -d "$ZSH" ]; then
   source "$ZSH/oh-my-zsh.sh"
 fi
@@ -28,18 +32,7 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 setopt SHARE_HISTORY
 
-# ---- Locale ----
-export LANG=ja_JP.UTF-8
-
-# ---- PATH ----
-export PATH="$HOME/.local/bin:$PATH"
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
-
 # ---- Tools ----
-[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
-[ -d "$HOME/.kiro/bin" ] && export PATH="$HOME/.kiro/bin:$PATH"
-
 # Python Aliases (Safe Shim)
 alias python='uv run python'
 alias pip='uv run pip'

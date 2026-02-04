@@ -91,31 +91,23 @@ fi
 # Palpeace'S CUSTOM CONFIGURATION
 # ==========================================
 
-# Locale
-export LANG=ja_JP.UTF-8
-
-# Rust (Cargo)
-[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
-
-# Node.js (Volta)
-
-# Python (uv) / Local Bin
-export PATH="$HOME/.local/bin:$PATH"
+# Shared environment (bash/zsh)
+if [ -f "$HOME/.config/shell/env" ]; then
+    . "$HOME/.config/shell/env"
+fi
 
 # Neovim
 export EDITOR=nvim
 alias v='nvim'
 alias vim='nvim'
 
-# Kiro CLI
-[ -d "$HOME/.kiro/bin" ] && export PATH="$HOME/.kiro/bin:$PATH"
-
 # Python Aliases (Safe Shim)
 alias python='uv run python'
 alias pip='uv run pip'
-. "$HOME/.cargo/env"
 
-. "$HOME/.local/bin/env"
+if [ -f "$HOME/.local/bin/env" ]; then
+  . "$HOME/.local/bin/env"
+fi
 
 # GitBucket helper (start keyring once per session)
 gbsk() {
@@ -124,5 +116,8 @@ gbsk() {
     "$@"
   fi
 }
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
+
+# Local overrides (per-machine)
+if [ -f "$HOME/.bashrc.local" ]; then
+  . "$HOME/.bashrc.local"
+fi

@@ -1,0 +1,16 @@
+# Shared environment variables for bash/zsh.
+
+export LANG=ja_JP.UTF-8
+
+# Local bin
+export PATH="$HOME/.local/bin:$PATH"
+
+# Volta (Node.js)
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
+
+# Rust (Cargo)
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+# Kiro CLI
+[ -d "$HOME/.kiro/bin" ] && export PATH="$HOME/.kiro/bin:$PATH"

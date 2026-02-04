@@ -23,11 +23,19 @@ link:
         echo "Backing up existing .bashrc..."; \
         mv {{home}}/.bashrc {{home}}/.bashrc.backup.$(date +%s); \
     fi
+    @if [ -f {{home}}/.zshrc ] && [ ! -L {{home}}/.zshrc ]; then \
+        echo "Backing up existing .zshrc..."; \
+        mv {{home}}/.zshrc {{home}}/.zshrc.backup.$(date +%s); \
+    fi
+    @if [ -f {{home}}/.tmux.conf ] && [ ! -L {{home}}/.tmux.conf ]; then \
+        echo "Backing up existing .tmux.conf..."; \
+        mv {{home}}/.tmux.conf {{home}}/.tmux.conf.backup.$(date +%s); \
+    fi
     @if [ -f {{home}}/.gitconfig ] && [ ! -L {{home}}/.gitconfig ]; then \
         echo "Backing up existing .gitconfig..."; \
         mv {{home}}/.gitconfig {{home}}/.gitconfig.backup.$(date +%s); \
     fi
-    stow -v -R -t {{home}} bash nvim git lazygit
+    stow -v -R -t {{home}} bash zsh tmux nvim git lazygit
     source ~/.bashrc
 
 # -----------------------------------------------------------------------------
@@ -265,6 +273,27 @@ setup-locale:
     @echo "🇯🇵 Generating Japanese locale..."
     sudo locale-gen ja_JP.UTF-8
     sudo update-locale LANG=ja_JP.UTF-8
+
+# -----------------------------------------------------------------------------
+# 🐚 Zsh
+# -----------------------------------------------------------------------------
+
+setup-zsh:
+    @echo "🐚 Installing Zsh + oh-my-zsh + powerlevel10k..."
+    sudo apt update
+    sudo apt install -y zsh git curl
+    @if [ ! -d "{{home}}/.oh-my-zsh" ]; then \
+        RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
+    fi
+    @if [ ! -d "{{home}}/.oh-my-zsh/custom/themes/powerlevel10k" ]; then \
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git {{home}}/.oh-my-zsh/custom/themes/powerlevel10k; \
+    fi
+    @if [ "$$SHELL" != "/usr/bin/zsh" ]; then \
+        chsh -s /usr/bin/zsh; \
+        echo "✅ Default shell set to /usr/bin/zsh. Please log out and back in."; \
+    else \
+        echo "✅ Default shell is already /usr/bin/zsh."; \
+    fi
 
 # -----------------------------------------------------------------------------
 # 🦀 Rust (rustup)

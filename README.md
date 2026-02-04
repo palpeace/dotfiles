@@ -16,6 +16,8 @@
 ```text
 ~/dotfiles/
 ├── bash/       -> ~/.bashrc
+├── zsh/        -> ~/.zshrc
+├── tmux/       -> ~/.tmux.conf
 ├── git/        -> ~/.gitconfig
 ├── lazygit/    -> ~/.config/lazygit/
 ├── nvim/       -> ~/.config/nvim/
@@ -52,6 +54,7 @@
 - `just install-clipboard` — win32yank を導入
 - `just install-gitleaks` — gitleaks を導入
 - `just install-lazygit` — Lazygit を導入
+- `just setup-zsh` — Zsh + oh-my-zsh + powerlevel10k を導入
 
 ## Git Bucket Notes
 - keyring はこのセッションで起動する必要あり
@@ -62,3 +65,11 @@ eval "$(just start-keyring)"
 
 - 認証登録は `just gitbucket-login`
 - helper 設定は `~/.config/git/config` に保存（dotfiles には含めない）
+
+## Zsh Notes
+- `~/.zshrc` は dotfiles で管理
+- 端末固有の設定は `~/.zshrc.local` に記載する
+- 初回のみ `p10k configure` を実行してテーマを調整する
+
+## Tmux Notes
+- copy-mode は vi 操作に設定

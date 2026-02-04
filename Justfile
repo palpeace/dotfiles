@@ -52,24 +52,24 @@ update-ai:
     else \
         echo "volta not found"; \
     fi
-    @if command -v kiro >/dev/null; then \
-        kiro --version 2>/dev/null || true; \
+    @if command -v kiro-cli >/dev/null; then \
+        kiro-cli --version 2>/dev/null || true; \
     else \
-        echo "kiro not found"; \
+        echo "kiro-cli not found"; \
     fi
     @echo "[update-ai] Updating AI tools..."
     @if command -v volta >/dev/null; then \
         volta install @openai/codex @github/copilot; \
     fi
-    @if command -v curl >/dev/null; then \
-        curl -fsSL https://cli.kiro.dev/install | bash; \
+    @if command -v kiro-cli >/dev/null; then \
+        kiro-cli update; \
     fi
     @echo "[update-ai] AI tool versions (after)"
     @if command -v volta >/dev/null; then \
         volta list @openai/codex @github/copilot 2>/dev/null || true; \
     fi
-    @if command -v kiro >/dev/null; then \
-        kiro --version 2>/dev/null || true; \
+    @if command -v kiro-cli >/dev/null; then \
+        kiro-cli --version 2>/dev/null || true; \
     fi
 
 setup-local:

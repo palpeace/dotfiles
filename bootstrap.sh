@@ -57,8 +57,11 @@ cd "$(dirname "$0")"
 # (Justfile内の 'setup' レシピが実行されます)
 just setup
 
-# ここで現在のシェルプロセスを新しいbashに置き換える
+# ここで現在のシェルプロセスを新しいシェルに置き換える
 # -l: ログインシェルとして起動し、確実に設定ファイルを読み込ませる
+if command -v zsh >/dev/null; then
+  exec zsh -l
+fi
 exec bash -l
 
 # --- 完了 ---

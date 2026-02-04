@@ -109,8 +109,14 @@ eval "$(just auth-keyring-start)"
 
 ## Zsh Notes
 - `~/.zshrc` は dotfiles で管理
+- `~/.p10k.zsh` は dotfiles で管理（共通テーマ）
 - 端末固有の設定は `~/.zshrc.local` に記載する
-- 初回のみ `p10k configure` を実行してテーマを調整する
+
+共通テーマを作り直す場合:
+1. `rm ~/.p10k.zsh`
+2. `p10k configure`
+3. `mv ~/.p10k.zsh ~/dotfiles/zsh/.p10k.zsh`
+4. `just ops-link`
 
 ## Bash Notes
 - 端末固有の設定は `~/.bashrc.local` に記載する

@@ -13,7 +13,7 @@ setup: setup-core setup-lang setup-tools setup-dotfiles
     @echo "🎉 All Setup Complete! Please restart your shell."
 
 # Grouped setup steps for readability
-setup-core: update-system install-apt install-gh install-git-credential-libsecret setup-pre-commit setup-fd setup-locale setup-projects
+setup-core: update-system install-apt install-gh install-git-credential-libsecret setup-pre-commit setup-fd setup-locale setup-projects setup-zsh
 
 setup-lang: install-rust install-python install-node
 
@@ -87,6 +87,10 @@ ops-migrate-rc:
     @if [ -f {{home}}/.config/shell/env ] && [ ! -L {{home}}/.config/shell/env ]; then \
         mv {{home}}/.config/shell/env {{home}}/.config/shell/env.backup.$(date +%s); \
         echo "Backed up .config/shell/env"; \
+    fi
+    @if [ -f {{home}}/.p10k.zsh ] && [ ! -L {{home}}/.p10k.zsh ]; then \
+        mv {{home}}/.p10k.zsh {{home}}/.p10k.zsh.backup.$(date +%s); \
+        echo "Backed up .p10k.zsh"; \
     fi
 
 # -----------------------------------------------------------------------------

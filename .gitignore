@@ -19,3 +19,4 @@ nvim/.config/nvim/.git/
 **/secret/
 **/.secrets/
 **/.secret/
+AGENTS.local.md

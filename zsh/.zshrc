@@ -7,6 +7,9 @@ fi
 
 # ~/.zshrc managed by dotfiles (stow).
 
+# Disable auto title updates (tmux/tmuxp compatibility)
+export DISABLE_AUTO_TITLE='true'
+
 # ---- oh-my-zsh ----
 export ZSH="$HOME/.oh-my-zsh"
 

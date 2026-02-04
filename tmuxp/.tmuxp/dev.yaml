@@ -1,0 +1,28 @@
+session_name: dev
+windows:
+  - window_name: ai
+    layout: even-horizontal
+    panes:
+      - shell_command:
+          - codex
+        focus: true
+      - shell_command:
+          - kiro-cli
+  - window_name: review
+    panes:
+      - shell_command:
+          - nvim
+        focus: true
+  - window_name: run
+    layout: even-horizontal
+    panes:
+      - shell_command:
+          - ""
+        focus: true
+      - shell_command:
+          - ""
+  - window_name: misc
+    panes:
+      - shell_command:
+          - ""
+        focus: true

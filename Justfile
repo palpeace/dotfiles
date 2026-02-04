@@ -17,7 +17,27 @@ setup-core: update-system install-apt install-gh install-git-credential-libsecre
 
 setup-lang: install-rust install-python install-node
 
-setup-tools: install-ai install-nvim install-clipboard install-gitleaks install-lazygit
+setup-tools: install-ai install-nvim install-clipboard install-gitleaks install-lazygit install-tmux-plugins install-tmuxp
+
+install-tmux-plugins:
+    @echo "🧩 Installing tmux plugin manager (TPM)..."
+    @if [ ! -d "{{home}}/.tmux/plugins/tpm" ]; then \
+        mkdir -p {{home}}/.tmux/plugins; \
+        git clone https://github.com/tmux-plugins/tpm {{home}}/.tmux/plugins/tpm; \
+        echo "✅ TPM installed."; \
+    else \
+        echo "✅ TPM already installed."; \
+    fi
+
+install-tmuxp:
+    @echo "🧰 Installing tmuxp..."
+    @if command -v uv >/dev/null; then \
+        uv tool install tmuxp; \
+    elif command -v pipx >/dev/null; then \
+        pipx install tmuxp; \
+    else \
+        python3 -m pip install --user tmuxp; \
+    fi
 
 setup-dotfiles: setup-local ops-link
 
@@ -29,7 +49,7 @@ ops-link:
     @echo "🔗 Linking dotfiles via Stow..."
     mkdir -p {{home}}/.config {{home}}/.config/shell
     just ops-migrate-rc
-    stow -v -R -t {{home}} bash zsh tmux shell nvim git lazygit
+    stow -v -R -t {{home}} bash zsh tmux shell nvim git lazygit tmuxp
     source ~/.bashrc
 
 ops-sync:

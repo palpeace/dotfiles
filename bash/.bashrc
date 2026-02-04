@@ -110,8 +110,8 @@ if [ -f "$HOME/.local/bin/env" ]; then
 fi
 
 # GitBucket helper (start keyring once per session)
-gbsk() {
-  eval "$(just -f ~/dotfiles/Justfile start-keyring)" || return $?
+gbks() {
+  eval "$(just -f ~/dotfiles/Justfile auth-keyring-start)" || return $?
   if [ "$#" -gt 0 ]; then
     "$@"
   fi

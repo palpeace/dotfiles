@@ -9,40 +9,30 @@ default:
     @just --list
 
 # 🚀 Setup Everything
-setup: update-system install-gh install-apt install-git-credential-libsecret setup-pre-commit link setup-local setup-fd setup-locale install-rust install-python install-node install-ai install-nvim install-clipboard install-gitleaks install-lazygit setup-projects
+setup: setup-core setup-lang setup-tools setup-dotfiles
     @echo "🎉 All Setup Complete! Please restart your shell."
+
+# Grouped setup steps for readability
+setup-core: update-system install-apt install-gh install-git-credential-libsecret setup-pre-commit setup-fd setup-locale setup-projects
+
+setup-lang: install-rust install-python install-node
+
+setup-tools: install-ai install-nvim install-clipboard install-gitleaks install-lazygit
+
+setup-dotfiles: setup-local ops-link
 
 # -----------------------------------------------------------------------------
 # 🔗 Configuration
 # -----------------------------------------------------------------------------
 
-link:
+ops-link:
     @echo "🔗 Linking dotfiles via Stow..."
     mkdir -p {{home}}/.config {{home}}/.config/shell
-    @if [ -f {{home}}/.bashrc ] && [ ! -L {{home}}/.bashrc ]; then \
-        echo "Found existing .bashrc (not symlink). Please move it first."; \
-        exit 1; \
-    fi
-    @if [ -f {{home}}/.config/shell/env ] && [ ! -L {{home}}/.config/shell/env ]; then \
-        echo "Found existing .config/shell/env (not symlink). Please move it first."; \
-        exit 1; \
-    fi
-    @if [ -f {{home}}/.zshrc ] && [ ! -L {{home}}/.zshrc ]; then \
-        echo "Found existing .zshrc (not symlink). Please move it first."; \
-        exit 1; \
-    fi
-    @if [ -f {{home}}/.tmux.conf ] && [ ! -L {{home}}/.tmux.conf ]; then \
-        echo "Found existing .tmux.conf (not symlink). Please move it first."; \
-        exit 1; \
-    fi
-    @if [ -f {{home}}/.gitconfig ] && [ ! -L {{home}}/.gitconfig ]; then \
-        echo "Found existing .gitconfig (not symlink). Please move it first."; \
-        exit 1; \
-    fi
+    just ops-migrate-rc
     stow -v -R -t {{home}} bash zsh tmux shell nvim git lazygit
     source ~/.bashrc
 
-sync:
+ops-sync:
     @echo "🔄 Sync dotfiles..."
     @OLD_HEAD=$(git -C {{home}}/dotfiles rev-parse HEAD); \
     git -C {{home}}/dotfiles pull --rebase || exit 1; \
@@ -51,7 +41,7 @@ sync:
         echo "No updates. Skipping link."; \
         exit 0; \
     fi; \
-    just link
+    just ops-link
 
 setup-local:
     @echo "📝 Creating local config stubs..."
@@ -64,6 +54,39 @@ setup-local:
     @mkdir -p {{home}}/.config/nvim/lua/config
     @if [ ! -f {{home}}/.config/nvim/lua/config/local.lua ]; then \
         printf "%s\n" "-- Local Neovim config (not tracked)." > {{home}}/.config/nvim/lua/config/local.lua; \
+    fi
+
+ops-migrate-rc:
+    @echo "🧳 Migrating existing rc files..."
+    @if [ -f {{home}}/.bashrc ] && [ ! -L {{home}}/.bashrc ]; then \
+        if [ ! -f {{home}}/.bashrc.local ]; then \
+            mv {{home}}/.bashrc {{home}}/.bashrc.local; \
+            echo "Moved .bashrc -> .bashrc.local"; \
+        else \
+            mv {{home}}/.bashrc {{home}}/.bashrc.backup.$(date +%s); \
+            echo "Backed up .bashrc"; \
+        fi; \
+    fi
+    @if [ -f {{home}}/.zshrc ] && [ ! -L {{home}}/.zshrc ]; then \
+        if [ ! -f {{home}}/.zshrc.local ]; then \
+            mv {{home}}/.zshrc {{home}}/.zshrc.local; \
+            echo "Moved .zshrc -> .zshrc.local"; \
+        else \
+            mv {{home}}/.zshrc {{home}}/.zshrc.backup.$(date +%s); \
+            echo "Backed up .zshrc"; \
+        fi; \
+    fi
+    @if [ -f {{home}}/.tmux.conf ] && [ ! -L {{home}}/.tmux.conf ]; then \
+        mv {{home}}/.tmux.conf {{home}}/.tmux.conf.backup.$(date +%s); \
+        echo "Backed up .tmux.conf"; \
+    fi
+    @if [ -f {{home}}/.gitconfig ] && [ ! -L {{home}}/.gitconfig ]; then \
+        mv {{home}}/.gitconfig {{home}}/.gitconfig.backup.$(date +%s); \
+        echo "Backed up .gitconfig"; \
+    fi
+    @if [ -f {{home}}/.config/shell/env ] && [ ! -L {{home}}/.config/shell/env ]; then \
+        mv {{home}}/.config/shell/env {{home}}/.config/shell/env.backup.$(date +%s); \
+        echo "Backed up .config/shell/env"; \
     fi
 
 # -----------------------------------------------------------------------------
@@ -143,7 +166,11 @@ setup-pre-commit:
     fi
     pre-commit install
 
-gh-personal-login:
+# -----------------------------------------------------------------------------
+# 🔐 Auth
+# -----------------------------------------------------------------------------
+
+auth-gh-personal:
     @if ! command -v gh >/dev/null; then \
         echo "gh not found. Run: just install-gh"; \
         exit 1; \
@@ -162,7 +189,7 @@ gh-personal-login:
     gh auth switch -h github.com -u "$PERSONAL_GH"; \
     gh auth setup-git
 
-gh-company-login:
+auth-gh-company:
     @if ! command -v gh >/dev/null; then \
         echo "gh not found. Run: just install-gh"; \
         exit 1; \
@@ -181,7 +208,7 @@ gh-company-login:
     gh auth switch -h github.com -u "$COMPANY_GH"; \
     gh auth setup-git
 
-gh-switch-personal:
+auth-gh-switch-personal:
     @if ! command -v gh >/dev/null; then \
         echo "gh not found. Run: just install-gh"; \
         exit 1; \
@@ -196,7 +223,7 @@ gh-switch-personal:
     fi; \
     gh auth switch -h github.com -u "$PERSONAL_GH"
 
-gh-switch-company:
+auth-gh-switch-company:
     @if ! command -v gh >/dev/null; then \
         echo "gh not found. Run: just install-gh"; \
         exit 1; \
@@ -237,8 +264,7 @@ install-git-credential-libsecret:
         exit 1; \
     fi
 
-
-gitbucket-login:
+auth-gitbucket:
     @if ! command -v git-credential-libsecret >/dev/null; then \
         echo "git-credential-libsecret not found. Run: just install-git-credential-libsecret"; \
         exit 1; \
@@ -249,7 +275,7 @@ gitbucket-login:
         touch {{home}}/.gitconfig-company; \
     fi
     @if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then \
-        echo "DBus session not found. Run: eval \"\\$$(just start-keyring)\""; \
+        echo "DBus session not found. Run: eval \"\\$$(just auth-keyring-start)\""; \
         exit 1; \
     fi
     @read -r -p "GitBucket URL (e.g. https://git.example.com/gitbucket): " GITBUCKET_URL </dev/tty; \
@@ -275,7 +301,7 @@ gitbucket-login:
     git config --file {{home}}/.config/git/config credential.$KEY_URL.useHttpPath false; \
     printf "protocol=https\nhost=%s\nusername=%s\npassword=%s\n\n" "$GITBUCKET_HOST" "$GITBUCKET_USER" "$GITBUCKET_PAT" | git credential approve
 
-start-keyring:
+auth-keyring-start:
     @if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then \
         if command -v dbus-launch >/dev/null; then \
             dbus-launch --sh-syntax; \

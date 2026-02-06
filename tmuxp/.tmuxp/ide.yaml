@@ -1,19 +1,28 @@
-session_name: dev
+session_name: ide
 windows:
-  - window_name: ai
-    layout: even-horizontal
+  - window_name: ai-chat
+    panes:
+      - shell_command:
+          - codex
+        focus: true
+      - shell_command:
+          - lazygit
+        split: horizontal
+        size: 30
+  - window_name: agent
+    layout: even-vertical
     panes:
       - shell_command:
           - codex
         focus: true
       - shell_command:
           - kiro-cli
-  - window_name: review
+  - window_name: nvim 
     panes:
       - shell_command:
           - nvim
         focus: true
-  - window_name: run
+  - window_name: docker
     layout: even-horizontal
     panes:
       - shell_command:
@@ -21,8 +30,3 @@ windows:
         focus: true
       - shell_command:
           - ""
-  - window_name: misc
-    panes:
-      - shell_command:
-          - ""
-        focus: true

@@ -1,0 +1,11 @@
+session_name: ai-chat
+windows:
+  - window_name: ai-chat
+    panes:
+      - shell_command:
+          - codex
+        focus: true
+      - shell_command:
+          - lazygit
+        split: horizontal
+        size: 30

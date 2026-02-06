@@ -40,6 +40,11 @@ setopt SHARE_HISTORY
 alias python='uv run python'
 alias pip='uv run pip'
 
+# Tmuxp
+ide() {
+  tmuxp load ide "$@"
+}
+
 # Neovim
 export EDITOR=nvim
 alias v='nvim'

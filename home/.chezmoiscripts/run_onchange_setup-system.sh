@@ -19,8 +19,7 @@ if command -v gh &> /dev/null; then
 fi
 
 # AIツールのために Node.js を先に入れてパスを通す
-$HOME/.local/bin/mise install node@lts
-$HOME/.local/bin/mise use --global node@lts
+$HOME/.local/bin/mise install node@lts -y
 eval "$($HOME/.local/bin/mise activate bash)"
 
 $HOME/.local/bin/mise install -y

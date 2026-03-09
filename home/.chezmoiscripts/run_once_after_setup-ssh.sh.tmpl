@@ -13,15 +13,21 @@ chmod 700 "$HOME/.ssh"
 if [ ! -f "$HOME/.ssh/id_ed25519_github_self" ]; then
     echo "🔑 個人用SSH鍵を生成中..."
     ssh-keygen -t ed25519 -C {{ .email_self | quote }} -f "$HOME/.ssh/id_ed25519_github_self"
+    echo "🔑 個人用SSH鍵..."
+    cat ~/.ssh/id_ed25519_github_self.pub
 fi
 
 # 仕事用
 if [ ! -f "$HOME/.ssh/id_ed25519_github_work" ]; then
     echo "🔑 仕事用SSH鍵を生成中..."
     ssh-keygen -t ed25519 -C {{ .email_work | quote }} -f "$HOME/.ssh/id_ed25519_github_work"
+    echo "🔑 仕事用SSH鍵..."
+    cat ~/.ssh/id_ed25519_github_work.pub
 fi
 
 # 3. 権限設定
 chmod 600 "$HOME/.ssh/id_ed25519_github_self" "$HOME/.ssh/id_ed25519_github_work"
 chmod 644 "$HOME/.ssh/id_ed25519_github_self.pub" "$HOME/.ssh/id_ed25519_github_work.pub"
+
+
 

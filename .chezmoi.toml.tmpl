@@ -1,7 +1,7 @@
-{{- $name_self := promptStringOnce . "name_self" "Name for Personal use" -}}
-{{- $name_work := promptStringOnce . "name_work" "Name for Work use" -}}
-{{- $email_self := promptStringOnce . "email_self" "Email for Personal use" -}}
-{{- $email_work := promptStringOnce . "email_work" "Email for Work use" -}}
+{{- $name_self := promptStringOnce . "name_self" "Personal Name" "Your Name" -}}
+{{- $name_work := promptStringOnce . "name_work" "Work Name" "Your Work Name" -}}
+{{- $email_self := promptStringOnce . "email_self" "Personal Email" "your-email@example.com" -}}
+{{- $email_work := promptStringOnce . "email_work" "Work Email" "work-email@company.com" -}}
 
 [data]
     name_self = {{ $name_self | quote }}

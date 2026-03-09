@@ -14,7 +14,7 @@ curl https://mise.run | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # gh を 有効化
-mise install github-cli@latest
+mise install github-cli@latest node@lts rust@latest
 
 echo "🔐 3. GitHub にログインしてください (API制限解除とCopilotのため)"
 # これにより API制限が 60回/時 -> 5,000回/時 に緩和されます

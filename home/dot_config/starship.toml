@@ -1,0 +1,142 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+# ==========================================
+# 全体設定
+# ==========================================
+add_newline = true
+continuation_prompt = "▶▶ "
+scan_timeout = 30
+command_timeout = 1000
+
+# 必要なものだけ順序立てて表示
+format = """
+$directory$git_branch$git_status$python$nodejs$golang$rust$docker_context$cmd_duration$status
+$line_break$character"""
+
+# ==========================================
+# コマンド実行時間
+# ==========================================
+[cmd_duration]
+min_time = 2_000
+format = "took [$duration]($style) "
+style = "yellow italic"
+
+# ==========================================
+# ディレクトリ
+# ==========================================
+[directory]
+style = "bg:blue fg:white bold"
+format = "[ $path ]($style)[$read_only]($read_only_style) "
+truncation_length = 4
+truncate_to_repo = true
+truncation_symbol = "…/"
+read_only = " "
+read_only_style = "bg:blue fg:yellow bold"
+
+# ==========================================
+# 入力行
+# ==========================================
+[character]
+success_symbol = "[>](bold magenta) "
+error_symbol = "[>](bold red) "
+vicmd_symbol = "[<](bold green) "
+
+# ==========================================
+# Git
+# ==========================================
+[git_branch]
+symbol = " "
+style = "bold purple"
+format = "on [$symbol$branch]($style) "
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold red"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+up_to_date = ""
+untracked = "?${count}"
+stashed = "\\$${count}"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+# ==========================================
+# 言語ランタイム
+# ==========================================
+[python]
+symbol = " "
+format = "via [$symbol$version]($style) "
+style = "bold yellow"
+
+[nodejs]
+symbol = " "
+format = "via [$symbol$version]($style) "
+style = "bold green"
+
+[golang]
+symbol = " "
+format = "via [$symbol$version]($style) "
+style = "bold cyan"
+
+[rust]
+symbol = " "
+format = "via [$symbol$version]($style) "
+style = "bold red"
+
+# ==========================================
+# Docker
+# ==========================================
+[docker_context]
+symbol = " "
+format = "via [$symbol$context]($style) "
+style = "bold blue"
+only_with_files = true
+
+# ==========================================
+# 終了ステータス
+# 失敗時だけ出す
+# ==========================================
+[status]
+disabled = false
+format = "[✘ $status]($style) "
+style = "bold red"
+success_symbol = ""
+map_symbol = true
+recognize_signal_code = true
+
+# ==========================================
+# SSH時だけ出す
+# ==========================================
+[hostname]
+ssh_only = true
+format = "[@$hostname](bold dimmed green) "
+disabled = false
+
+[username]
+show_always = false
+style_user = "bold dimmed green"
+style_root = "bold red"
+format = "[$user]($style)@"
+disabled = false
+
+# ==========================================
+# ノイズ抑制
+# ==========================================
+[package]
+disabled = true
+
+[os]
+disabled = true
+
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[azure]
+disabled = true

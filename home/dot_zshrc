@@ -1,0 +1,26 @@
+# --- 1. システム設定 ---
+# コマンドラインでの # (コメント) を有効にする
+setopt interactive_comments
+# 履歴設定
+setopt share_history
+HISTSIZE=10000
+SAVEHIST=10000
+export PATH="$HOME/.local/bin:$PATH"
+
+# --- 2. ツール起動 (miseを最優先に) ---
+eval "$(~/.local/bin/mise activate zsh)"
+eval "$(sheldon source)"
+eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
+source <(fzf --zsh)
+
+# --- 3. キーバインド (履歴検索) ---
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+# --- 4. エイリアス ---
+alias ls="eza --icons --git"
+alias ll="eza -ahl --icons --git"
+alias cat="bat --paging=never"
+alias cd="z"
+alias lg="lazygit"

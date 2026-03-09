@@ -1,0 +1,18 @@
+# chezmoi自体の設定・管理用ファイル
+.chezmoiroot
+.chezmoiignore
+.chezmoi.toml.tmpl
+.chezmoistate
+
+# リポジトリのドキュメントやGit設定
+.git/
+.gitignore
+README.md
+LICENSE
+
+# macOS特有の不要なファイル
+**/.DS_Store
+
+# スクリプトディレクトリ自体は展開不要
+# (chezmoiは .chezmoiscripts 内のファイルを自動で実行しますが、ファイルとしてコピーはしません)
+.chezmoiscripts/

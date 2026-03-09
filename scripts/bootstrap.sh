@@ -31,7 +31,7 @@ echo "📥 Downloading chezmoi binary..."
 sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 
 # 初期化のみ実行
-$HOME/.local/bin/chezmoi init palpeace
+$HOME/.local/bin/chezmoi init --prompt palpeace
 
 echo "📦 Applying configurations..."
 $HOME/.local/bin/chezmoi apply --force

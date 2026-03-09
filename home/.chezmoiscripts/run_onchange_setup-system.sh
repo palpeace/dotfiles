@@ -18,10 +18,7 @@ if command -v gh &> /dev/null; then
     export GITHUB_TOKEN=$(gh auth token 2>/dev/null || echo "")
 fi
 
-# AIツールのために Node.js を先に入れてパスを通す
-$HOME/.local/bin/mise install node@lts -y
 eval "$($HOME/.local/bin/mise activate bash)"
-
 $HOME/.local/bin/mise install -y
 
 # 4. Kiro CLI

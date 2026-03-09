@@ -14,12 +14,11 @@ curl https://mise.run | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # gh を 有効化
-$HOME/.local/bin/mise use github-cli@latest
-export PATH="$($HOME/.local/bin/mise where github-cli@latest)/bin:$PATH"
+mise install github-cli@latest
 
 echo "🔐 3. GitHub にログインしてください (API制限解除とCopilotのため)"
 # これにより API制限が 60回/時 -> 5,000回/時 に緩和されます
-gh auth login
+mise exec github-cli@latest -- gh auth login
 
 # 🚀 4. chezmoi を起動し、全ての環境を展開します
 echo "🚀 4. Initializing chezmoi..."

@@ -1,0 +1,40 @@
+[tools]
+# --- 1. 開発言語ランタイム (Core Runtimes) ---
+rust = "latest"
+go = "latest"
+node = "lts"
+python = "latest"
+
+# --- 2. モダンCLI (Core Tools) ---
+fzf = "latest"        # 検索
+ripgrep = "latest"    # 爆速grep (rg)
+bat = "latest"        # 色付きcat
+eza = "latest"        # 高機能ls
+zoxide = "latest"     # 爆速cd (z)
+"cargo:fd-find" = "latest"  # 高機能find
+jq = "latest"         # JSON処理
+starship = "latest"   # プロンプト
+"cargo:sheldon" = "latest"  # Zshプラグイン
+
+# --- 3. 開発効率・Git・ネットワーク ---
+github-cli = "latest"  # PR作成やGitHub連携(gh)
+lazygit = "latest"     # Git TUI
+delta = "latest"       # Git diffを美しく
+bottom = "latest"      # リソース監視 (btm)
+xh = "latest"          # 爆速APIテスト (httpieのRust版)
+uv = "latest"          # 爆速Pythonパッケージ管理
+
+# --- 4. ターミナルユーティリティ ---
+helix = "latest"       # ターミナル用爆速エディタ
+dust = "latest"        # ディレクトリ容量の可視化
+# zellij = "latest"    # 画面分割 (必要になったらコメントアウトを外す)
+
+# --- 5. 4大AIエージェントツール (npm経由) ---
+"npm:@anthropic-ai/claude-code" = "latest"
+"npm:@openai/codex" = "latest"
+"npm:@google/gemini-cli" = "latest"
+"npm:@github/copilot" = "latest"
+
+[settings]
+# ツールが見つからない時に自動インストールを促す設定
+all_compile = false

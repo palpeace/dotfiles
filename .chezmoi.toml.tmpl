@@ -1,0 +1,10 @@
+{{- $name_self := promptStringOnce . "name_self" "Name for Personal use" -}}
+{{- $name_work := promptStringOnce . "name_work" "Name for Work use" -}}
+{{- $email_self := promptStringOnce . "email_self" "Email for Personal use" -}}
+{{- $email_work := promptStringOnce . "email_work" "Email for Work use" -}}
+
+[data]
+    name_self = {{ $name_self | quote }}
+    name_work = {{ $name_work | quote }}
+    email_self = {{ $email_self | quote }}
+    email_work = {{ $email_work | quote }}

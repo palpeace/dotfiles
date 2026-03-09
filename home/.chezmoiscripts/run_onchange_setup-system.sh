@@ -20,7 +20,7 @@ fi
 
 # AIツールのために Node.js を先に入れてパスを通す
 $HOME/.local/bin/mise install node -y
-eval "$(mise activate bash)"
+eval "$($HOME/.local/bin/mise activate bash)"
 
 $HOME/.local/bin/mise install -y
 

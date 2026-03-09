@@ -14,10 +14,8 @@ curl https://mise.run | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # gh を 有効化
-$HOME/.local/bin/mise use --global github-cli@latest
-
-# 現在のシェルセッションで gh を使えるようにする
-eval "$($HOME/.local/bin/mise activate bash)"
+$HOME/.local/bin/mise use github-cli@latest
+export PATH="$($HOME/.local/bin/mise where github-cli@latest)/bin:$PATH"
 
 echo "🔐 3. GitHub にログインしてください (API制限解除とCopilotのため)"
 # これにより API制限が 60回/時 -> 5,000回/時 に緩和されます

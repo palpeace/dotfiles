@@ -50,3 +50,19 @@ git add .
 git commit -m "update: something"
 git push
 ```
+
+環境の更新コマンドの役割分担:
+
+```zsh
+# chezmoi 本体を更新
+chezmoi upgrade
+
+# dotfiles を pull して apply
+chezmoi update
+
+# mise 管理のツールを最新化
+mise upgrade
+```
+
+`run_onchange_after_00-setup-system.sh` では Ubuntu のシステムパッケージと `mise install -y` を実行します。
+そのため dotfiles 側の変更反映は `chezmoi update` / `chezmoi apply`、ツールの最新版化は `mise upgrade` を使う運用です。

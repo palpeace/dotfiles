@@ -18,7 +18,15 @@ source <(fzf --zsh)
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
-# --- 4. エイリアス ---
+# --- 4. 開発環境メンテナンス ---
+update-dev() {
+  chezmoi update &&
+    sudo apt update &&
+    sudo apt upgrade -y &&
+    mise upgrade
+}
+
+# --- 5. エイリアス ---
 alias ls="eza --icons --git"
 alias ll="eza -ahl --icons --git"
 alias cat="bat --paging=never"

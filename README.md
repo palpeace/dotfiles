@@ -54,6 +54,9 @@ git push
 環境の更新コマンドの役割分担:
 
 ```zsh
+# 開発環境をまとめて更新
+update-dev
+
 # chezmoi 本体を更新
 chezmoi upgrade
 
@@ -66,3 +69,12 @@ mise upgrade
 
 `run_onchange_after_00-setup-system.sh` では Ubuntu のシステムパッケージと `mise install -y` を実行します。
 そのため dotfiles 側の変更反映は `chezmoi update` / `chezmoi apply`、ツールの最新版化は `mise upgrade` を使う運用です。
+
+`update-dev` は次の順で実行されます。
+
+```zsh
+chezmoi update
+sudo apt update
+sudo apt upgrade -y
+mise upgrade
+```

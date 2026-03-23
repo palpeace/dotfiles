@@ -6,7 +6,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # 1. OSパッケージ
 sudo apt update
-sudo apt install -y zsh build-essential pkg-config libssl-dev unzip xz-utils
+sudo apt install -y zsh build-essential pkg-config libssl-dev unzip xz-utils bubblewrap
 
 # 2. シェル切り替え
 if [ "$SHELL" != "$(which zsh)" ]; then

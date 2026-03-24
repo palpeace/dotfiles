@@ -14,21 +14,21 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 ## 📦 Quick Start (Restore)
 
-新しい環境で以下のコマンドを叩くだけで、OSの依存関係からAIツールまで全てが整います。
+新しい環境では、まず以下のコマンドでセットアップを開始します。初回 bootstrap では、必要な local identity の値を確認する対話入力があります。
 
 ```zsh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/scripts/bootstrap.sh)"
 ```
 
-## 🔒 Local Identity Overlay
+## 🔒 Identity and SSH
 
 公開リポジトリには個人情報を残さず、必要な値だけ初回 bootstrap で対話入力します。
 
-- `~/.gitconfig.local`: default self account
-- `~/.gitconfig-work.local`: work account for repos under `~/work/`
-- `~/.ssh/config.local`: optional local SSH extensions
-- SSH private keys stay only on the local machine
-- first bootstrap prompts for missing values and never overwrites existing local files
+- `~/.gitconfig.local`: self 用の既定アカウント
+- `~/.gitconfig-work.local`: `~/work/` 配下のリポジトリ用の work アカウント
+- `~/.ssh/config.local`: 必要に応じて追加するローカル SSH 設定
+- SSH private keys はローカルマシンにのみ置く
+- first bootstrap は不足値を確認し、既存の local files は上書きしない
 
 ## 📋 Prerequisites
 

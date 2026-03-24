@@ -20,6 +20,16 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/scripts/bootstrap.sh)"
 ```
 
+## 🔒 Local Identity Overlay
+
+公開リポジトリには個人情報を残さず、必要な値だけ初回 bootstrap で対話入力します。
+
+- `~/.gitconfig.local`: default self account
+- `~/.gitconfig-work.local`: work account for repos under `~/work/`
+- `~/.ssh/config.local`: optional local SSH extensions
+- SSH private keys stay only on the local machine
+- first bootstrap prompts for missing values and never overwrites existing local files
+
 ## 📋 Prerequisites
 
 インストール前に、Windows側に以下のフォントを導入してください。これがないとアイコンが化けます。

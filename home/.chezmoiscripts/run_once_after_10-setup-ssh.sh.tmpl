@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -eu
 
+if [ "${CHEZMOI_COMMAND:-}" = "apply" ] && [ -n "${CHEZMOI_SOURCE_FILE:-}" ]; then
+    echo "⏭️  Local identity bootstrap is manual-only; skipping during chezmoi apply."
+    exit 0
+fi
+
+PATH="${PATH:+$PATH:}/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH
+
 echo "🛠️  個人ワークスペースとSSHの初期設定を開始します..."
 
 prompt_nonempty() {

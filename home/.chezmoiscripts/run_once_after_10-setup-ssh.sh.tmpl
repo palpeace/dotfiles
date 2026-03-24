@@ -3,31 +3,159 @@ set -eu
 
 echo "🛠️  個人ワークスペースとSSHの初期設定を開始します..."
 
+prompt_nonempty() {
+    local prompt="$1"
+    local value=""
+
+    while [ -z "$value" ]; do
+        printf "%s: " "$prompt" >&2
+        IFS= read -r value
+    done
+
+    printf "%s" "$value"
+}
+
+confirm() {
+    local prompt="$1"
+    local response=""
+
+    printf "%s [y/N]: " "$prompt"
+    if ! IFS= read -r response; then
+        return 1
+    fi
+
+    case "$response" in
+        [Yy]|[Yy][Ee][Ss])
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+ensure_directory() {
+    local dir="$1"
+
+    if [ -d "$dir" ]; then
+        echo "⏭️  $dir は既に存在するためスキップします。"
+        return
+    fi
+
+    mkdir -p "$dir"
+    echo "✅ $dir を作成しました。"
+}
+
+ensure_git_identity_file() {
+    local path="$1"
+    local label="$2"
+    local name=""
+    local email=""
+
+    if [ -e "$path" ]; then
+        echo "⏭️  $path は既に存在するためスキップします。"
+        return
+    fi
+
+    name="$(prompt_nonempty "$label user.name")"
+    email="$(prompt_nonempty "$label user.email")"
+
+    cat >"$path" <<EOF
+[user]
+    name = $name
+    email = $email
+EOF
+
+    echo "✅ $path を作成しました。"
+}
+
+ensure_ssh_config_local() {
+    local path="$1"
+
+    if [ -e "$path" ]; then
+        echo "⏭️  $path は既に存在するためスキップします。"
+        return
+    fi
+
+    cat >"$path" <<'EOF'
+# Local SSH configuration overrides.
+# Add machine-specific hosts or options here.
+EOF
+
+    echo "✅ $path を作成しました。"
+}
+
+gitconfig_email() {
+    local path="$1"
+
+    sed -n 's/^[[:space:]]*email[[:space:]]*=[[:space:]]*//p' "$path" | sed -n '1p'
+}
+
+show_public_key() {
+    local label="$1"
+    local pub_path="$2"
+
+    if [ -f "$pub_path" ]; then
+        echo "🔑 $label 公開鍵:"
+        cat "$pub_path"
+        return
+    fi
+
+    echo "⏭️  $pub_path が見つからないため公開鍵の表示をスキップします。"
+}
+
+ensure_ssh_key() {
+    local label="$1"
+    local key_path="$2"
+    local comment="$3"
+    local pub_path="${key_path}.pub"
+
+    if [ -e "$key_path" ]; then
+        echo "⏭️  $key_path は既に存在するため鍵生成をスキップします。"
+    else
+        if confirm "$label 用SSH鍵がありません。生成しますか？"; then
+            echo "🔑 $label 用SSH鍵を生成します..."
+            ssh-keygen -t ed25519 -C "$comment" -f "$key_path"
+        else
+            echo "⏭️  $label 用SSH鍵の生成をスキップしました。"
+        fi
+    fi
+
+    if [ -f "$key_path" ]; then
+        chmod 600 "$key_path"
+    fi
+
+    if [ -f "$pub_path" ]; then
+        chmod 644 "$pub_path"
+    fi
+
+    show_public_key "$label" "$pub_path"
+}
+
+self_gitconfig_path="$HOME/.gitconfig.local"
+work_gitconfig_path="$HOME/.gitconfig-work.local"
+ssh_config_local_path="$HOME/.ssh/config.local"
+self_key_path="$HOME/.ssh/id_ed25519_github_self"
+work_key_path="$HOME/.ssh/id_ed25519_github_work"
+
 # 1. ディレクトリ作成
-mkdir -p "$HOME/work" "$HOME/self" "$HOME/explore"
-mkdir -p "$HOME/.ssh"
+ensure_directory "$HOME/self"
+ensure_directory "$HOME/work"
+ensure_directory "$HOME/explore"
+ensure_directory "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
-# 2. SSH鍵の生成 (存在しない場合のみ)
-# 個人用
-if [ ! -f "$HOME/.ssh/id_ed25519_github_self" ]; then
-    echo "🔑 個人用SSH鍵を生成中..."
-    ssh-keygen -t ed25519 -C {{ .email_self | quote }} -f "$HOME/.ssh/id_ed25519_github_self"
-    echo "🔑 個人用SSH鍵..."
-    cat ~/.ssh/id_ed25519_github_self.pub
-fi
+# 2. ローカルGit設定作成
+ensure_git_identity_file "$self_gitconfig_path" "Self"
+ensure_git_identity_file "$work_gitconfig_path" "Work"
 
-# 仕事用
-if [ ! -f "$HOME/.ssh/id_ed25519_github_work" ]; then
-    echo "🔑 仕事用SSH鍵を生成中..."
-    ssh-keygen -t ed25519 -C {{ .email_work | quote }} -f "$HOME/.ssh/id_ed25519_github_work"
-    echo "🔑 仕事用SSH鍵..."
-    cat ~/.ssh/id_ed25519_github_work.pub
-fi
+self_email="$(gitconfig_email "$self_gitconfig_path")"
+work_email="$(gitconfig_email "$work_gitconfig_path")"
 
-# 3. 権限設定
-chmod 600 "$HOME/.ssh/id_ed25519_github_self" "$HOME/.ssh/id_ed25519_github_work"
-chmod 644 "$HOME/.ssh/id_ed25519_github_self.pub" "$HOME/.ssh/id_ed25519_github_work.pub"
+# 3. ローカルSSH設定作成
+ensure_ssh_config_local "$ssh_config_local_path"
 
-
+# 4. SSH鍵の生成
+ensure_ssh_key "Self" "$self_key_path" "$self_email"
+ensure_ssh_key "Work" "$work_key_path" "$work_email"
 

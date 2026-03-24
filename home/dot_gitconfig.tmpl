@@ -1,12 +1,8 @@
-[user]
-    name = {{ .name_self | quote }}
-    email = {{ .email_self | quote }}
-
 [core]
     editor = vim
 
-[includeIf "gitdir:~/work/"]
-    path = ~/.gitconfig-work
+[include]
+    path = ~/.gitconfig.local
 
-[includeIf "gitdir:~/self/"]
-    path = ~/.gitconfig-self
+[includeIf "gitdir:~/work/"]
+    path = ~/.gitconfig-work.local

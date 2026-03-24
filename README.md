@@ -14,21 +14,27 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 ## 📦 Quick Start (Restore)
 
-新しい環境では、まず以下のコマンドでセットアップを開始します。初回 bootstrap では、必要な local identity の値を確認する対話入力があります。
+新しい環境では、まず以下のコマンドでセットアップを開始します。初回セットアップでは、Git のユーザー情報などローカル専用の値を確認する対話入力があります。
 
 ```zsh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/scripts/bootstrap.sh)"
 ```
 
+この流れでは次を順に行います。
+
+- `chezmoi apply` で dotfiles を配置
+- `setup-system` で OS 依存と `mise` 管理ツールを導入
+- ローカル専用の Git 設定と SSH 設定を対話形式で作成
+
 ## 🔒 Identity and SSH
 
-公開リポジトリには個人情報を残さず、必要な値だけ初回 bootstrap で対話入力します。
+公開リポジトリには個人情報を残さず、必要な値だけ初回セットアップで対話入力します。
 
 - `~/.gitconfig.local`: self 用の既定アカウント
 - `~/.gitconfig-work.local`: `~/work/` 配下のリポジトリ用の work アカウント
 - `~/.ssh/config.local`: 必要に応じて追加するローカル SSH 設定
-- SSH private keys はローカルマシンにのみ置く
-- first bootstrap は不足値を確認し、既存の local files は上書きしない
+- SSH 秘密鍵はローカルマシンにのみ置く
+- 初回セットアップでは不足している値だけを確認し、既存のローカルファイルは上書きしない
 
 ## 📋 Prerequisites
 
@@ -48,43 +54,88 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 ## 📝 Maintenance
 
-設定を更新した際の基本フロー：
+日々の運用は「dotfiles の同期」と「システム更新」を分けて扱います。
+
+### Dotfiles を同期する
+
+差分を確認してから反映する運用を基本にします。
 
 ```zsh
-# 変更を反映
-chezmoi re-add ~/.zshrc
+chezmoi diff
+chezmoi apply
+```
 
-# GitHubに保存
+または helper を使います。
+
+```zsh
+sync-dotfiles
+```
+
+`sync-dotfiles` は dotfiles の差分確認と反映だけを行い、OS パッケージやツールの導入・更新は行いません。
+
+別 PC で変更した dotfiles を取り込むときは次です。
+
+```zsh
+chezmoi update
+chezmoi diff
+```
+
+`~/.zshrc` など managed file をローカルで直接編集した場合だけ `chezmoi re-add` を使います。
+
+```zsh
+chezmoi re-add ~/.zshrc
 chezmoi cd
 git add .
 git commit -m "update: something"
 git push
 ```
 
-環境の更新コマンドの役割分担:
+### 日々の開発コマンド
+
+Zed のターミナルからは、まず次の 2 つを入口に使う想定です。
 
 ```zsh
-# 開発環境をまとめて更新
+# 今いるプロジェクトに応じて開発を開始
+dev
+
+# 今いるプロジェクトに応じて確認系コマンドをまとめて実行
+check
+```
+
+挙動の優先順は次です。
+
+- `Justfile` / `justfile` があり、対応する recipe がある: `just dev` / `just check`
+- `package.json` がある: `pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`
+- `Cargo.toml` がある: `bacon` または `cargo run`、`cargo fmt` / `clippy` / `cargo nextest`
+- Markdown 中心のディレクトリ: `prettier` と `markdownlint-cli2`
+
+### システム導入と更新
+
+`chezmoi apply/update` では OS パッケージや `mise` ツールの導入は行いません。明示コマンドで実行します。
+これらのコマンドは `sudo` とネットワーク接続を使います。
+
+```zsh
+# 新規導入・不足分のインストール
+setup-system
+
+# OS / mise 管理ツールの更新
+update-system
+```
+
+必要なら従来どおりまとめて実行できます。
+
+```zsh
 update-dev
-
-# chezmoi 本体を更新
-chezmoi upgrade
-
-# dotfiles を pull して apply
-chezmoi update
-
-# mise 管理のツールを最新化
-mise upgrade
 ```
 
-`run_onchange_after_00-setup-system.sh` では Ubuntu のシステムパッケージと `mise install -y` を実行します。
-そのため dotfiles 側の変更反映は `chezmoi update` / `chezmoi apply`、ツールの最新版化は `mise upgrade` を使う運用です。
+### Local-only ファイル
 
-`update-dev` は次の順で実行されます。
+次のファイルは `chezmoi` で管理せず、各マシンにだけ置きます。
 
-```zsh
-chezmoi update
-sudo apt update
-sudo apt upgrade -y
-mise upgrade
-```
+- `~/.gitconfig.local`
+- `~/.gitconfig-work.local`
+- `~/.ssh/config.local`
+- `~/.ssh/id_ed25519_github_self`
+- `~/.ssh/id_ed25519_github_work`
+
+これらを変更したいときは local file を直接編集します。`chezmoi apply` では上書きしません。

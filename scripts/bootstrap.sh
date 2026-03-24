@@ -13,12 +13,12 @@ echo "📦 2. mise と GitHub CLI を導入中..."
 curl https://mise.run | sh
 export PATH="$HOME/.local/bin:$PATH"
 
-# gh を 有効化
-mise install github-cli@latest
+# gh を有効化
+"$HOME/.local/bin/mise" install github-cli@latest
 
 echo "🔐 3. GitHub にログインしてください (API制限解除とCopilotのため)"
 # これにより API制限が 60回/時 -> 5,000回/時 に緩和されます
-mise exec github-cli@latest -- gh auth login
+"$HOME/.local/bin/mise" exec github-cli@latest -- gh auth login
 
 # 🚀 4. chezmoi を起動し、全ての環境を展開します
 echo "🚀 4. Initializing chezmoi..."
@@ -31,9 +31,12 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 $HOME/.local/bin/chezmoi init --prompt palpeace
 
 echo "📦 Applying configurations..."
-$HOME/.local/bin/chezmoi apply --force
+$HOME/.local/bin/chezmoi apply
 
-echo "🔐 5. Configuring local identities and SSH..."
+echo "🛠️  5. Installing system dependencies and managed tools..."
+"$HOME/.local/bin/setup-system"
+
+echo "🔐 6. Configuring local identities and SSH..."
 bash "$HOME/.local/share/chezmoi/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
 
 echo "✅ 全てのセットアップが完了しました！"

@@ -19,11 +19,159 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
 # --- 4. 開発環境メンテナンス ---
+project-root() {
+  git rev-parse --show-toplevel 2>/dev/null || pwd
+}
+
+has-just-recipe() {
+  command -v just >/dev/null 2>&1 || return 1
+  [ -f Justfile ] || [ -f justfile ] || return 1
+  just --summary 2>/dev/null | tr ' ' '\n' | rg -qx "$1"
+}
+
+has-package-script() {
+  [ -f package.json ] || return 1
+  jq -e --arg name "$1" '.scripts[$name] != null' package.json >/dev/null 2>&1
+}
+
+is-markdown-worktree() {
+  rg --files . 2>/dev/null | rg -q '\.(md|mdx)$'
+}
+
+sync-dotfiles() {
+  local diff_status=0
+
+  chezmoi diff || diff_status=$?
+  if [ "$diff_status" -gt 1 ]; then
+    echo "chezmoi diff failed; aborting apply." >&2
+    return "$diff_status"
+  fi
+
+  chezmoi apply
+}
+
 update-dev() {
   chezmoi update &&
-    sudo apt update &&
-    sudo apt upgrade -y &&
-    mise upgrade
+    update-system
+}
+
+dev() {
+  local root
+  root="$(project-root)"
+  cd "$root" || return 1
+
+  if has-just-recipe dev; then
+    just dev
+    return
+  fi
+
+  if [ -f package.json ]; then
+    if command -v pnpm >/dev/null 2>&1; then
+      pnpm dev
+    else
+      echo "pnpm is not installed. Run setup-system first." >&2
+      return 1
+    fi
+    return
+  fi
+
+  if [ -f Cargo.toml ]; then
+    if command -v bacon >/dev/null 2>&1; then
+      bacon
+    else
+      cargo run
+    fi
+    return
+  fi
+
+  if is-markdown-worktree; then
+    echo "Markdown workspace detected."
+    echo "Use 'check' to run prettier / markdownlint checks."
+    return
+  fi
+
+  echo "No supported project type detected in $root." >&2
+  echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
+  return 1
+}
+
+check() {
+  local root
+  root="$(project-root)"
+  cd "$root" || return 1
+
+  if has-just-recipe check; then
+    just check
+    return
+  fi
+
+  if [ -f Cargo.toml ]; then
+    cargo fmt --check &&
+      cargo clippy --all-targets --all-features -- -D warnings &&
+      { command -v cargo-nextest >/dev/null 2>&1 && cargo nextest run || cargo test; }
+    return
+  fi
+
+  if [ -f package.json ]; then
+    if ! command -v pnpm >/dev/null 2>&1; then
+      echo "pnpm is not installed. Run setup-system first." >&2
+      return 1
+    fi
+
+    local ran=0
+
+    if has-package-script lint; then
+      pnpm lint || return 1
+      ran=1
+    fi
+
+    if has-package-script typecheck; then
+      pnpm typecheck || return 1
+      ran=1
+    fi
+
+    if has-package-script test; then
+      pnpm test || return 1
+      ran=1
+    fi
+
+    if command -v prettier >/dev/null 2>&1 && rg --files . 2>/dev/null | rg -q '\.(md|mdx|json|ya?ml|ts|tsx|js|jsx)$'; then
+      prettier --check . || return 1
+      ran=1
+    fi
+
+    if [ "$ran" -eq 0 ]; then
+      echo "No supported package.json checks found." >&2
+      return 1
+    fi
+
+    return
+  fi
+
+  if is-markdown-worktree; then
+    local ran=0
+
+    if command -v prettier >/dev/null 2>&1; then
+      prettier --check . || return 1
+      ran=1
+    fi
+
+    if command -v markdownlint-cli2 >/dev/null 2>&1; then
+      markdownlint-cli2 "**/*.md" "**/*.mdx" || return 1
+      ran=1
+    fi
+
+    if [ "$ran" -eq 0 ]; then
+      echo "No Markdown check tools found. Run setup-system first." >&2
+      return 1
+    fi
+
+    return
+  fi
+
+  echo "No supported project type detected in $root." >&2
+  echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
+  return 1
 }
 
 # --- 5. エイリアス ---

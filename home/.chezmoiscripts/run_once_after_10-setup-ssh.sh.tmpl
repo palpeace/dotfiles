@@ -91,6 +91,19 @@ gitconfig_email() {
     sed -n 's/^[[:space:]]*email[[:space:]]*=[[:space:]]*//p' "$path" | sed -n '1p'
 }
 
+require_gitconfig_email() {
+    local label="$1"
+    local path="$2"
+    local email="$3"
+
+    if [ -n "$email" ]; then
+        return
+    fi
+
+    echo "❌ $path に $label 用の email がありません。SSH鍵コメントに使うため email を設定してください。" >&2
+    exit 1
+}
+
 show_public_key() {
     local label="$1"
     local pub_path="$2"
@@ -152,10 +165,12 @@ ensure_git_identity_file "$work_gitconfig_path" "Work"
 self_email="$(gitconfig_email "$self_gitconfig_path")"
 work_email="$(gitconfig_email "$work_gitconfig_path")"
 
+require_gitconfig_email "Self" "$self_gitconfig_path" "$self_email"
+require_gitconfig_email "Work" "$work_gitconfig_path" "$work_email"
+
 # 3. ローカルSSH設定作成
 ensure_ssh_config_local "$ssh_config_local_path"
 
 # 4. SSH鍵の生成
 ensure_ssh_key "Self" "$self_key_path" "$self_email"
 ensure_ssh_key "Work" "$work_key_path" "$work_email"
-

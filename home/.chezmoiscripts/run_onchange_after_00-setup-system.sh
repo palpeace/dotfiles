@@ -1,6 +1,15 @@
 #!/bin/bash
 set -eufo pipefail
 
+if [ "${CHEZMOI:-}" = "1" ] && [ "${CHEZMOI_COMMAND:-}" = "apply" ]; then
+    case " ${CHEZMOI_ARGS:-} " in
+        *" --destination "*)
+            echo "⏭️  Alternate destination apply detected; skipping system provisioning."
+            exit 0
+            ;;
+    esac
+fi
+
 echo "🚀 システム構成を同期中..."
 export PATH="$HOME/.local/bin:$PATH"
 

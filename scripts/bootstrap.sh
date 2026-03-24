@@ -33,5 +33,8 @@ $HOME/.local/bin/chezmoi init --prompt palpeace
 echo "📦 Applying configurations..."
 $HOME/.local/bin/chezmoi apply --force
 
+echo "🔐 5. Configuring local identities and SSH..."
+bash "$HOME/.local/share/chezmoi/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+
 echo "✅ 全てのセットアップが完了しました！"
 echo "新しいシェル（zsh）を立ち上げて、最強の環境を楽しんでください。"

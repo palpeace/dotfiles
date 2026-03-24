@@ -120,13 +120,15 @@ show_public_key() {
 ensure_ssh_key() {
     local label="$1"
     local key_path="$2"
-    local comment="$3"
+    local gitconfig_path="$3"
+    local comment="$4"
     local pub_path="${key_path}.pub"
 
     if [ -e "$key_path" ]; then
         echo "⏭️  $key_path は既に存在するため鍵生成をスキップします。"
     else
         if confirm "$label 用SSH鍵がありません。生成しますか？"; then
+            require_gitconfig_email "$label" "$gitconfig_path" "$comment"
             echo "🔑 $label 用SSH鍵を生成します..."
             ssh-keygen -t ed25519 -C "$comment" -f "$key_path"
         else
@@ -165,12 +167,9 @@ ensure_git_identity_file "$work_gitconfig_path" "Work"
 self_email="$(gitconfig_email "$self_gitconfig_path")"
 work_email="$(gitconfig_email "$work_gitconfig_path")"
 
-require_gitconfig_email "Self" "$self_gitconfig_path" "$self_email"
-require_gitconfig_email "Work" "$work_gitconfig_path" "$work_email"
-
 # 3. ローカルSSH設定作成
 ensure_ssh_config_local "$ssh_config_local_path"
 
 # 4. SSH鍵の生成
-ensure_ssh_key "Self" "$self_key_path" "$self_email"
-ensure_ssh_key "Work" "$work_key_path" "$work_email"
+ensure_ssh_key "Self" "$self_key_path" "$self_gitconfig_path" "$self_email"
+ensure_ssh_key "Work" "$work_key_path" "$work_gitconfig_path" "$work_email"

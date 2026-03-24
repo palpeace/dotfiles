@@ -1,9 +1,10 @@
 [tools]
 # --- 1. 開発言語ランタイム (Core Runtimes) ---
-rust = "latest"
-go = "latest"
+# 日々の運用でズレにくい安定寄りの指定を優先する
+rust = "stable"
+go = "1.24"
 node = "lts"
-python = "latest"
+python = "3.12"
 
 # --- 2. モダンCLI (Core Tools) ---
 fzf = "latest"        # 検索
@@ -23,6 +24,8 @@ delta = "latest"       # Git diffを美しく
 bottom = "latest"      # リソース監視 (btm)
 xh = "latest"          # 爆速APIテスト (httpieのRust版)
 uv = "latest"          # 爆速Pythonパッケージ管理
+just = "latest"        # プロジェクトコマンドの整理
+pnpm = "latest"        # Next.js 向けパッケージ管理
 
 # --- 4. ターミナルユーティリティ ---
 helix = "latest"       # ターミナル用爆速エディタ
@@ -30,10 +33,21 @@ dust = "latest"        # ディレクトリ容量の可視化
 # zellij = "latest"    # 画面分割 (必要になったらコメントアウトを外す)
 
 # --- 5. 4大AIエージェントツール (npm経由) ---
+# 更新が速いツール群。必要に応じて `update-system` で追従する
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@openai/codex" = "latest"
 "npm:@google/gemini-cli" = "latest"
 "npm:@github/copilot" = "latest"
+
+# --- 6. LSP ---
+"aqua:artempyanykh/marksman" = "latest"
+"cargo:bacon" = "latest"
+"cargo:cargo-nextest" = "latest"
+"cargo:taplo-cli" = "latest"
+"npm:markdownlint-cli2" = "latest"
+"npm:prettier" = "latest"
+"npm:pyright" = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
 
 [settings]
 # ツールが見つからない時に自動インストールを促す設定

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+
+PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+export PATH
+
+echo "🚀 Installing base system dependencies..."
+sudo apt update
+sudo apt install -y git curl zsh build-essential pkg-config libssl-dev unzip xz-utils bubblewrap
+
+if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
+    echo "🔧 Switching login shell to zsh..."
+    sudo chsh -s "$(command -v zsh)" "$(whoami)"
+fi
+
+if ! command -v mise >/dev/null 2>&1; then
+    echo "📦 Installing mise..."
+    curl https://mise.run | sh
+fi
+
+if command -v gh >/dev/null 2>&1; then
+    export GITHUB_TOKEN
+    GITHUB_TOKEN="$(gh auth token 2>/dev/null || echo "")"
+
+    if [ -z "$GITHUB_TOKEN" ]; then
+        echo "⚠️  gh is installed but not authenticated. GitHub-backed downloads may hit rate limits." >&2
+        echo "⚠️  Run 'gh auth login' first if setup-system fails while installing tools." >&2
+    fi
+else
+    echo "⚠️  gh is not installed. GitHub-backed downloads may hit rate limits." >&2
+    echo "⚠️  Run bootstrap.sh or install/authenticate gh before setup-system if needed." >&2
+fi
+
+echo "📦 Installing managed tools with mise..."
+eval "$("$HOME/.local/bin/mise" activate bash)"
+"$HOME/.local/bin/mise" install -y
+
+if ! command -v kiro-cli >/dev/null 2>&1; then
+    echo "🤖 Installing Kiro CLI..."
+    curl -fsSL https://cli.kiro.dev/install | bash
+fi

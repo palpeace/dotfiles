@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+
+PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+export PATH
+
+echo "📦 Updating OS packages..."
+sudo apt update
+sudo apt upgrade -y
+
+if [ -x "$HOME/.local/bin/mise" ]; then
+    echo "📦 Upgrading managed tools..."
+    "$HOME/.local/bin/mise" upgrade
+else
+    echo "⏭️  mise is not installed; skipping tool upgrades."
+fi

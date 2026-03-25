@@ -56,6 +56,49 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 日々の運用は「dotfiles の同期」と「システム更新」を分けて扱います。
 
+### 運用早見表
+
+まず覚えるのは次の 4 パターンです。
+
+```zsh
+# 1. 初回セットアップ
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/scripts/bootstrap.sh)"
+
+# 2. dotfiles を GitHub / 別 PC から取り込んで反映
+chezmoi update
+chezmoi diff
+chezmoi apply
+
+# 3. 今の PC で変えた managed file を dotfiles repo に戻す
+chezmoi re-add ~/.zshrc
+chezmoi cd
+git add .
+git commit -m "update: something"
+git push
+
+# 4. OS / mise 管理ツールを更新
+update-system
+```
+
+まとめて更新したいときは次です。
+
+```zsh
+# dotfiles の更新と system update をまとめて行うフル更新
+update-dev
+```
+
+### 用語整理
+
+- 取り込む
+  - `chezmoi update`
+  - GitHub や別 PC で変わった dotfiles repo の内容を、今の PC の source repo に持ってくる
+- 反映する
+  - `chezmoi apply`
+  - source repo の内容を、`~/.zshrc` など実際のファイルへ書き出す
+- source に戻す
+  - `chezmoi re-add ~/.zshrc`
+  - 今の PC で直接編集した managed file の変更を、source repo 側へ戻す
+
 ### Dotfiles を同期する
 
 差分を確認してから反映する運用を基本にします。

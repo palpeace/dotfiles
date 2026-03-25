@@ -105,9 +105,15 @@ check
 挙動の優先順は次です。
 
 - `Justfile` / `justfile` があり、対応する recipe がある: `just dev` / `just check`
-- `package.json` がある: `pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`
-- `Cargo.toml` がある: `bacon` または `cargo run`、`cargo fmt` / `clippy` / `cargo nextest`
+- `package.json` / `pnpm-lock.yaml` / `turbo.json` がある: `pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`
+- `Cargo.toml` / `Cargo.lock` がある: `bacon` または `cargo run`、`cargo fmt` / `clippy` / `cargo nextest`
 - Markdown 中心のディレクトリ: `prettier` と `markdownlint-cli2`
+
+シェル操作も次を前提に整えています。
+
+- `Ctrl-R`: `fzf` ベースの履歴検索
+- `Ctrl-J`: ディレクトリ候補からの移動
+- `Tab`: 色付きの補完候補
 
 ### システム導入と更新
 
@@ -125,8 +131,36 @@ update-system
 必要なら従来どおりまとめて実行できます。
 
 ```zsh
+# dotfiles の更新と system update をまとめて行うフル更新
 update-dev
 ```
+
+### Windows 側の Zed 設定
+
+Windows 版 Zed を WSL からリモート利用する前提では、UI 設定の本体は Windows 側にあります。
+この repo では source-of-truth を保持し、必要なときだけ明示的に Windows 側へ反映します。
+
+```zsh
+# dotfiles -> Windows
+apply-zed-windows-settings
+
+# Windows -> dotfiles
+pull-zed-windows-settings
+```
+
+既存の `settings.json` / `keymap.json` がある場合は、反映前に `.bak.<timestamp>` を作成します。
+WSL のユーザー名と Windows のユーザー名が異なる場合は、`WINDOWS_USER=<name>` を付けて実行します。
+
+WSL 側の remote server 設定は `~/.config/zed/settings.json` を `chezmoi` で管理します。
+ここには LSP の binary path や、remote 側で効かせたい言語設定だけを置きます。
+このファイルは通常の `chezmoi apply` で反映されます。
+
+LSP / formatter / lint は基本的に WSL 側の実行環境を使います。VS Code のように Windows 側へ拡張を追加する前提ではありません。
+必要なツールは主に `mise` で管理し、Zed から見えない場合はまず `mise install` と `command -v <tool>` を確認します。
+ただし `rust-analyzer` だけは Rust の標準運用に寄せて `rustup` / `cargo` 側に任せます。
+
+Markdown は Zed の標準では LSP 前提ではありません。基本は `prettier` による format と tree-sitter ベースの編集支援で扱います。
+そのため、Markdown で Language Server が `No item` でも不自然ではありません。
 
 ### Local-only ファイル
 

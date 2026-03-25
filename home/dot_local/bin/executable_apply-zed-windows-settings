@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+
+repo_dir="$(chezmoi source-path)"
+source_settings_file="${repo_dir}/assets/zed/settings.json"
+source_keymap_file="${repo_dir}/assets/zed/keymap.json"
+
+windows_user="${WINDOWS_USER:-$USER}"
+windows_home="/mnt/c/Users/${windows_user}"
+target_dir="${windows_home}/AppData/Roaming/Zed"
+target_settings_file="${target_dir}/settings.json"
+target_keymap_file="${target_dir}/keymap.json"
+
+if [ ! -d "$windows_home" ]; then
+    echo "Windows home not found: $windows_home" >&2
+    echo "Set WINDOWS_USER if your Windows username differs from your WSL username." >&2
+    exit 1
+fi
+
+if [ ! -f "$source_settings_file" ] || [ ! -f "$source_keymap_file" ]; then
+    echo "Zed settings source not found under ${repo_dir}/assets/zed" >&2
+    exit 1
+fi
+
+mkdir -p "$target_dir"
+
+if [ -f "$target_settings_file" ]; then
+    backup_file="${target_settings_file}.bak.$(date +%Y%m%d%H%M%S)"
+    cp "$target_settings_file" "$backup_file"
+    echo "Backed up existing Zed settings to $backup_file"
+fi
+
+if [ -f "$target_keymap_file" ]; then
+    backup_file="${target_keymap_file}.bak.$(date +%Y%m%d%H%M%S)"
+    cp "$target_keymap_file" "$backup_file"
+    echo "Backed up existing Zed keymap to $backup_file"
+fi
+
+cp "$source_settings_file" "$target_settings_file"
+cp "$source_keymap_file" "$target_keymap_file"
+
+echo "Applied Zed settings to $target_settings_file"
+echo "Applied Zed keymap to $target_keymap_file"

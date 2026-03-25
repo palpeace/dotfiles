@@ -3,22 +3,63 @@
 setopt interactive_comments
 # 履歴設定
 setopt share_history
+setopt hist_ignore_all_dups
+setopt hist_reduce_blanks
+setopt inc_append_history
+setopt auto_cd
+setopt auto_pushd
+setopt pushd_ignore_dups
+setopt pushd_minus
 HISTSIZE=10000
 SAVEHIST=10000
 export PATH="$HOME/.local/bin:$PATH"
+typeset -U path PATH
+export LESS='-FRX'
+export BAT_THEME='ansi'
+export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=inline --preview-window=right:50%:wrap'
 
-# --- 2. ツール起動 (miseを最優先に) ---
+# --- 2. ツール起動 ---
 eval "$(~/.local/bin/mise activate zsh)"
 eval "$(sheldon source)"
+autoload -Uz compinit
+zmodload zsh/complist
+compinit -C
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 source <(fzf --zsh)
 
-# --- 3. キーバインド (履歴検索) ---
+# --- 3. 補完と候補表示 ---
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:warnings' format '%F{red}no matches found%f'
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$HOME/.cache/zsh/.zcompcache"
+zstyle ':completion:*' completer _extensions _complete _approximate
+
+# --- 4. キーバインドと操作性 ---
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+bindkey '^R' fzf-history-widget
+bindkey '^F' autosuggest-accept
+bindkey '^J' fzf-cd-widget
 
-# --- 4. 開発環境メンテナンス ---
+fzf-cd-widget() {
+  local dir
+
+  dir="$(
+    fd --type d --hidden --follow --exclude .git . "${1:-.}" 2>/dev/null |
+      fzf --height 40% --reverse --prompt='cd > ' --preview 'eza --all --icons --group-directories-first --color=always {}'
+  )" || return
+
+  BUFFER="cd ${dir:q}"
+  zle accept-line
+}
+zle -N fzf-cd-widget
+
+# --- 5. 開発環境メンテナンス ---
 project-root() {
   git rev-parse --show-toplevel 2>/dev/null || pwd
 }
@@ -32,6 +73,14 @@ has-just-recipe() {
 has-package-script() {
   [ -f package.json ] || return 1
   jq -e --arg name "$1" '.scripts[$name] != null' package.json >/dev/null 2>&1
+}
+
+is-node-worktree() {
+  [ -f package.json ] || [ -f pnpm-lock.yaml ] || [ -f turbo.json ]
+}
+
+is-rust-worktree() {
+  [ -f Cargo.toml ] || [ -f Cargo.lock ]
 }
 
 is-markdown-worktree() {
@@ -65,9 +114,14 @@ dev() {
     return
   fi
 
-  if [ -f package.json ]; then
+  if is-node-worktree; then
     if command -v pnpm >/dev/null 2>&1; then
-      pnpm dev
+      if [ -f package.json ] && has-package-script dev; then
+        pnpm dev
+      else
+        echo "Node workspace detected."
+        echo "Use 'pnpm install' if needed, then run the project-specific dev command."
+      fi
     else
       echo "pnpm is not installed. Run setup-system first." >&2
       return 1
@@ -75,7 +129,7 @@ dev() {
     return
   fi
 
-  if [ -f Cargo.toml ]; then
+  if is-rust-worktree; then
     if command -v bacon >/dev/null 2>&1; then
       bacon
     else
@@ -105,14 +159,14 @@ check() {
     return
   fi
 
-  if [ -f Cargo.toml ]; then
+  if is-rust-worktree; then
     cargo fmt --check &&
       cargo clippy --all-targets --all-features -- -D warnings &&
       { command -v cargo-nextest >/dev/null 2>&1 && cargo nextest run || cargo test; }
     return
   fi
 
-  if [ -f package.json ]; then
+  if is-node-worktree; then
     if ! command -v pnpm >/dev/null 2>&1; then
       echo "pnpm is not installed. Run setup-system first." >&2
       return 1
@@ -174,9 +228,11 @@ check() {
   return 1
 }
 
-# --- 5. エイリアス ---
+# --- 6. エイリアス ---
 alias ls="eza --icons --git"
 alias ll="eza -ahl --icons --git"
+alias la="eza -a --icons --git"
+alias tree="eza --tree --icons --git-ignore"
 alias cat="bat --paging=never"
 alias cd="z"
 alias lg="lazygit"

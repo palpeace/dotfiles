@@ -37,7 +37,10 @@ echo "🛠️  5. Installing system dependencies and managed tools..."
 "$HOME/.local/bin/setup-system"
 
 echo "🔐 6. Configuring local identities and SSH..."
-bash "$HOME/.local/share/chezmoi/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+"$HOME/.local/bin/chezmoi" execute-template < "$("$HOME/.local/bin/chezmoi" source-path)/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl" | bash
+
+echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
+echo "   apply-zed-windows-settings"
 
 echo "✅ 全てのセットアップが完了しました！"
 echo "新しいシェル（zsh）を立ち上げて、最強の環境を楽しんでください。"

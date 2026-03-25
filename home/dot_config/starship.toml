@@ -25,33 +25,33 @@ style = "yellow italic"
 # ディレクトリ
 # ==========================================
 [directory]
-style = "bg:blue fg:white bold"
-format = "[ $path ]($style)[$read_only]($read_only_style) "
+style = "bold cyan"
+format = "[$path]($style)[$read_only]($read_only_style) "
 truncation_length = 4
 truncate_to_repo = true
 truncation_symbol = "…/"
 read_only = " "
-read_only_style = "bg:blue fg:yellow bold"
+read_only_style = "bold yellow"
 
 # ==========================================
 # 入力行
 # ==========================================
 [character]
-success_symbol = "[>](bold magenta) "
+success_symbol = "[>](bold green) "
 error_symbol = "[>](bold red) "
-vicmd_symbol = "[<](bold green) "
+vicmd_symbol = "[<](bold yellow) "
 
 # ==========================================
 # Git
 # ==========================================
 [git_branch]
 symbol = " "
-style = "bold purple"
+style = "bold magenta"
 format = "on [$symbol$branch]($style) "
 
 [git_status]
 format = '([\[$all_status$ahead_behind\]]($style) )'
-style = "bold red"
+style = "bold yellow"
 conflicted = "="
 ahead = "⇡${count}"
 behind = "⇣${count}"
@@ -70,22 +70,22 @@ deleted = "✘${count}"
 [python]
 symbol = " "
 format = "via [$symbol$version]($style) "
-style = "bold yellow"
+style = "yellow"
 
 [nodejs]
 symbol = " "
 format = "via [$symbol$version]($style) "
-style = "bold green"
+style = "green"
 
 [golang]
 symbol = " "
 format = "via [$symbol$version]($style) "
-style = "bold cyan"
+style = "cyan"
 
 [rust]
 symbol = " "
 format = "via [$symbol$version]($style) "
-style = "bold red"
+style = "red"
 
 # ==========================================
 # Docker
@@ -93,7 +93,7 @@ style = "bold red"
 [docker_context]
 symbol = " "
 format = "via [$symbol$context]($style) "
-style = "bold blue"
+style = "blue"
 only_with_files = true
 
 # ==========================================
@@ -113,12 +113,12 @@ recognize_signal_code = true
 # ==========================================
 [hostname]
 ssh_only = true
-format = "[@$hostname](bold dimmed green) "
+format = "[@$hostname](dimmed green) "
 disabled = false
 
 [username]
 show_always = false
-style_user = "bold dimmed green"
+style_user = "dimmed green"
 style_root = "bold red"
 format = "[$user]($style)@"
 disabled = false

@@ -1,0 +1,46 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "binary": {
+        "path": "{{ .chezmoi.homeDir }}/.cargo/bin/rust-analyzer"
+      }
+    },
+    "taplo": {
+      "binary": {
+        "path": "{{ .chezmoi.homeDir }}/.local/share/mise/shims/taplo"
+      }
+    },
+    "pyright": {
+      "binary": {
+        "path": "{{ .chezmoi.homeDir }}/.local/share/mise/shims/pyright-langserver"
+      }
+    },
+    "gopls": {
+      "binary": {
+        "path": "{{ .chezmoi.homeDir }}/.local/share/mise/shims/gopls"
+      }
+    }
+  },
+  "languages": {
+    "Rust": {
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "TOML": {
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "JSON": {
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "Markdown": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": true
+      },
+      "soft_wrap": "preferred_line_length",
+      "preferred_line_length": 100
+    }
+  }
+}

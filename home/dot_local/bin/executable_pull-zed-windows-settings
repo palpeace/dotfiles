@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+
+repo_dir="$(chezmoi source-path)"
+target_settings_file="${repo_dir}/assets/zed/settings.json"
+target_keymap_file="${repo_dir}/assets/zed/keymap.json"
+
+windows_user="${WINDOWS_USER:-$USER}"
+windows_home="/mnt/c/Users/${windows_user}"
+source_dir="${windows_home}/AppData/Roaming/Zed"
+source_settings_file="${source_dir}/settings.json"
+source_keymap_file="${source_dir}/keymap.json"
+
+if [ ! -d "$windows_home" ]; then
+    echo "Windows home not found: $windows_home" >&2
+    echo "Set WINDOWS_USER if your Windows username differs from your WSL username." >&2
+    exit 1
+fi
+
+if [ ! -f "$source_settings_file" ] || [ ! -f "$source_keymap_file" ]; then
+    echo "Zed settings/keymap not found under $source_dir" >&2
+    exit 1
+fi
+
+mkdir -p "${repo_dir}/assets/zed"
+cp "$source_settings_file" "$target_settings_file"
+cp "$source_keymap_file" "$target_keymap_file"
+
+echo "Pulled Zed settings into $target_settings_file"
+echo "Pulled Zed keymap into $target_keymap_file"

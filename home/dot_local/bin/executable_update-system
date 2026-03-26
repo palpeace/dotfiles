@@ -7,10 +7,20 @@ export PATH
 echo "📦 Updating OS packages..."
 sudo apt update
 sudo apt upgrade -y
+sudo apt autoremove -y
 
 if [ -x "$HOME/.local/bin/mise" ]; then
     echo "📦 Upgrading managed tools..."
     "$HOME/.local/bin/mise" upgrade
+    echo "🧹 Pruning unused managed tool installs..."
+    "$HOME/.local/bin/mise" prune
 else
     echo "⏭️  mise is not installed; skipping tool upgrades."
+fi
+
+if command -v kiro-cli >/dev/null 2>&1; then
+    echo "🤖 Updating Kiro CLI..."
+    curl -fsSL https://cli.kiro.dev/install | bash
+else
+    echo "⏭️  kiro-cli is not installed; skipping Kiro update."
 fi

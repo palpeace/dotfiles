@@ -1,5 +1,7 @@
 # 🚀 dotfiles
 
+[MIT License](./LICENSE) © 2026 palpeace
+
 Modern, minimal, and AI-native development environment optimized for WSL2.
 
 ---
@@ -84,7 +86,7 @@ update-system
 
 ```zsh
 # dotfiles の更新と system update をまとめて行うフル更新
-update-dev
+update-all
 ```
 
 `chezmoi apply` 中に `.ssh has changed since chezmoi last wrote it?` と聞かれたら、普段は `skip` で構いません。`~/.ssh/config.local` や SSH 鍵の作成で `~/.ssh` ディレクトリ自体の状態が変わるためです。`[config.tmpl](/home/murai/.local/share/chezmoi/home/dot_ssh/config.tmpl)` を変更して `~/.ssh/config` を反映したい時だけ、内容を確認して apply してください。
@@ -177,7 +179,7 @@ update-system
 
 ```zsh
 # dotfiles の更新と system update をまとめて行うフル更新
-update-dev
+update-all
 ```
 
 ### Windows 側の Zed 設定

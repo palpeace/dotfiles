@@ -18,6 +18,13 @@ else
     echo "⏭️  mise is not installed; skipping tool upgrades."
 fi
 
+if command -v sheldon >/dev/null 2>&1; then
+    echo "🔌 Updating Zsh plugins..."
+    sheldon lock --update
+else
+    echo "⏭️  sheldon is not installed; skipping plugin updates."
+fi
+
 if command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Updating Kiro CLI..."
     curl -fsSL https://cli.kiro.dev/install | bash

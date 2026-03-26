@@ -16,10 +16,14 @@ zoxide = "latest"     # 爆速cd (z)
 jq = "latest"         # JSON処理
 starship = "latest"   # プロンプト
 "cargo:sheldon" = "latest"  # Zshプラグイン
+atuin = "latest"      # 履歴検索・同期
+"cargo:tealdeer" = "latest"  # tldrページ (実例ベースのman)
+"npm:trash-cli" = "latest"  # 安全なrm (ゴミ箱に移動)
 
 # --- 3. 開発効率・Git・ネットワーク ---
 github-cli = "latest"  # PR作成やGitHub連携(gh)
 lazygit = "latest"     # Git TUI
+lazydocker = "latest"  # Docker TUI
 delta = "latest"       # Git diffを美しく
 bottom = "latest"      # リソース監視 (btm)
 xh = "latest"          # 爆速APIテスト (httpieのRust版)

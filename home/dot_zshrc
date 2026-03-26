@@ -98,7 +98,7 @@ sync-dotfiles() {
   chezmoi apply
 }
 
-update-dev() {
+update-all() {
   chezmoi update &&
     update-system
 }

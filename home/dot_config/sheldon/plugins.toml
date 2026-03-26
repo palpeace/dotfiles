@@ -14,7 +14,7 @@ github = "zdharma-continuum/fast-syntax-highlighting"
 github = "zsh-users/zsh-autosuggestions"
 use = ["{{ name }}.zsh"]
 
-# 4. 履歴の「部分一致」検索 (超便利！)
-# 「git」と打ってから「↑」を押すと、過去の git コマンドだけを遡れます
-[plugins.history-substring-search]
-github = "zsh-users/zsh-history-substring-search"
+# 4. zsh-abbr (展開されるエイリアス)
+# 入力した瞬間にフルコマンドへ展開される。何を実行するか常にわかる
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"

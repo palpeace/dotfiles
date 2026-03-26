@@ -27,6 +27,7 @@ compinit -C
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 source <(fzf --zsh)
+eval "$(atuin init zsh)"
 
 # --- 3. 補完と候補表示 ---
 zstyle ':completion:*' menu select
@@ -40,9 +41,7 @@ zstyle ':completion:*' cache-path "$HOME/.cache/zsh/.zcompcache"
 zstyle ':completion:*' completer _extensions _complete _approximate
 
 # --- 4. キーバインドと操作性 ---
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-bindkey '^R' fzf-history-widget
+# ↑↓ と Ctrl+R は atuin が自動でバインドする
 bindkey '^F' autosuggest-accept
 bindkey '^J' fzf-cd-widget
 
@@ -236,3 +235,4 @@ alias tree="eza --tree --icons --git-ignore"
 alias cat="bat --paging=never"
 alias cd="z"
 alias lg="lazygit"
+

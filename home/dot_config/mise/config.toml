@@ -34,7 +34,8 @@ pnpm = "latest"        # Next.js 向けパッケージ管理
 # --- 4. ターミナルユーティリティ ---
 helix = "latest"       # ターミナル用爆速エディタ
 dust = "latest"        # ディレクトリ容量の可視化
-# zellij = "latest"    # 画面分割 (必要になったらコメントアウトを外す)
+zellij = "latest"      # 画面分割
+"npm:decktape" = "latest"  # スライドPDF化
 
 # --- 5. 4大AIエージェントツール (npm経由) ---
 # 更新が速いツール群。必要に応じて `update-system` で追従する

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eufo pipefail
 
-repo_dir="$(chezmoi source-path)"
+repo_dir="$(chezmoi source-path)/.."
 source_settings_file="${repo_dir}/assets/zed/settings.json"
 source_keymap_file="${repo_dir}/assets/zed/keymap.json"
 

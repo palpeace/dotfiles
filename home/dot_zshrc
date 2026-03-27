@@ -236,4 +236,7 @@ alias cat="bat --paging=never"
 alias cd="z"
 alias lg="lazygit"
 alias ld="lazydocker"
+alias ah="z ~/.local/share/agents-home"
+alias r2="z ~/self/r2"
+alias ze="zed ."
 

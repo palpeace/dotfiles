@@ -175,6 +175,8 @@ setup-system
 update-system
 ```
 
+`setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。
+
 必要なら従来どおりまとめて実行できます。
 
 ```zsh

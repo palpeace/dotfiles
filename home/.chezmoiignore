@@ -1,7 +1,6 @@
 # chezmoi自体の設定・管理用ファイル
 .chezmoiroot
 .chezmoiignore
-.chezmoi.toml.tmpl
 .chezmoistate
 
 # リポジトリのドキュメントやGit設定

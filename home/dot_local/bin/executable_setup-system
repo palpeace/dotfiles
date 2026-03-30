@@ -14,6 +14,7 @@ base_apt_packages=(
     unzip
     xz-utils
     bubblewrap
+    fonts-noto-color-emoji
 )
 
 # Browser runtimes such as Chromium / Playwright need these shared libraries.
@@ -51,6 +52,14 @@ fi
 echo "🚀 Installing base system dependencies..."
 sudo apt update
 sudo apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
+
+echo "🔤 Rebuilding font cache..."
+fc-cache -fv
+
+echo "🔎 Checking for Noto Color Emoji..."
+if ! fc-list | grep -i "Noto Color Emoji"; then
+    echo "⚠️  Noto Color Emoji was not found in fc-list output." >&2
+fi
 
 if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
     echo "🔧 Switching login shell to zsh..."

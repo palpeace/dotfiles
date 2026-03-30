@@ -176,6 +176,7 @@ update-system
 ```
 
 `setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。
+また、WSL 側の絵文字表示用に `fonts-noto-color-emoji` を導入し、実行後に `fc-cache -fv` でフォントキャッシュを更新します。
 
 必要なら従来どおりまとめて実行できます。
 

@@ -4,9 +4,53 @@ set -eufo pipefail
 PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
 
+base_apt_packages=(
+    git
+    curl
+    zsh
+    build-essential
+    pkg-config
+    libssl-dev
+    unzip
+    xz-utils
+    bubblewrap
+)
+
+# Browser runtimes such as Chromium / Playwright need these shared libraries.
+browser_runtime_apt_packages=(
+    libnss3
+    libnspr4
+)
+
+resolve_apt_package() {
+    local package="$1"
+    local policy_output=""
+
+    policy_output="$(apt-cache policy "$package" 2>/dev/null || true)"
+
+    if [[ "$policy_output" == *"Candidate: (none)"* ]]; then
+        return 1
+    fi
+
+    if [[ "$policy_output" == *"Candidate:"* ]]; then
+        printf '%s\n' "$package"
+        return 0
+    fi
+
+    return 1
+}
+
+alsa_runtime_package="$(resolve_apt_package libasound2t64 || resolve_apt_package libasound2 || true)"
+
+if [ -n "$alsa_runtime_package" ]; then
+    browser_runtime_apt_packages+=("$alsa_runtime_package")
+else
+    echo "⚠️  Could not resolve an ALSA runtime package (tried libasound2t64, libasound2)." >&2
+fi
+
 echo "🚀 Installing base system dependencies..."
 sudo apt update
-sudo apt install -y git curl zsh build-essential pkg-config libssl-dev unzip xz-utils bubblewrap
+sudo apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
 if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
     echo "🔧 Switching login shell to zsh..."

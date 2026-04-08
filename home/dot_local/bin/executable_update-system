@@ -10,6 +10,14 @@ sudo apt upgrade -y
 sudo apt autoremove -y
 
 if [ -x "$HOME/.local/bin/mise" ]; then
+    if command -v rustup >/dev/null 2>&1; then
+        echo "🦀 Updating rustup and Rust stable toolchain..."
+        rustup self update
+        rustup update stable
+    else
+        echo "⏭️  rustup is not installed; skipping Rust toolchain update."
+    fi
+
     echo "📦 Upgrading managed tools..."
     "$HOME/.local/bin/mise" upgrade
     echo "🧹 Pruning unused managed tool installs..."

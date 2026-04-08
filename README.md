@@ -82,6 +82,9 @@ git push
 update-system
 ```
 
+`update-system` は `mise` 管理ツールの更新に加えて、Rust だけは `rustup self update` と `rustup update stable` を先に実行します。
+この repo では Rust のバージョン指定は `mise` (`rust = "stable"`) に置きつつ、実体の更新は Rust 標準運用に合わせて `rustup` に任せます。
+
 まとめて更新したいときは次です。
 
 ```zsh

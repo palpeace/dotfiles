@@ -88,6 +88,11 @@ echo "📦 Installing managed tools with mise..."
 eval "$("$HOME/.local/bin/mise" activate bash)"
 "$HOME/.local/bin/mise" install -y
 
+if ! command -v claude >/dev/null 2>&1; then
+    echo "🤖 Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+fi
+
 if ! command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Installing Kiro CLI..."
     curl -fsSL https://cli.kiro.dev/install | bash

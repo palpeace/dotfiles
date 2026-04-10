@@ -2,7 +2,7 @@
 # =================================================================               
 # bootstrap.sh - The ultimate entry point for my dotfiles
 # =================================================================
-set -eu
+set -euo pipefail
 
 echo "⚙️  1. 最小限の基盤ツールを準備中..."
 echo "🔐 システムパッケージ（git, curl）をインストールするため、sudo 権限を使用します..."
@@ -37,7 +37,11 @@ echo "🛠️  5. Installing system dependencies and managed tools..."
 "$HOME/.local/bin/setup-system"
 
 echo "🔐 6. Configuring local identities and SSH..."
-"$HOME/.local/bin/chezmoi" execute-template < "$("$HOME/.local/bin/chezmoi" source-path)/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl" | bash
+template_path="$("$HOME/.local/bin/chezmoi" source-path)/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+rendered_script="$(mktemp)"
+trap 'rm -f "$rendered_script"' EXIT
+"$HOME/.local/bin/chezmoi" execute-template < "$template_path" > "$rendered_script"
+bash "$rendered_script"
 
 echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
 echo "   apply-zed-windows-settings"

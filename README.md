@@ -52,7 +52,7 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 | **AI Agents** | Claude Code, Copilot, Gemini CLI, Kiro |
 | **Editor** | Helix (hx) |
 | **CLI Essentials** | fzf, ripgrep (rg), fd, eza, bat, zoxide (z) |
-| **Modern Ops** | lazygit (lg), bottom (btm), xh, jq, dust |
+| **Modern Ops** | lazygit (lg), bottom (btm), xh, jq, dust, tmux |
 
 ## 📝 Maintenance
 

@@ -89,7 +89,7 @@ SETUP
     chmod +x "$HOME/.local/bin/setup-system"
     ;;
   source-path)
-    printf '%s\n' "$source_dir"
+    printf '%s\n' "$source_dir/home"
     ;;
   execute-template)
     if [[ "$behavior" == "fail-execute-template" ]]; then

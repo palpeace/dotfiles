@@ -33,6 +33,13 @@ else
     echo "⏭️  sheldon is not installed; skipping plugin updates."
 fi
 
+if command -v claude >/dev/null 2>&1; then
+    echo "🤖 Updating Claude Code..."
+    claude update
+else
+    echo "⏭️  claude is not installed; skipping Claude Code update."
+fi
+
 if command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Updating Kiro CLI..."
     kiro-cli update

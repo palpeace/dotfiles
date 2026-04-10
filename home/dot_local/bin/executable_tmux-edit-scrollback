@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pane_id="${1:-}"
+
+if [ -z "$pane_id" ]; then
+    printf 'usage: %s <pane-id>\n' "${0##*/}" >&2
+    exit 1
+fi
+
+editor="${EDITOR:-hx}"
+tmpfile="$(mktemp "${TMPDIR:-/tmp}/tmux-scrollback.XXXXXX")"
+trap 'rm -f "$tmpfile"' EXIT
+
+tmux capture-pane -p -S -32768 -t "$pane_id" > "$tmpfile"
+"$editor" "$tmpfile"

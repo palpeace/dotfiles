@@ -37,7 +37,24 @@ echo "🛠️  5. Installing system dependencies and managed tools..."
 "$HOME/.local/bin/setup-system"
 
 echo "🔐 6. Configuring local identities and SSH..."
-template_path="$("$HOME/.local/bin/chezmoi" source-path)/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+source_path="$("$HOME/.local/bin/chezmoi" source-path)"
+template_path=""
+
+for candidate in \
+    "$source_path/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl" \
+    "$source_path/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+do
+    if [[ -f "$candidate" ]]; then
+        template_path="$candidate"
+        break
+    fi
+done
+
+if [[ -z "$template_path" ]]; then
+    printf 'chezmoi template not found under %s\n' "$source_path" >&2
+    exit 1
+fi
+
 rendered_script="$(mktemp)"
 trap 'rm -f "$rendered_script"' EXIT
 "$HOME/.local/bin/chezmoi" execute-template < "$template_path" > "$rendered_script"

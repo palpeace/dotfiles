@@ -149,12 +149,11 @@ require_github_cli_auth
 
 echo "📦 Installing managed tools with mise..."
 export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"
-eval "$("$HOME/.local/bin/mise" activate bash)"
-if ! command -v node >/dev/null 2>&1; then
+if ! "$HOME/.local/bin/mise" which node >/dev/null 2>&1; then
     echo "📦 Installing Node.js first for npm-backed mise tools..."
     "$HOME/.local/bin/mise" install -y node
-    eval "$("$HOME/.local/bin/mise" activate bash)"
 fi
+eval "$("$HOME/.local/bin/mise" activate bash)"
 "$HOME/.local/bin/mise" install -y
 
 unset GITHUB_TOKEN

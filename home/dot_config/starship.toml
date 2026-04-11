@@ -10,7 +10,7 @@ command_timeout = 1000
 
 # 必要なものだけ順序立てて表示
 format = """
-$directory$git_branch$git_status$python$nodejs$golang$rust$docker_context$cmd_duration$status
+$username$hostname$directory$git_branch$git_status$python$nodejs$golang$rust$docker_context$cmd_duration$status
 $line_break$character"""
 
 # ==========================================

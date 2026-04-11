@@ -157,11 +157,11 @@ assert_contains "home/dot_local/bin/executable_configure-machine" "Enable NVIDIA
 assert_not_contains "home/dot_local/bin/executable_setup-system" "setup-docker-engine"
 assert_not_contains "home/dot_local/bin/executable_setup-system" "configure-machine"
 
-test_configure_machine_generates_expected_config
-test_configure_machine_preserves_unrelated_keys
-test_setup_optional_requires_machine_config
-test_setup_optional_invokes_setup_docker_engine
-test_setup_docker_engine_rejects_invalid_gpu_mode_before_install
-test_setup_docker_engine_rejects_nvidia_without_wsl2_runtime
+(test_configure_machine_generates_expected_config)
+(test_configure_machine_preserves_unrelated_keys)
+(test_setup_optional_requires_machine_config)
+(test_setup_optional_invokes_setup_docker_engine)
+(test_setup_docker_engine_rejects_invalid_gpu_mode_before_install)
+(test_setup_docker_engine_rejects_nvidia_without_wsl2_runtime)
 
 printf 'docker optional checks passed\n'

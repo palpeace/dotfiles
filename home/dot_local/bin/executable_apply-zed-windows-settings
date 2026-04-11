@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eufo pipefail
+set -euo pipefail
 
 repo_dir="$(chezmoi source-path)/.."
 source_settings_file="${repo_dir}/assets/zed/settings.json"

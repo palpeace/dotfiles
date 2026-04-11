@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-if [ "${CHEZMOI_COMMAND:-}" = "apply" ] && [ -n "${CHEZMOI_SOURCE_FILE:-}" ]; then
+if [ "${CHEZMOI_COMMAND:-}" = "apply" ] && [ -n "${CHEZMOI_SOURCE_DIR:-}" ]; then
     echo "⏭️  Local identity bootstrap is manual-only; skipping during chezmoi apply."
     exit 0
 fi

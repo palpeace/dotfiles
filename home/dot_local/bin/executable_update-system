@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eufo pipefail
+set -euo pipefail
 
 PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
@@ -12,7 +12,7 @@ sudo apt autoremove -y
 if [ -x "$HOME/.local/bin/mise" ]; then
     if command -v rustup >/dev/null 2>&1; then
         echo "🦀 Updating rustup and Rust stable toolchain..."
-        rustup self update
+        rustup self update || echo "⚠️  rustup self update is not supported in this environment; skipping."
         rustup update stable
     else
         echo "⏭️  rustup is not installed; skipping Rust toolchain update."

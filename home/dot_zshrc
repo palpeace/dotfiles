@@ -10,26 +10,31 @@ setopt auto_cd
 setopt auto_pushd
 setopt pushd_ignore_dups
 setopt pushd_minus
+HISTFILE="$HOME/.zsh_history"
 HISTSIZE=10000
 SAVEHIST=10000
 export PATH="$HOME/.local/bin:$PATH"
 typeset -U path PATH
 export LESS='-FRX'
+export EDITOR='hx'
 export BAT_THEME='ansi'
 export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=inline --preview-window=right:50%:wrap'
 
 # --- 2. ツール起動 ---
 eval "$(~/.local/bin/mise activate zsh)"
 eval "$(sheldon source)"
-autoload -Uz compinit
-zmodload zsh/complist
-compinit -C
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 source <(fzf --zsh)
 eval "$(atuin init zsh)"
 
+# compinit はツール初期化後に実行（zoxide/atuin の補完を拾うため）
+autoload -Uz compinit
+zmodload zsh/complist
+compinit -C
+
 # --- 3. 補完と候補表示 ---
+[[ -d "$HOME/.cache/zsh/.zcompcache" ]] || mkdir -p "$HOME/.cache/zsh/.zcompcache"
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
@@ -43,8 +48,8 @@ zstyle ':completion:*' completer _extensions _complete _approximate
 # --- 4. キーバインドと操作性 ---
 # ↑↓ と Ctrl+R は atuin が自動でバインドする
 bindkey '^F' autosuggest-accept
-bindkey '^J' fzf-cd-widget
 
+# fzf --zsh が定義する fzf-cd-widget を fd + eza プレビュー版で上書き
 fzf-cd-widget() {
   local dir
 
@@ -57,6 +62,7 @@ fzf-cd-widget() {
   zle accept-line
 }
 zle -N fzf-cd-widget
+bindkey '^J' fzf-cd-widget
 
 # --- 5. 開発環境メンテナンス ---
 project-root() {

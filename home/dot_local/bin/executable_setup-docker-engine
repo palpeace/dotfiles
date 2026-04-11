@@ -25,6 +25,11 @@ if [ "${ID:-}" != "ubuntu" ]; then
     exit 1
 fi
 
+if [ -z "${VERSION_CODENAME:-}" ]; then
+    echo "VERSION_CODENAME is not set in /etc/os-release." >&2
+    exit 1
+fi
+
 require_wsl2_nvidia_runtime() {
     local kernel_release=""
 
@@ -76,9 +81,7 @@ sudo apt install -y ca-certificates curl gnupg
 
 echo "🔐 Configuring Docker apt repository..."
 sudo install -m 0755 -d /etc/apt/keyrings
-if [ ! -f "$docker_keyring" ]; then
-    curl -fsSL "$docker_repo/gpg" | sudo gpg --dearmor -o "$docker_keyring"
-fi
+curl -fsSL "$docker_repo/gpg" | sudo tee "$docker_keyring" >/dev/null
 sudo chmod a+r "$docker_keyring"
 printf 'deb [arch=%s signed-by=%s] %s %s stable\n' \
     "$arch" \
@@ -116,7 +119,7 @@ case "$DOTFILES_DOCKER_GPU" in
         nvidia_list="/etc/apt/sources.list.d/nvidia-container-toolkit.list"
 
         echo "🎮 Configuring NVIDIA Container Toolkit repository..."
-        curl -fsSL "$nvidia_repo_base/gpgkey" | sudo gpg --dearmor -o "$nvidia_keyring"
+        curl -fsSL "$nvidia_repo_base/gpgkey" | sudo gpg --dearmor --yes -o "$nvidia_keyring"
         curl -fsSL "$nvidia_repo_base/nvidia-container-toolkit.list" |
             sed "s#deb https://#deb [signed-by=$nvidia_keyring] https://#g" |
             sudo tee "$nvidia_list" >/dev/null

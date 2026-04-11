@@ -114,13 +114,14 @@ case "$DOTFILES_DOCKER_GPU" in
         echo "🎮 Skipping GPU runtime configuration (DOTFILES_DOCKER_GPU=none)."
         ;;
     nvidia)
-        nvidia_repo_base="https://nvidia.github.io/libnvidia-container/stable/deb"
+        nvidia_gpgkey_url="https://nvidia.github.io/libnvidia-container/gpgkey"
+        nvidia_list_url="https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list"
         nvidia_keyring="/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
         nvidia_list="/etc/apt/sources.list.d/nvidia-container-toolkit.list"
 
         echo "🎮 Configuring NVIDIA Container Toolkit repository..."
-        curl -fsSL "$nvidia_repo_base/gpgkey" | sudo gpg --dearmor --yes -o "$nvidia_keyring"
-        curl -fsSL "$nvidia_repo_base/nvidia-container-toolkit.list" |
+        curl -fsSL "$nvidia_gpgkey_url" | sudo gpg --dearmor --yes -o "$nvidia_keyring"
+        curl -fsSL "$nvidia_list_url" |
             sed "s#deb https://#deb [signed-by=$nvidia_keyring] https://#g" |
             sudo tee "$nvidia_list" >/dev/null
 

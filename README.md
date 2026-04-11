@@ -28,6 +28,8 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 - `setup-system` で OS 依存と `mise` 管理ツールを導入
 - ローカル専用の Git 設定と SSH 設定を対話形式で作成
 
+Docker / GPU が必要なマシンでは、`bootstrap` の後に `configure-machine` と `setup-optional` を実行します。
+
 ## 🔒 Identity and SSH
 
 公開リポジトリには個人情報を残さず、必要な値だけ初回セットアップで対話入力します。

@@ -17,7 +17,10 @@ prompt_nonempty() {
 
     while [ -z "$value" ]; do
         printf "%s: " "$prompt" >&2
-        IFS= read -r value
+        if ! IFS= read -r value; then
+            echo "❌ 入力が読み取れませんでした。対話可能な端末で再実行してください。" >&2
+            exit 1
+        fi
     done
 
     printf "%s" "$value"
@@ -75,6 +78,35 @@ ensure_git_identity_file() {
 EOF
 
     echo "✅ $path を作成しました。"
+}
+
+append_work_github_routing() {
+    local path="$1"
+    local owner=""
+
+    if grep -Fq 'insteadOf = https://github.com/' "$path" 2>/dev/null; then
+        return
+    fi
+
+    printf "Work GitHub owner/org (例: your-company, 空欄なら後で手動設定): " >&2
+    IFS= read -r owner || true
+
+    if [ -z "$owner" ]; then
+        echo "⏭️  Work 用の GitHub SSH routing は後で手動設定します。"
+        return
+    fi
+
+    cat >>"$path" <<EOF
+
+[url "git@github-work:"]
+    insteadOf = https://github.com/$owner/
+    insteadOf = https://www.github.com/$owner/
+    insteadOf = git@github.com:$owner/
+    insteadOf = ssh://git@github.com/$owner/
+    insteadOf = git@github-self:$owner/
+EOF
+
+    echo "✅ $path に GitHub work routing を追加しました。"
 }
 
 ensure_ssh_config_local() {
@@ -171,6 +203,7 @@ chmod 700 "$HOME/.ssh"
 # 2. ローカルGit設定作成
 ensure_git_identity_file "$self_gitconfig_path" "Self"
 ensure_git_identity_file "$work_gitconfig_path" "Work"
+append_work_github_routing "$work_gitconfig_path"
 
 self_email="$(gitconfig_email "$self_gitconfig_path")"
 work_email="$(gitconfig_email "$work_gitconfig_path")"

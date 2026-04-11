@@ -38,6 +38,8 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 - SSH 秘密鍵はローカルマシンにのみ置く
 - 初回セットアップでは不足している値だけを確認し、既存のローカルファイルは上書きしない
 
+GitHub の Git 通信は SSH 前提です。既定では `github-self` を使い、`~/work/` 配下では `~/.gitconfig-work.local` に設定した会社 owner/org だけ `github-work` に切り替える想定です。
+
 ## 📋 Prerequisites
 
 インストール前に、Windows側に以下のフォントを導入してください。これがないとアイコンが化けます。

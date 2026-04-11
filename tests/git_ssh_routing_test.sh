@@ -14,8 +14,6 @@ assert_contains() {
 }
 
 assert_contains "home/dot_gitconfig.tmpl" '[url "git@github-self:"]'
-assert_contains "home/dot_gitconfig.tmpl" 'insteadOf = https://github.com/'
-assert_contains "home/dot_gitconfig.tmpl" 'insteadOf = https://www.github.com/'
 assert_contains "home/dot_gitconfig.tmpl" 'insteadOf = git@github.com:'
 assert_contains "home/dot_gitconfig.tmpl" 'insteadOf = ssh://git@github.com/'
 

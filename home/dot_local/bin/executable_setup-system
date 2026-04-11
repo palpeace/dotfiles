@@ -7,6 +7,7 @@ export PATH
 base_apt_packages=(
     git
     curl
+    openssh-client
     zsh
     build-essential
     pkg-config
@@ -22,6 +23,78 @@ browser_runtime_apt_packages=(
     libnss3
     libnspr4
 )
+
+ensure_github_known_host() {
+    local ssh_dir="$HOME/.ssh"
+    local known_hosts="$ssh_dir/known_hosts"
+
+    mkdir -p "$ssh_dir"
+    chmod 700 "$ssh_dir"
+    touch "$known_hosts"
+    chmod 600 "$known_hosts"
+
+    if ssh-keygen -F github.com -f "$known_hosts" >/dev/null 2>&1; then
+        return
+    fi
+
+    if ! command -v ssh-keyscan >/dev/null 2>&1; then
+        echo "⚠️  ssh-keyscan is not available; skipping GitHub host key bootstrap." >&2
+        return
+    fi
+
+    echo "🔐 Seeding github.com SSH host keys..."
+    ssh-keyscan -H github.com >>"$known_hosts" 2>/dev/null || {
+        echo "⚠️  Failed to pre-seed github.com in known_hosts." >&2
+    }
+}
+
+require_github_cli_auth() {
+    local gh_bin=""
+
+    gh_bin="$(command -v gh 2>/dev/null || true)"
+
+    if [ -z "$gh_bin" ]; then
+        gh_bin="$("$HOME/.local/bin/mise" which gh 2>/dev/null || true)"
+    fi
+
+    if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
+        echo "📦 Installing GitHub CLI with mise..."
+        "$HOME/.local/bin/mise" install github-cli@latest
+        gh_bin="$("$HOME/.local/bin/mise" which gh 2>/dev/null || true)"
+    fi
+
+    if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
+        echo "❌ GitHub CLI binary could not be resolved." >&2
+        exit 1
+    fi
+
+    if ! "$gh_bin" auth status >/dev/null 2>&1; then
+        if [ -t 0 ] && [ -t 1 ]; then
+            echo "🔐 GitHub CLI authentication is required before setup-system." >&2
+            echo "🔐 Starting: gh auth login --web" >&2
+            "$gh_bin" auth login --web
+        else
+            echo "❌ GitHub CLI authentication is required before setup-system." >&2
+            echo "❌ Run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
+            exit 1
+        fi
+    fi
+
+    if ! "$gh_bin" auth status >/dev/null 2>&1; then
+        echo "❌ GitHub CLI authentication did not complete successfully." >&2
+        echo "❌ Run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
+        exit 1
+    fi
+
+    export GITHUB_TOKEN
+    GITHUB_TOKEN="$("$gh_bin" auth token 2>/dev/null || echo "")"
+
+    if [ -z "$GITHUB_TOKEN" ]; then
+        echo "❌ GitHub CLI is authenticated, but no token was returned." >&2
+        echo "❌ Re-run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
+        exit 1
+    fi
+}
 
 resolve_apt_package() {
     local package="$1"
@@ -71,21 +144,16 @@ if ! command -v mise >/dev/null 2>&1; then
     curl https://mise.run | sh
 fi
 
-if command -v gh >/dev/null 2>&1; then
-    export GITHUB_TOKEN
-    GITHUB_TOKEN="$(gh auth token 2>/dev/null || echo "")"
-
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo "⚠️  gh is installed but not authenticated. GitHub-backed downloads may hit rate limits." >&2
-        echo "⚠️  Run 'gh auth login' first if setup-system fails while installing tools." >&2
-    fi
-else
-    echo "⚠️  gh is not installed. GitHub-backed downloads may hit rate limits." >&2
-    echo "⚠️  Run bootstrap.sh or install/authenticate gh before setup-system if needed." >&2
-fi
+ensure_github_known_host
+require_github_cli_auth
 
 echo "📦 Installing managed tools with mise..."
+export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"
 eval "$("$HOME/.local/bin/mise" activate bash)"
+if ! command -v node >/dev/null 2>&1; then
+    echo "📦 Installing Node.js first for npm-backed mise tools..."
+    "$HOME/.local/bin/mise" install -y node@lts
+fi
 "$HOME/.local/bin/mise" install -y
 
 if ! command -v claude >/dev/null 2>&1; then

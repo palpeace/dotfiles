@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+export PATH
+
+machine_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/machine.env"
+
+if [ -f "$machine_config_path" ]; then
+    # shellcheck disable=SC1090
+    . "$machine_config_path"
+fi
+
+DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
+
+if [ ! -r /etc/os-release ]; then
+    echo "/etc/os-release is not readable." >&2
+    exit 1
+fi
+
+. /etc/os-release
+
+if [ "${ID:-}" != "ubuntu" ]; then
+    echo "setup-docker-engine currently supports Ubuntu only." >&2
+    exit 1
+fi
+
+require_wsl2_nvidia_runtime() {
+    local kernel_release=""
+
+    kernel_release="$(uname -r 2>/dev/null || true)"
+
+    if ! grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "NVIDIA GPU support is intended for WSL2 on Windows." >&2
+        return 1
+    fi
+
+    case "$kernel_release" in
+        *WSL2*|*wsl2*)
+            ;;
+        *)
+            echo "NVIDIA GPU support requires WSL2. Current kernel: ${kernel_release:-unknown}" >&2
+            return 1
+            ;;
+    esac
+
+    if [ ! -x /usr/lib/wsl/lib/nvidia-smi ]; then
+        echo "WSL NVIDIA runtime was not detected at /usr/lib/wsl/lib/nvidia-smi." >&2
+        echo "Install a WSL-compatible NVIDIA Windows driver first." >&2
+        return 1
+    fi
+}
+
+case "$DOTFILES_DOCKER_GPU" in
+    none)
+        ;;
+    nvidia)
+        if ! require_wsl2_nvidia_runtime; then
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Unsupported DOTFILES_DOCKER_GPU: $DOTFILES_DOCKER_GPU" >&2
+        exit 1
+        ;;
+esac
+
+arch="$(dpkg --print-architecture)"
+docker_repo="https://download.docker.com/linux/ubuntu"
+docker_keyring="/etc/apt/keyrings/docker.asc"
+docker_list="/etc/apt/sources.list.d/docker.list"
+
+echo "📦 Installing Docker Engine prerequisites..."
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+
+echo "🔐 Configuring Docker apt repository..."
+sudo install -m 0755 -d /etc/apt/keyrings
+if [ ! -f "$docker_keyring" ]; then
+    curl -fsSL "$docker_repo/gpg" | sudo gpg --dearmor -o "$docker_keyring"
+fi
+sudo chmod a+r "$docker_keyring"
+printf 'deb [arch=%s signed-by=%s] %s %s stable\n' \
+    "$arch" \
+    "$docker_keyring" \
+    "$docker_repo" \
+    "$VERSION_CODENAME" | sudo tee "$docker_list" >/dev/null
+
+echo "🐳 Installing Docker Engine packages..."
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+echo "👥 Ensuring docker group exists and adding current user..."
+sudo groupadd -f docker
+if ! id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
+    sudo usermod -aG docker "$USER"
+    echo "ℹ️  Added $USER to docker group. Open a new shell after setup to apply it."
+fi
+
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    echo "🛠 Enabling and starting Docker service with systemd..."
+    sudo systemctl enable docker
+    sudo systemctl restart docker
+else
+    echo "🛠 Starting Docker service without systemd..."
+    sudo service docker start
+fi
+
+case "$DOTFILES_DOCKER_GPU" in
+    none)
+        echo "🎮 Skipping GPU runtime configuration (DOTFILES_DOCKER_GPU=none)."
+        ;;
+    nvidia)
+        nvidia_repo_base="https://nvidia.github.io/libnvidia-container/stable/deb"
+        nvidia_keyring="/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
+        nvidia_list="/etc/apt/sources.list.d/nvidia-container-toolkit.list"
+
+        echo "🎮 Configuring NVIDIA Container Toolkit repository..."
+        curl -fsSL "$nvidia_repo_base/gpgkey" | sudo gpg --dearmor -o "$nvidia_keyring"
+        curl -fsSL "$nvidia_repo_base/nvidia-container-toolkit.list" |
+            sed "s#deb https://#deb [signed-by=$nvidia_keyring] https://#g" |
+            sudo tee "$nvidia_list" >/dev/null
+
+        echo "🎮 Installing NVIDIA Container Toolkit..."
+        sudo apt update
+        sudo apt install -y nvidia-container-toolkit
+        sudo nvidia-ctk runtime configure --runtime=docker
+
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            sudo systemctl restart docker
+        else
+            sudo service docker restart
+        fi
+
+        echo "ℹ️  This assumes Windows 11 has a WSL-compatible NVIDIA driver installed."
+        echo "ℹ️  Validate later with: docker run --rm --gpus all nvidia/cuda:12.9.0-base-ubuntu24.04 nvidia-smi"
+        ;;
+esac

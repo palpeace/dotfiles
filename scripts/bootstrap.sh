@@ -62,6 +62,9 @@ bash "$rendered_script"
 
 echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
 echo "   apply-zed-windows-settings"
+echo "🐳 8. Docker / GPU を使うマシンでは、必要に応じて次を実行してください:"
+echo "   configure-machine"
+echo "   setup-optional"
 
 echo "✅ 全てのセットアップが完了しました！"
 echo "新しいシェル（zsh）を立ち上げて、最強の環境を楽しんでください。"

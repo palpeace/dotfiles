@@ -181,6 +181,36 @@ update-system
 `setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。
 また、WSL 側の絵文字表示用に `fonts-noto-color-emoji` を導入し、実行後に `fc-cache -fv` でフォントキャッシュを更新します。
 
+Docker は全マシン一律では入れません。`setup-system` では入れず、必要なマシンだけ `configure-machine` と `setup-optional` を実行します。
+
+```zsh
+configure-machine
+setup-optional
+```
+
+後から設定をやり直したい場合は次です。
+
+```zsh
+configure-machine
+setup-optional
+```
+
+内部的には次の値を保存しています。
+
+```sh
+DOTFILES_DOCKER_MODE=none   # または engine
+DOTFILES_DOCKER_GPU=none    # または nvidia
+```
+
+Windows 11 + WSL2 + Ubuntu 24.04 + NVIDIA で Docker GPU を使うマシンでは次を指定します。
+
+```sh
+DOTFILES_DOCKER_MODE=engine
+DOTFILES_DOCKER_GPU=nvidia
+```
+
+この場合、`setup-optional` は `Docker Engine` に加えて `NVIDIA Container Toolkit` も導入します。前提として、Windows 側に WSL 対応の NVIDIA ドライバが必要です。WSL 側には Linux 用 GPU ドライバを別途入れません。
+
 必要なら従来どおりまとめて実行できます。
 
 ```zsh

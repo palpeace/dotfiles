@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+export PATH
+
+machine_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/machine.env"
+
+if [ ! -f "$machine_config_path" ]; then
+    echo "No machine config found at $machine_config_path" >&2
+    echo "Run 'configure-machine' first." >&2
+    exit 1
+fi
+
+# shellcheck disable=SC1090
+. "$machine_config_path"
+
+DOTFILES_DOCKER_MODE="${DOTFILES_DOCKER_MODE:-none}"
+DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
+
+case "$DOTFILES_DOCKER_MODE" in
+    none)
+        echo "🐳 No optional Docker components selected for this machine."
+        ;;
+    engine)
+        echo "🐳 Installing Docker Engine (GPU=${DOTFILES_DOCKER_GPU})..."
+        "$HOME/.local/bin/setup-docker-engine"
+        ;;
+    *)
+        echo "Unsupported DOTFILES_DOCKER_MODE: $DOTFILES_DOCKER_MODE" >&2
+        exit 1
+        ;;
+esac

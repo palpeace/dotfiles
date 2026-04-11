@@ -44,7 +44,7 @@ curl https://mise.run | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # gh を有効化
-"$HOME/.local/bin/mise" install github-cli@latest
+"$HOME/.local/bin/mise" use --global github-cli@latest
 
 ensure_github_auth_for_setup
 
@@ -56,26 +56,16 @@ echo "📥 Downloading chezmoi binary..."
 sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 
 # 初期化のみ実行
-$HOME/.local/bin/chezmoi init --prompt palpeace
+"$HOME/.local/bin/chezmoi" init --prompt palpeace
 
 echo "📦 Applying configurations..."
-$HOME/.local/bin/chezmoi apply
+"$HOME/.local/bin/chezmoi" apply
 
 echo "🔐 5. Configuring local identities and SSH..."
 source_path="$("$HOME/.local/bin/chezmoi" source-path)"
-template_path=""
+template_path="$source_path/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
 
-for candidate in \
-    "$source_path/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl" \
-    "$source_path/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
-do
-    if [[ -f "$candidate" ]]; then
-        template_path="$candidate"
-        break
-    fi
-done
-
-if [[ -z "$template_path" ]]; then
+if [[ ! -f "$template_path" ]]; then
     printf 'chezmoi template not found under %s\n' "$source_path" >&2
     exit 1
 fi

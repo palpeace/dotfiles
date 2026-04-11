@@ -27,7 +27,7 @@ cat > "$HOME/.local/bin/mise" <<'EOF_MISE'
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "${1:-}" == "install" ]]; then
+if [[ "${1:-}" == "install" || "${1:-}" == "use" ]]; then
   exit 0
 fi
 
@@ -148,7 +148,7 @@ run_bootstrap() {
     local test_root="$1"
     export HOME="$test_root/home"
     mkdir -p "$HOME/.local/bin" "$HOME/.local/share"
-    export PATH="$test_root/fakebin:$PATH"
+    export PATH="$test_root/fakebin:$HOME/.local/bin:$PATH"
     bash "$repo_root/scripts/bootstrap.sh" >/dev/null 2>&1
 }
 
@@ -192,8 +192,8 @@ test_fails_when_template_rendering_fails() {
     fi
 }
 
-test_creates_workspace_directories
-test_runs_setup_system_after_bootstrap_authentication
-test_fails_when_template_rendering_fails
+(test_creates_workspace_directories)
+(test_runs_setup_system_after_bootstrap_authentication)
+(test_fails_when_template_rendering_fails)
 
 printf 'bootstrap tests passed\n'

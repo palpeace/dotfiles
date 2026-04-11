@@ -24,9 +24,10 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 この流れでは次を順に行います。
 
+- `gh auth login --web` を含む GitHub CLI 認証
 - `chezmoi apply` で dotfiles を配置
-- `setup-system` で OS 依存と `mise` 管理ツールを導入
 - ローカル専用の Git 設定と SSH 設定を対話形式で作成
+- `setup-system` で OS 依存と `mise` 管理ツールを導入
 
 Docker / GPU が必要なマシンでは、`bootstrap` の後に `configure-machine` と `setup-optional` を実行します。
 
@@ -40,7 +41,7 @@ Docker / GPU が必要なマシンでは、`bootstrap` の後に `configure-mach
 - SSH 秘密鍵はローカルマシンにのみ置く
 - 初回セットアップでは不足している値だけを確認し、既存のローカルファイルは上書きしない
 
-GitHub の Git 通信は SSH 前提です。既定では `github-self` を使い、`~/work/` 配下では `~/.gitconfig-work.local` に設定した会社 owner/org だけ `github-work` に切り替える想定です。
+GitHub の Git 通信は SSH 前提です。既定では `git@github.com:` と `ssh://git@github.com/` を `github-self` に寄せ、`~/work/` 配下では `~/.gitconfig-work.local` に設定した会社 owner/org だけ `github-work` に切り替える想定です。公開 repo を HTTPS で取得するツール類はそのまま HTTPS を使います。
 
 ## 📋 Prerequisites
 
@@ -176,13 +177,13 @@ check
 
 ```zsh
 # 新規導入・不足分のインストール
-setup-system
+~/.local/bin/setup-system
 
 # OS / mise 管理ツールの更新
 update-system
 ```
 
-`setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。
+`setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。対話端末から直接実行した場合は、未認証なら `gh auth login --web` を起動してから続行します。非対話実行では認証コマンドを案内して終了します。
 また、WSL 側の絵文字表示用に `fonts-noto-color-emoji` を導入し、実行後に `fc-cache -fv` でフォントキャッシュを更新します。
 
 Docker は全マシン一律では入れません。`setup-system` では入れず、必要なマシンだけ `configure-machine` と `setup-optional` を実行します。

@@ -4,6 +4,36 @@
 # =================================================================
 set -euo pipefail
 
+ensure_github_auth_for_setup() {
+    local gh_bin=""
+
+    gh_bin="$(command -v gh 2>/dev/null || true)"
+
+    if [ -z "$gh_bin" ]; then
+        gh_bin="$("$HOME/.local/bin/mise" which gh 2>/dev/null || true)"
+    fi
+
+    if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
+        echo "❌ GitHub CLI binary could not be resolved after installation." >&2
+        exit 1
+    fi
+
+    if "$gh_bin" auth status >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "🔐 3. GitHub CLI authentication is required for setup-system."
+    echo "🌐 Starting GitHub login in your browser..."
+    "$gh_bin" auth login --web
+
+    if "$gh_bin" auth status >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "❌ GitHub CLI authentication did not complete successfully." >&2
+    exit 1
+}
+
 echo "⚙️  1. 最小限の基盤ツールを準備中..."
 echo "🔐 システムパッケージ（git, curl）をインストールするため、sudo 権限を使用します..."
 sudo apt update && sudo apt install -y git curl
@@ -16,9 +46,7 @@ export PATH="$HOME/.local/bin:$PATH"
 # gh を有効化
 "$HOME/.local/bin/mise" install github-cli@latest
 
-echo "🔐 3. GitHub にログインしてください (API制限解除とCopilotのため)"
-# これにより API制限が 60回/時 -> 5,000回/時 に緩和されます
-"$HOME/.local/bin/mise" exec github-cli@latest -- gh auth login
+ensure_github_auth_for_setup
 
 # 🚀 4. chezmoi を起動し、全ての環境を展開します
 echo "🚀 4. Initializing chezmoi..."
@@ -33,10 +61,7 @@ $HOME/.local/bin/chezmoi init --prompt palpeace
 echo "📦 Applying configurations..."
 $HOME/.local/bin/chezmoi apply
 
-echo "🛠️  5. Installing system dependencies and managed tools..."
-"$HOME/.local/bin/setup-system"
-
-echo "🔐 6. Configuring local identities and SSH..."
+echo "🔐 5. Configuring local identities and SSH..."
 source_path="$("$HOME/.local/bin/chezmoi" source-path)"
 template_path=""
 
@@ -60,11 +85,14 @@ trap 'rm -f "$rendered_script"' EXIT
 "$HOME/.local/bin/chezmoi" execute-template < "$template_path" > "$rendered_script"
 bash "$rendered_script"
 
+echo "🛠️  6. Installing system dependencies and managed tools..."
+"$HOME/.local/bin/setup-system"
+
 echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
 echo "   apply-zed-windows-settings"
 echo "🐳 8. Docker / GPU を使うマシンでは、必要に応じて次を実行してください:"
 echo "   configure-machine"
 echo "   setup-optional"
 
-echo "✅ 全てのセットアップが完了しました！"
-echo "新しいシェル（zsh）を立ち上げて、最強の環境を楽しんでください。"
+echo "✅ bootstrap が完了しました。"
+echo "必要なら新しいシェルを開いてください。"

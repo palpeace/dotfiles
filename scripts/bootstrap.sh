@@ -36,6 +36,15 @@ ensure_github_auth_for_setup() {
 
 echo "⚙️  1. 最小限の基盤ツールを準備中..."
 echo "🔐 システムパッケージ（git, curl）をインストールするため、sudo 権限を使用します..."
+
+# Switch to JAIST mirror for faster downloads in Japan.
+sources_file="/etc/apt/sources.list.d/ubuntu.sources"
+jp_mirror="http://ftp.jaist.ac.jp/pub/Linux/ubuntu/"
+if [ -f "$sources_file" ] && ! grep -q "$jp_mirror" "$sources_file"; then
+    echo "🌏 Switching apt mirror to ftp.jaist.ac.jp..."
+    sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/|${jp_mirror}|g" "$sources_file"
+fi
+
 sudo apt update && sudo apt install -y git curl
 
 echo "📦 2. mise と GitHub CLI を導入中..."

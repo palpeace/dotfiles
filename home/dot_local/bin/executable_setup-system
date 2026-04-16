@@ -125,25 +125,44 @@ gh auth setup-git >/dev/null 2>&1 || echo "⚠️  Could not configure GitHub CL
 
 echo "📦 Installing managed tools with mise..."
 export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"
-if ! "$HOME/.local/bin/mise" which rustc >/dev/null 2>&1; then
-    echo "📦 Installing Rust first for cargo-backed mise tools..."
-    "$HOME/.local/bin/mise" install -y rust
-fi
-if ! "$HOME/.local/bin/mise" which node >/dev/null 2>&1; then
-    echo "📦 Installing Node.js first for npm-backed mise tools..."
-    "$HOME/.local/bin/mise" install -y node
-fi
+setup_failures=()
+
+# mise does not resolve implicit backend dependencies (npm:→node, cargo:→rust).
+# Runtimes are fatal — without them, npm:/cargo:/go: tools cannot install.
+echo "📦 Installing runtimes (rust, node, go, python) first..."
+"$HOME/.local/bin/mise" install -y --jobs=1 rust node go python
+
 eval "$("$HOME/.local/bin/mise" activate bash)"
-"$HOME/.local/bin/mise" install -y
+
+# Remaining tools: report failures but continue so one broken tool doesn't
+# block the entire environment.
+echo "📦 Installing remaining tools..."
+if ! "$HOME/.local/bin/mise" install -y; then
+    setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
+fi
 
 unset GITHUB_TOKEN
 
 if ! command -v claude >/dev/null 2>&1; then
     echo "🤖 Installing Claude Code..."
-    curl -fsSL https://claude.ai/install.sh | bash
+    if ! curl -fsSL https://claude.ai/install.sh | bash; then
+        setup_failures+=("Claude Code")
+    fi
 fi
 
 if ! command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Installing Kiro CLI..."
-    curl -fsSL https://cli.kiro.dev/install | bash
+    if ! curl -fsSL https://cli.kiro.dev/install | bash; then
+        setup_failures+=("Kiro CLI")
+    fi
+fi
+
+if [ ${#setup_failures[@]} -gt 0 ]; then
+    echo "" >&2
+    echo "⚠️  setup-system completed with errors:" >&2
+    for f in "${setup_failures[@]}"; do
+        echo "   - $f" >&2
+    done
+    echo "   Run 'setup-system' again to retry failed items." >&2
+    exit 1
 fi

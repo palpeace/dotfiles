@@ -56,7 +56,7 @@ echo "📥 Downloading chezmoi binary..."
 sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 
 # 初期化のみ実行
-"$HOME/.local/bin/chezmoi" init --prompt palpeace
+"$HOME/.local/bin/chezmoi" init palpeace
 
 echo "📦 Applying configurations..."
 "$HOME/.local/bin/chezmoi" apply
@@ -76,7 +76,14 @@ trap 'rm -f "$rendered_script"' EXIT
 bash "$rendered_script"
 
 echo "🛠️  6. Installing system dependencies and managed tools..."
-"$HOME/.local/bin/setup-system"
+if ! "$HOME/.local/bin/setup-system"; then
+    echo "" >&2
+    echo "⚠️  setup-system did not complete successfully." >&2
+    echo "   chezmoi apply は完了しているので dotfiles は配置済みです。" >&2
+    echo "   以下を実行してリトライしてください:" >&2
+    echo "     ~/.local/bin/setup-system" >&2
+    exit 1
+fi
 
 echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
 echo "   apply-zed-windows-settings"

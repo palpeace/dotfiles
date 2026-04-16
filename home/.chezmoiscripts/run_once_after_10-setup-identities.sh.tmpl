@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -eu
+
+if [ "${CHEZMOI_COMMAND:-}" = "apply" ] && [ -n "${CHEZMOI_SOURCE_DIR:-}" ]; then
+    echo "⏭️  Local identity bootstrap is manual-only; skipping during chezmoi apply."
+    exit 0
+fi
+
+echo "🛠️  個人ワークスペースとGit identityの初期設定を開始します..."
+
+prompt_nonempty() {
+    local prompt="$1"
+    local value=""
+
+    while [ -z "$value" ]; do
+        printf "%s: " "$prompt" >&2
+        if ! IFS= read -r value; then
+            echo "❌ 入力が読み取れませんでした。対話可能な端末で再実行してください。" >&2
+            exit 1
+        fi
+    done
+
+    printf "%s" "$value"
+}
+
+ensure_directory() {
+    local dir="$1"
+
+    if [ -d "$dir" ]; then
+        echo "⏭️  $dir は既に存在するためスキップします。"
+        return
+    fi
+
+    mkdir -p "$dir"
+    echo "✅ $dir を作成しました。"
+}
+
+ensure_git_identity_file() {
+    local path="$1"
+    local label="$2"
+    local name=""
+    local email=""
+
+    if [ -e "$path" ]; then
+        echo "⏭️  $path は既に存在するためスキップします。"
+        return
+    fi
+
+    name="$(prompt_nonempty "$label user.name")"
+    email="$(prompt_nonempty "$label user.email")"
+
+    cat >"$path" <<EOF
+[user]
+    name = $name
+    email = $email
+EOF
+
+    echo "✅ $path を作成しました。"
+}
+
+self_gitconfig_path="$HOME/.gitconfig.local"
+work_gitconfig_path="$HOME/.gitconfig-work.local"
+
+ensure_directory "$HOME/self"
+ensure_directory "$HOME/work"
+ensure_directory "$HOME/explore"
+
+ensure_git_identity_file "$self_gitconfig_path" "Self"
+ensure_git_identity_file "$work_gitconfig_path" "Work"

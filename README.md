@@ -26,22 +26,20 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 
 - `gh auth login --web` を含む GitHub CLI 認証
 - `chezmoi apply` で dotfiles を配置
-- ローカル専用の Git 設定と SSH 設定を対話形式で作成
+- ローカル専用の Git 設定を対話形式で作成
 - `setup-system` で OS 依存と `mise` 管理ツールを導入
 
 Docker / GPU が必要なマシンでは、`bootstrap` の後に `configure-machine` と `setup-optional` を実行します。
 
-## 🔒 Identity and SSH
+## 🔒 Identity and GitHub Auth
 
 公開リポジトリには個人情報を残さず、必要な値だけ初回セットアップで対話入力します。
 
 - `~/.gitconfig.local`: self 用の既定アカウント
 - `~/.gitconfig-work.local`: `~/work/` 配下のリポジトリ用の work アカウント
-- `~/.ssh/config.local`: 必要に応じて追加するローカル SSH 設定
-- SSH 秘密鍵はローカルマシンにのみ置く
 - 初回セットアップでは不足している値だけを確認し、既存のローカルファイルは上書きしない
 
-GitHub の Git 通信は SSH 前提です。既定では `git@github.com:` と `ssh://git@github.com/` を `github-self` に寄せ、`~/work/` 配下では `~/.gitconfig-work.local` に設定した会社 owner/org だけ `github-work` に切り替える想定です。公開 repo を HTTPS で取得するツール類はそのまま HTTPS を使います。
+GitHub の Git 通信は HTTPS + GitHub CLI 認証前提です。`setup-system` で `gh auth login --web` による認証を確認し、`gh auth setup-git` で Git の credential helper を設定します。commit identity は `~/.gitconfig.local` と `~/.gitconfig-work.local` の切り替えで扱い、push 認証は GitHub CLI 側に寄せます。
 
 ## 📋 Prerequisites
 
@@ -96,8 +94,6 @@ update-system
 # dotfiles の更新と system update をまとめて行うフル更新
 update-all
 ```
-
-`chezmoi apply` 中に `.ssh has changed since chezmoi last wrote it?` と聞かれたら、普段は `skip` で構いません。`~/.ssh/config.local` や SSH 鍵の作成で `~/.ssh` ディレクトリ自体の状態が変わるためです。`home/private_dot_ssh/private_config.tmpl` を変更して `~/.ssh/config` を反映したい時だけ、内容を確認して apply してください。
 
 ### 用語整理
 
@@ -183,7 +179,7 @@ check
 update-system
 ```
 
-`setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。対話端末から直接実行した場合は、未認証なら `gh auth login --web` を起動してから続行します。非対話実行では認証コマンドを案内して終了します。
+`setup-system` には Chromium / Playwright 系の実行に必要な共有ライブラリも含めています。不足ライブラリが出た場合も、原則ここへ追記して管理します。対話端末から直接実行した場合は、未認証なら `gh auth login --web` を起動してから続行します。認証後は `gh auth setup-git` で HTTPS push 用の git credential helper も設定します。非対話実行では認証コマンドを案内して終了します。
 また、WSL 側の絵文字表示用に `fonts-noto-color-emoji` を導入し、実行後に `fc-cache -fv` でフォントキャッシュを更新します。
 
 Docker は全マシン一律では入れません。`setup-system` では入れず、必要なマシンだけ `configure-machine` と `setup-optional` を実行します。
@@ -256,8 +252,5 @@ Markdown は Zed の標準では LSP 前提ではありません。基本は `pr
 
 - `~/.gitconfig.local`
 - `~/.gitconfig-work.local`
-- `~/.ssh/config.local`
-- `~/.ssh/id_ed25519_github_self`
-- `~/.ssh/id_ed25519_github_work`
 
 これらを変更したいときは local file を直接編集します。`chezmoi apply` では上書きしません。

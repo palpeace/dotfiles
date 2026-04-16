@@ -7,7 +7,6 @@ export PATH
 base_apt_packages=(
     git
     curl
-    openssh-client
     zsh
     build-essential
     pkg-config
@@ -23,30 +22,6 @@ browser_runtime_apt_packages=(
     libnss3
     libnspr4
 )
-
-ensure_github_known_host() {
-    local ssh_dir="$HOME/.ssh"
-    local known_hosts="$ssh_dir/known_hosts"
-
-    mkdir -p "$ssh_dir"
-    chmod 700 "$ssh_dir"
-    touch "$known_hosts"
-    chmod 600 "$known_hosts"
-
-    if ssh-keygen -F github.com -f "$known_hosts" >/dev/null 2>&1; then
-        return
-    fi
-
-    if ! command -v ssh-keyscan >/dev/null 2>&1; then
-        echo "⚠️  ssh-keyscan is not available; skipping GitHub host key bootstrap." >&2
-        return
-    fi
-
-    echo "🔐 Seeding github.com SSH host keys..."
-    ssh-keyscan -H github.com >>"$known_hosts" 2>/dev/null || {
-        echo "⚠️  Failed to pre-seed github.com in known_hosts." >&2
-    }
-}
 
 require_github_cli_auth() {
     local gh_bin=""
@@ -144,8 +119,9 @@ if ! command -v mise >/dev/null 2>&1; then
     curl https://mise.run | sh
 fi
 
-ensure_github_known_host
 require_github_cli_auth
+
+gh auth setup-git >/dev/null 2>&1 || echo "⚠️  Could not configure GitHub CLI as git credential helper." >&2
 
 echo "📦 Installing managed tools with mise..."
 export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"

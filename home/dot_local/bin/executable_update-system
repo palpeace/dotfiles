@@ -1,48 +1,71 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# No -e: each step catches its own errors and reports failures at the end.
+set -uo pipefail
 
 PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
 
+update_failures=()
+
 echo "📦 Updating OS packages..."
-sudo apt update
-sudo apt upgrade -y
-sudo apt autoremove -y
+if ! { sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y; }; then
+    update_failures+=("apt upgrade")
+fi
 
 if [ -x "$HOME/.local/bin/mise" ]; then
     if command -v rustup >/dev/null 2>&1; then
         echo "🦀 Updating rustup and Rust stable toolchain..."
-        rustup self update || echo "⚠️  rustup self update is not supported in this environment; skipping."
-        rustup update stable
+        rustup self update 2>/dev/null || true
+        if ! rustup update stable; then
+            update_failures+=("rustup update stable")
+        fi
     else
         echo "⏭️  rustup is not installed; skipping Rust toolchain update."
     fi
 
     echo "📦 Upgrading managed tools..."
-    "$HOME/.local/bin/mise" upgrade
+    if ! "$HOME/.local/bin/mise" upgrade; then
+        update_failures+=("mise upgrade")
+    fi
     echo "🧹 Pruning unused managed tool installs..."
-    "$HOME/.local/bin/mise" prune
+    "$HOME/.local/bin/mise" prune || true
 else
     echo "⏭️  mise is not installed; skipping tool upgrades."
 fi
 
 if command -v sheldon >/dev/null 2>&1; then
     echo "🔌 Updating Zsh plugins..."
-    sheldon lock --update
+    if ! sheldon lock --update; then
+        update_failures+=("sheldon lock --update")
+    fi
 else
     echo "⏭️  sheldon is not installed; skipping plugin updates."
 fi
 
 if command -v claude >/dev/null 2>&1; then
     echo "🤖 Updating Claude Code..."
-    claude update
+    if ! claude update; then
+        update_failures+=("claude update")
+    fi
 else
     echo "⏭️  claude is not installed; skipping Claude Code update."
 fi
 
 if command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Updating Kiro CLI..."
-    kiro-cli update
+    if ! kiro-cli update; then
+        update_failures+=("kiro-cli update")
+    fi
 else
     echo "⏭️  kiro-cli is not installed; skipping Kiro update."
+fi
+
+if [ ${#update_failures[@]} -gt 0 ]; then
+    echo "" >&2
+    echo "⚠️  update-system completed with errors:" >&2
+    for f in "${update_failures[@]}"; do
+        echo "   - $f" >&2
+    done
+    echo "   Run 'update-system' again to retry." >&2
+    exit 1
 fi

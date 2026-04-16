@@ -29,3 +29,44 @@
 - When a file mixes sources such as `aqua:`, `npm:`, `cargo:`, or `go:`, keep the order natural for humans and use comments to explain purpose where needed.
 - Keep comments short and practical. Prefer why the tool is present over repeating the tool name.
 - Do not rely on config file ordering to satisfy runtime prerequisites. If `npm:` tools require Node or `cargo:` tools require Rust, make that explicit in setup scripts.
+
+## Tool placement: global vs project-local
+
+mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジェクトの `mise.toml` に置くかは以下で判断する。
+
+### グローバルに置くもの
+
+- ランタイム (rust, node, go, python): npm:/cargo:/go: バックエンドの前提になる
+- シェル環境に統合されるツール (starship, sheldon, zoxide, fzf, atuin 等)
+- どのディレクトリでも日常的に使う CLI (ripgrep, fd, bat, eza, jq, git 関連)
+- エディタ (Zed リモート) が PATH から直接参照する LSP / formatter (pyright, gopls, taplo, marksman, prettier, markdownlint-cli2)
+- パッケージマネージャ・タスクランナー (pnpm, uv, just)
+
+### プロジェクトの mise.toml に置くもの
+
+- 特定言語のビルド・実行ツール (bacon, cargo-make 等) — ただし cargo-nextest は `just check` で汎用的に使うためグローバル
+- プロジェクト固有のツールチェイン
+- チームで揃えるバージョンが重要なツール
+
+### 判断基準
+
+1. 「どのプロジェクトを開いても動いてほしいか？」→ Yes ならグローバル
+2. 「Zed が PATH から参照するか？」→ Yes ならグローバル (LSP / formatter)
+3. 「プリビルトバイナリがあるか？」→ No (cargo build 必須) なら PJ 側を優先し、グローバルには原則置かない
+
+### ツール選定の注意
+
+- aqua バックエンドのツールは、対象プラットフォーム向けのプリビルトバイナリが GitHub Releases に存在することを確認してから追加する。リリースからバイナリが消えるケースがある (例: tealdeer)。
+- `cargo:` バックエンドはビルドが必要なため、グローバルには原則置かない。プロジェクトの `mise.toml` で管理する。
+
+## Setup scripts の設計方針
+
+### エラーハンドリング
+
+- `setup-system`: ランタイム (rust, node, go, python) のインストール失敗は致命的なので即停止する。残りのツール (mise install, Claude Code, Kiro CLI) は失敗を記録して続行し、最後にまとめて報告する。
+- `update-system`: `set -e` を使わない。各ステップ (apt, rustup, mise upgrade, sheldon, claude, kiro) を個別にエラーハンドリングし、失敗しても次へ進む。最後に失敗一覧を報告する。
+- `bootstrap.sh`: `setup-system` が失敗した場合、dotfiles は配置済みであることを伝え、`setup-system` の再実行を案内する。
+
+### mise のインストール順序
+
+mise は `npm:` → `node`、`cargo:` → `rust`、`go:` → `go` のような暗黙のバックエンド依存を自動解決しない。`setup-system` ではランタイムを `--jobs=1` で先にインストールしてから、残りのツールを並列インストールする。

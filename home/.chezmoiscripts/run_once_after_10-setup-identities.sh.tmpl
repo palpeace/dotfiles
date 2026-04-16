@@ -8,16 +8,25 @@ fi
 
 echo "🛠️  個人ワークスペースとGit identityの初期設定を開始します..."
 
+strip_escape_sequences() {
+    sed 's/\x1b\[[0-9;]*[A-Za-z]//g; s/\x1b\][^\x1b]*\x1b\\//g; s/\x1b\].*\x07//g'
+}
+
 prompt_nonempty() {
     local prompt="$1"
     local value=""
 
     while [ -z "$value" ]; do
+        # Drain any pending terminal responses from stdin
+        if read -r -t 0 2>/dev/null; then
+            while read -r -t 0.1 _discard 2>/dev/null; do :; done
+        fi
         printf "%s: " "$prompt" >&2
         if ! IFS= read -r value; then
             echo "❌ 入力が読み取れませんでした。対話可能な端末で再実行してください。" >&2
             exit 1
         fi
+        value="$(printf "%s" "$value" | strip_escape_sequences)"
     done
 
     printf "%s" "$value"

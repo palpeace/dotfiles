@@ -61,9 +61,9 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 echo "📦 Applying configurations..."
 "$HOME/.local/bin/chezmoi" apply
 
-echo "🔐 5. Configuring local identities and SSH..."
+echo "🔐 5. Configuring local Git identities..."
 source_path="$("$HOME/.local/bin/chezmoi" source-path)"
-template_path="$source_path/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl"
+template_path="$source_path/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl"
 
 if [[ ! -f "$template_path" ]]; then
     printf 'chezmoi template not found under %s\n' "$source_path" >&2

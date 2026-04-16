@@ -106,7 +106,7 @@ fi
 case "${1:-}" in
   init)
     mkdir -p "$source_dir/home/.chezmoiscripts"
-    cat > "$source_dir/home/.chezmoiscripts/run_once_after_10-setup-ssh.sh.tmpl" <<'TEMPLATE'
+    cat > "$source_dir/home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" <<'TEMPLATE'
 #!/usr/bin/env bash
 set -euo pipefail
 mkdir -p "$HOME/self" "$HOME/work" "$HOME/explore"

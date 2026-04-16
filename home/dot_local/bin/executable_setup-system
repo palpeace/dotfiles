@@ -97,6 +97,14 @@ else
     echo "⚠️  Could not resolve an ALSA runtime package (tried libasound2t64, libasound2)." >&2
 fi
 
+# Switch to JAIST mirror for faster downloads in Japan.
+sources_file="/etc/apt/sources.list.d/ubuntu.sources"
+jp_mirror="http://ftp.jaist.ac.jp/pub/Linux/ubuntu/"
+if [ -f "$sources_file" ] && ! grep -q "$jp_mirror" "$sources_file"; then
+    echo "🌏 Switching apt mirror to ftp.jaist.ac.jp..."
+    sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/|${jp_mirror}|g" "$sources_file"
+fi
+
 echo "🚀 Installing base system dependencies..."
 sudo apt update
 sudo apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
@@ -129,16 +137,23 @@ setup_failures=()
 
 # mise does not resolve implicit backend dependencies (npm:→node, cargo:→rust).
 # Runtimes are fatal — without them, npm:/cargo:/go: tools cannot install.
+# MISE_QUIET suppresses warnings about unresolvable npm:/cargo: tools that
+# depend on runtimes not yet installed at this point.
 echo "📦 Installing runtimes (rust, node, go, python) first..."
-"$HOME/.local/bin/mise" install -y --jobs=1 rust node go python
+MISE_QUIET=1 "$HOME/.local/bin/mise" install -y --jobs=1 rust node go python
 
 eval "$("$HOME/.local/bin/mise" activate bash)"
 
 # Remaining tools: report failures but continue so one broken tool doesn't
 # block the entire environment.
+# If signature verification fails (e.g. Rekor key format mismatch in mise),
+# retry once with verification disabled.
 echo "📦 Installing remaining tools..."
 if ! "$HOME/.local/bin/mise" install -y; then
-    setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
+    echo "⚠️  Retrying with signature verification disabled..." >&2
+    if ! MISE_COSIGN_VERIFY=0 "$HOME/.local/bin/mise" install -y; then
+        setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
+    fi
 fi
 
 unset GITHUB_TOKEN

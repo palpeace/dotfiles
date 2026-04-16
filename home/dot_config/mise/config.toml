@@ -12,12 +12,12 @@ ripgrep = "latest"    # 爆速grep (rg)
 bat = "latest"        # 色付きcat
 eza = "latest"        # 高機能ls
 zoxide = "latest"     # 爆速cd (z)
-"cargo:fd-find" = "latest"  # 高機能find
+"aqua:sharkdp/fd" = "latest"  # 高機能find
 jq = "latest"         # JSON処理
 starship = "latest"   # プロンプト
-"cargo:sheldon" = "latest"  # Zshプラグイン
+"aqua:rossmacarthur/sheldon" = "latest"  # Zshプラグイン
 atuin = "latest"      # 履歴検索・同期
-"cargo:tealdeer" = "latest"  # tldrページ (実例ベースのman)
+"aqua:tealdeer-rs/tealdeer" = "latest"  # tldrページ (実例ベースのman)
 "npm:trash-cli" = "latest"  # 安全なrm (ゴミ箱に移動)
 
 # --- 3. 開発効率・Git・ネットワーク ---
@@ -46,8 +46,8 @@ tmux = "latest"        # 画面分割
 # --- 6. LSP ---
 "aqua:artempyanykh/marksman" = "latest"
 "cargo:bacon" = "latest"
-"cargo:cargo-nextest" = "latest"
-"cargo:taplo-cli" = "latest"
+"aqua:nextest-rs/nextest/cargo-nextest" = "latest"
+"aqua:tamasfe/taplo" = "latest"
 "npm:markdownlint-cli2" = "latest"
 "npm:prettier" = "latest"
 "npm:pyright" = "latest"

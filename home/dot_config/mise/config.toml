@@ -1,57 +1,63 @@
 [tools]
-# --- 1. 開発言語ランタイム (Core Runtimes) ---
+# 用途ごとに並べる。`aqua:` `npm:` `cargo:` などの取得元は実装都合で、並び順の基準にはしない
+
+# --- 1. ランタイム ---
 # 日々の運用でズレにくい安定寄りの指定を優先する
 rust = "stable"
 go = "1.24"
 node = "lts"
 python = "3.12"
 
-# --- 2. モダンCLI (Core Tools) ---
-fzf = "latest"        # 検索
-ripgrep = "latest"    # 爆速grep (rg)
-bat = "latest"        # 色付きcat
-eza = "latest"        # 高機能ls
-zoxide = "latest"     # 爆速cd (z)
-"aqua:sharkdp/fd" = "latest"  # 高機能find
-jq = "latest"         # JSON処理
+# --- 2. Shell / Navigation ---
+"aqua:rossmacarthur/sheldon" = "latest"  # Zshプラグイン管理
 starship = "latest"   # プロンプト
-"aqua:rossmacarthur/sheldon" = "latest"  # Zshプラグイン
-atuin = "latest"      # 履歴検索・同期
-"aqua:tealdeer-rs/tealdeer" = "latest"  # tldrページ (実例ベースのman)
-"npm:trash-cli" = "latest"  # 安全なrm (ゴミ箱に移動)
+atuin = "latest"      # シェル履歴の検索と同期
+zoxide = "latest"     # ディレクトリ移動
+fzf = "latest"        # インタラクティブ検索
+"aqua:tealdeer-rs/tealdeer" = "latest"  # tldr の高速参照
 
-# --- 3. 開発効率・Git・ネットワーク ---
-github-cli = "latest"  # PR作成やGitHub連携(gh)
+# --- 3. Core CLI ---
+ripgrep = "latest"    # テキスト検索
+"aqua:sharkdp/fd" = "latest"  # ファイル検索
+bat = "latest"        # 構文ハイライト付き pager
+eza = "latest"        # `ls` 代替
+jq = "latest"         # JSON 処理
+"npm:trash-cli" = "latest"  # 削除をゴミ箱経由にする
+
+# --- 4. Git / Dev Workflow ---
+github-cli = "latest"  # GitHub 操作
 lazygit = "latest"     # Git TUI
+delta = "latest"       # Git diff の見やすさ改善
+just = "latest"        # プロジェクトごとの定型コマンド実行
+"cargo:bacon" = "latest"  # Rust の継続的な check / test 実行
+"aqua:nextest-rs/nextest/cargo-nextest" = "latest"  # Rust テスト実行
+uv = "latest"          # Python パッケージ管理
+pnpm = "latest"        # Node パッケージ管理
+
+# --- 5. Network / Containers / System ---
+xh = "latest"          # HTTP クライアント
 lazydocker = "latest"  # Docker TUI
-delta = "latest"       # Git diffを美しく
-bottom = "latest"      # リソース監視 (btm)
-xh = "latest"          # 爆速APIテスト (httpieのRust版)
-uv = "latest"          # 爆速Pythonパッケージ管理
-just = "latest"        # プロジェクトコマンドの整理
-pnpm = "latest"        # Next.js 向けパッケージ管理
-
-# --- 4. ターミナルユーティリティ ---
-helix = "latest"       # ターミナル用爆速エディタ
+bottom = "latest"      # システム監視
 dust = "latest"        # ディレクトリ容量の可視化
-tmux = "latest"        # 画面分割
-"npm:decktape" = "latest"  # スライドPDF化
 
-# --- 5. 4大AIエージェントツール (npm経由) ---
+# --- 6. Terminal Apps ---
+tmux = "latest"        # ターミナル multiplexing
+helix = "latest"       # ターミナルエディタ
+"npm:decktape" = "latest"  # スライドの PDF 化
+
+# --- 7. AI CLI ---
 # 更新が速いツール群。必要に応じて `update-system` で追従する
 "npm:@openai/codex" = "latest"
 "npm:@google/gemini-cli" = "latest"
 "npm:@github/copilot" = "latest"
 
-# --- 6. LSP ---
-"aqua:artempyanykh/marksman" = "latest"
-"cargo:bacon" = "latest"
-"aqua:nextest-rs/nextest/cargo-nextest" = "latest"
-"aqua:tamasfe/taplo" = "latest"
-"npm:markdownlint-cli2" = "latest"
-"npm:prettier" = "latest"
-"npm:pyright" = "latest"
-"go:golang.org/x/tools/gopls" = "latest"
+# --- 8. Formatting / LSP ---
+"npm:prettier" = "latest"  # 汎用 formatter
+"npm:markdownlint-cli2" = "latest"  # Markdown lint
+"aqua:artempyanykh/marksman" = "latest"  # Markdown LSP
+"aqua:tamasfe/taplo" = "latest"  # TOML formatter / LSP
+"npm:pyright" = "latest"  # Python LSP
+"go:golang.org/x/tools/gopls" = "latest"  # Go LSP
 
 [settings]
 # ツールが見つからない時に自動インストールを促す設定

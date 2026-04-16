@@ -149,6 +149,10 @@ require_github_cli_auth
 
 echo "📦 Installing managed tools with mise..."
 export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"
+if ! "$HOME/.local/bin/mise" which rustc >/dev/null 2>&1; then
+    echo "📦 Installing Rust first for cargo-backed mise tools..."
+    "$HOME/.local/bin/mise" install -y rust
+fi
 if ! "$HOME/.local/bin/mise" which node >/dev/null 2>&1; then
     echo "📦 Installing Node.js first for npm-backed mise tools..."
     "$HOME/.local/bin/mise" install -y node

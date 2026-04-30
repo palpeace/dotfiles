@@ -33,7 +33,7 @@ delta = "latest"       # diff の見やすさ改善
 
 # --- 5. Package Managers / Task Runner ---
 uv = "latest"          # Python パッケージ管理
-pnpm = "latest"        # Node パッケージ管理
+"npm:pnpm" = "latest"  # Node パッケージ管理
 just = "latest"        # プロジェクトごとの定型コマンド実行
 
 # --- 6. Test ---

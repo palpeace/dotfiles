@@ -2,7 +2,7 @@
 # No -e: each step catches its own errors and reports failures at the end.
 set -uo pipefail
 
-PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+PATH="$HOME/.opencode/bin:$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
 
 update_failures=()
@@ -58,6 +58,33 @@ if command -v kiro-cli >/dev/null 2>&1; then
     fi
 else
     echo "⏭️  kiro-cli is not installed; skipping Kiro update."
+fi
+
+machine_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/machine.env"
+if [ -f "$machine_config_path" ]; then
+    # shellcheck disable=SC1090
+    . "$machine_config_path"
+fi
+
+if [ "${DOTFILES_OPENCODE:-none}" = "enabled" ] && command -v opencode >/dev/null 2>&1; then
+    echo "🤖 Updating OpenCode..."
+    if ! opencode upgrade; then
+        update_failures+=("opencode upgrade")
+    fi
+fi
+
+if [ "${DOTFILES_PAPERCLIP:-none}" = "enabled" ] && command -v paperclipai >/dev/null 2>&1; then
+    echo "🤖 Updating Paperclip AI..."
+    if ! npm install -g --legacy-peer-deps paperclipai@latest; then
+        update_failures+=("paperclipai update")
+    fi
+fi
+
+if [ "${DOTFILES_HERMES:-none}" = "enabled" ] && command -v hermes >/dev/null 2>&1; then
+    echo "🤖 Updating Hermes Agent..."
+    if ! hermes update; then
+        update_failures+=("hermes update")
+    fi
 fi
 
 if [ ${#update_failures[@]} -gt 0 ]; then

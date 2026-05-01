@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+PATH="$HOME/.opencode/bin:$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
 
 machine_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/machine.env"
@@ -17,6 +17,9 @@ fi
 
 DOTFILES_DOCKER_MODE="${DOTFILES_DOCKER_MODE:-none}"
 DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
+DOTFILES_HERMES="${DOTFILES_HERMES:-none}"
+DOTFILES_PAPERCLIP="${DOTFILES_PAPERCLIP:-none}"
+DOTFILES_OPENCODE="${DOTFILES_OPENCODE:-none}"
 
 case "$DOTFILES_DOCKER_MODE" in
     none)
@@ -31,3 +34,36 @@ case "$DOTFILES_DOCKER_MODE" in
         exit 1
         ;;
 esac
+
+if [ "$DOTFILES_OPENCODE" = "enabled" ]; then
+    if ! command -v opencode >/dev/null 2>&1; then
+        echo "🤖 Installing OpenCode..."
+        curl -fsSL https://opencode.ai/install | bash
+    else
+        echo "✅ OpenCode is already installed."
+    fi
+else
+    echo "⏭️  OpenCode not selected for this machine."
+fi
+
+if [ "$DOTFILES_PAPERCLIP" = "enabled" ]; then
+    if ! command -v paperclipai >/dev/null 2>&1; then
+        echo "🤖 Installing Paperclip AI..."
+        npm install -g --legacy-peer-deps paperclipai
+    else
+        echo "✅ Paperclip AI is already installed."
+    fi
+else
+    echo "⏭️  Paperclip AI not selected for this machine."
+fi
+
+if [ "$DOTFILES_HERMES" = "enabled" ]; then
+    if ! command -v hermes >/dev/null 2>&1; then
+        echo "🤖 Installing Hermes Agent..."
+        curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+    else
+        echo "✅ Hermes Agent is already installed."
+    fi
+else
+    echo "⏭️  Hermes Agent not selected for this machine."
+fi

@@ -30,6 +30,7 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 - `setup-system` で OS 依存と `mise` 管理ツールを導入
 
 Docker / GPU が必要なマシンでは、`bootstrap` の後に `configure-machine` と `setup-optional` を実行します。
+Hermes Agent や Paperclip AI などオプションの AI エージェントも同じ流れで導入します。
 
 ## 🔒 Identity and GitHub Auth
 
@@ -53,6 +54,7 @@ GitHub の Git 通信は HTTPS + GitHub CLI 認証前提です。`setup-system` 
 | Category | Tools |
 | :--- | :--- |
 | **AI Agents** | Claude Code, Copilot, Gemini CLI, Kiro |
+| **AI Agents (optional)** | Hermes Agent, OpenCode, Paperclip AI |
 | **Editor** | Helix (hx) |
 | **CLI Essentials** | fzf, ripgrep (rg), fd, eza, bat, zoxide (z) |
 | **Modern Ops** | lazygit (lg), bottom (btm), xh, jq, dust, tmux |
@@ -201,6 +203,9 @@ setup-optional
 ```sh
 DOTFILES_DOCKER_MODE=none   # または engine
 DOTFILES_DOCKER_GPU=none    # または nvidia
+DOTFILES_HERMES=none        # または enabled
+DOTFILES_PAPERCLIP=none     # または enabled
+DOTFILES_OPENCODE=none      # または enabled
 ```
 
 Windows 11 + WSL2 + Ubuntu 24.04 + NVIDIA で Docker GPU を使うマシンでは次を指定します。

@@ -1,3 +1,4 @@
 abbr "rm"="trash"
 abbr "man"="tldr"
 abbr "pclip"="paperclipai"
+abbr "ghs"="gh auth switch"

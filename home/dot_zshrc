@@ -15,6 +15,7 @@ HISTSIZE=10000
 SAVEHIST=10000
 export PATH="$HOME/.local/bin:$PATH"
 typeset -U path PATH
+export TICKTICK_STATE_DIR="$HOME/.local/share/ticktick-cli"
 export LESS='-FRX'
 export EDITOR='hx'
 export BAT_THEME='ansi'
@@ -25,7 +26,9 @@ eval "$(~/.local/bin/mise activate zsh)"
 eval "$(sheldon source)"
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-source <(fzf --zsh)
+if [[ -o interactive && -t 0 && -t 1 ]]; then
+  source <(fzf --zsh)
+fi
 eval "$(atuin init zsh)"
 
 # compinit はツール初期化後に実行（zoxide/atuin の補完を拾うため）

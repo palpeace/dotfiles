@@ -63,8 +63,8 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 
 ### エラーハンドリング
 
-- `setup-system`: ランタイム (rust, node, go, python) のインストール失敗は致命的なので即停止する。残りのツール (mise install, Claude Code, Kiro CLI) は失敗を記録して続行し、最後にまとめて報告する。
-- `update-system`: `set -e` を使わない。各ステップ (apt, rustup, mise upgrade, sheldon, claude, kiro) を個別にエラーハンドリングし、失敗しても次へ進む。最後に失敗一覧を報告する。
+- `setup-system`: ランタイム (rust, node, go, python) のインストール失敗は致命的なので即停止する。残りのツール (mise install, Claude Code, Kiro CLI, Antigravity CLI) は失敗を記録して続行し、最後にまとめて報告する。
+- `update-system`: `set -e` を使わない。各ステップ (apt, rustup, mise upgrade, sheldon, claude, kiro, agy) を個別にエラーハンドリングし、失敗しても次へ進む。最後に失敗一覧を報告する。
 - `bootstrap.sh`: `setup-system` が失敗した場合、dotfiles は配置済みであることを伝え、`setup-system` の再実行を案内する。
 
 ### mise のインストール順序

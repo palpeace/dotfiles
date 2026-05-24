@@ -172,6 +172,13 @@ if ! command -v kiro-cli >/dev/null 2>&1; then
     fi
 fi
 
+if ! command -v agy >/dev/null 2>&1; then
+    echo "🤖 Installing Antigravity CLI..."
+    if ! curl -fsSL https://antigravity.google/cli/install.sh | bash; then
+        setup_failures+=("Antigravity CLI")
+    fi
+fi
+
 if [ ${#setup_failures[@]} -gt 0 ]; then
     echo "" >&2
     echo "⚠️  setup-system completed with errors:" >&2

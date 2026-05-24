@@ -12,7 +12,7 @@ Modern, minimal, and AI-native development environment optimized for WSL2.
 - **Tool Management**: [mise](https://mise.jdx.dev/) - 言語・CLIツールのバージョン管理
 - **Shell**: [Zsh](https://www.zsh.org/) + [Sheldon](https://sheldon.cli.rs/) (Plugin Manager)
 - **Prompt**: [Starship](https://starship.rs/) - 2行構成 & 視認性重視の独自スタイル
-- **AI Native**: Claude Code, GitHub Copilot, Gemini CLI, Kiro (Amazon Q) をプリインストール
+- **AI Native**: Claude Code, GitHub Copilot, Antigravity CLI, Kiro (Amazon Q) をプリインストール
 
 ## 📦 Quick Start (Restore)
 
@@ -53,7 +53,7 @@ GitHub の Git 通信は HTTPS + GitHub CLI 認証前提です。`setup-system` 
 
 | Category | Tools |
 | :--- | :--- |
-| **AI Agents** | Claude Code, Copilot, Gemini CLI, Kiro |
+| **AI Agents** | Claude Code, Copilot, Antigravity CLI, Kiro |
 | **AI Agents (optional)** | Hermes Agent, OpenCode, Paperclip AI |
 | **Editor** | Helix (hx) |
 | **CLI Essentials** | fzf, ripgrep (rg), fd, eza, bat, zoxide (z) |

@@ -53,7 +53,6 @@ helix = "latest"       # ターミナルエディタ
 # --- 9. AI CLI ---
 # 更新が速いツール群。必要に応じて update-system で追従する。
 "npm:@openai/codex" = "latest"
-"npm:@google/gemini-cli" = "latest"
 "npm:@github/copilot" = "latest"
 
 # --- 10. Formatting ---

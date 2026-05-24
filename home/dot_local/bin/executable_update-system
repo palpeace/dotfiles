@@ -50,7 +50,6 @@ if command -v claude >/dev/null 2>&1; then
 else
     echo "⏭️  claude is not installed; skipping Claude Code update."
 fi
-
 if command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Updating Kiro CLI..."
     if ! kiro-cli update; then
@@ -58,6 +57,15 @@ if command -v kiro-cli >/dev/null 2>&1; then
     fi
 else
     echo "⏭️  kiro-cli is not installed; skipping Kiro update."
+fi
+
+if command -v agy >/dev/null 2>&1; then
+    echo "🤖 Updating Antigravity CLI..."
+    if ! agy upgrade; then
+        update_failures+=("agy upgrade")
+    fi
+else
+    echo "⏭️  agy is not installed; skipping Antigravity update."
 fi
 
 machine_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/machine.env"

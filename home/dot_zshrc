@@ -25,7 +25,6 @@ export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=i
 eval "$(~/.local/bin/mise activate zsh)"
 eval "$(sheldon source)"
 eval "$(starship init zsh)"
-eval "$(zoxide init zsh)"
 if [[ -o interactive && -t 0 && -t 1 ]]; then
   source <(fzf --zsh)
 fi
@@ -251,3 +250,6 @@ alias ze="zed ."
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh
+
+# zoxide は chpwd フックを最後に登録する必要があるため、設定ファイルの末尾で初期化する。
+eval "$(zoxide init zsh)"

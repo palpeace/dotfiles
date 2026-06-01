@@ -15,3 +15,6 @@ LICENSE
 # スクリプトディレクトリ自体は展開不要
 # (chezmoiは .chezmoiscripts 内のファイルを自動で実行しますが、ファイルとしてコピーはしません)
 .chezmoiscripts/
+
+# ローカル秘密 (トークン等)。git/chezmoi に絶対取り込まない。
+.config/zsh/secrets.zsh

@@ -249,3 +249,5 @@ alias ah="z ~/.local/share/agents-home"
 alias r2="z ~/self/r2"
 alias ze="zed ."
 
+# ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
+[[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh

@@ -54,6 +54,7 @@ helix = "latest"       # ターミナルエディタ
 # 更新が速いツール群。必要に応じて update-system で追従する。
 "npm:@openai/codex" = "latest"
 "npm:@github/copilot" = "latest"
+"github:gastownhall/beads" = "latest"  # Beads bd CLI
 
 # --- 10. Formatting ---
 "npm:prettier" = "latest"  # 汎用 formatter

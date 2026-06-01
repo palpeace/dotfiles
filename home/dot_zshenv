@@ -1,0 +1,4 @@
+
+# mise shims on PATH for non-interactive/login shells (Orca-WSL, IDE-spawned shells)
+# .zshenv is sourced by ALL zsh invocations, unlike .zshrc — keeps mise tools (gh, node, ...) resolvable.
+export PATH="$HOME/.local/share/mise/shims:$PATH"

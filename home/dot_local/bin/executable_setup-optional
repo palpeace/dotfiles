@@ -20,6 +20,7 @@ DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
 DOTFILES_HERMES="${DOTFILES_HERMES:-none}"
 DOTFILES_PAPERCLIP="${DOTFILES_PAPERCLIP:-none}"
 DOTFILES_OPENCODE="${DOTFILES_OPENCODE:-none}"
+DOTFILES_HEADROOM="${DOTFILES_HEADROOM:-none}"
 
 case "$DOTFILES_DOCKER_MODE" in
     none)
@@ -66,4 +67,16 @@ if [ "$DOTFILES_HERMES" = "enabled" ]; then
     fi
 else
     echo "⏭️  Hermes Agent not selected for this machine."
+fi
+
+if [ "$DOTFILES_HEADROOM" = "enabled" ]; then
+    # venv は PATH に出ないため、バイナリの実体で導入済みを判定。install.sh は chezmoi が配置済み。
+    if [ ! -x "$HOME/.local/headroom-experiment/venv/bin/headroom" ]; then
+        echo "🤖 Installing headroom (Claude Code token proxy)..."
+        "$HOME/.local/headroom-experiment/install.sh"
+    else
+        echo "✅ headroom is already installed."
+    fi
+else
+    echo "⏭️  headroom not selected for this machine."
 fi

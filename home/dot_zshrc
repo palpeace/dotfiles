@@ -247,6 +247,8 @@ alias ld="lazydocker"
 alias ah="z ~/.local/share/agents-home"
 alias r2="z ~/self/r2"
 alias ze="zed ."
+# Claude Code を headroom(token圧縮)proxy 経由で起動。素の claude も残す二択。CLAUDE_HR_MODE=cache で切替
+alias claude-hr="$HOME/.local/headroom-experiment/claude-hr.sh"
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh

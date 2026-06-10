@@ -18,3 +18,9 @@ LICENSE
 
 # ローカル秘密 (トークン等)。git/chezmoi に絶対取り込まない。
 .config/zsh/secrets.zsh
+
+# headroom: venv(再生成可・622MB)・実行時状態(CCR=原文含む機密)・検証データは管理しない。
+# env.sh / claude-hr.sh / install.sh は管理し、venv は install.sh で明示再生成する。
+.local/headroom-experiment/venv
+.local/headroom-experiment/state
+.local/headroom-experiment/trial

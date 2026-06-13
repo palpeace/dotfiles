@@ -21,6 +21,11 @@ base_apt_packages=(
 browser_runtime_apt_packages=(
     libnss3
     libnspr4
+    # Work IQ 認証用。現 pin の 0.2.8 は browser auth → wslview(wslu)で Windows 側ブラウザを開く。
+    wslu
+    # 0.4.x/0.5.x の MSAL/WAM broker に戻したとき用(webkit2gtk が javascriptcoregtk/soup3 を依存で引く)。
+    libwebkit2gtk-4.1-0
+    libsecret-1-0
 )
 
 require_github_cli_auth() {

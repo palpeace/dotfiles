@@ -61,8 +61,8 @@ fi
 
 if command -v agy >/dev/null 2>&1; then
     echo "🤖 Updating Antigravity CLI..."
-    if ! agy upgrade; then
-        update_failures+=("agy upgrade")
+    if ! agy update; then
+        update_failures+=("agy update")
     fi
 else
     echo "⏭️  agy is not installed; skipping Antigravity update."

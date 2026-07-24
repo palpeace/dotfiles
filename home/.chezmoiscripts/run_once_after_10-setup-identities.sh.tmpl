@@ -30,7 +30,11 @@ prompt_value() {
     fi
 
     if [ ! -t 0 ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
-        echo "${default_val:-unknown}"
+        if [ -n "$default_val" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
+            echo "$default_val"
+        else
+            echo ""
+        fi
         return
     fi
 
@@ -63,6 +67,12 @@ if [ -n "$name" ] && [ "$name" != "Your Name" ]; then
 fi
 
 email="$(prompt_value "Git user.email" "${default_email:-your-email@example.com}")"
+
+if [ -z "$name" ] || [ -z "$email" ]; then
+    echo "⚠️  Git user.name または user.email が未決定のため $self_gitconfig_path の自動作成をスキップしました。"
+    echo "💡 必要に応じて 'git config --global user.name ...' 等を設定してください。"
+    exit 0
+fi
 
 cat >"$self_gitconfig_path" <<EOF
 [user]

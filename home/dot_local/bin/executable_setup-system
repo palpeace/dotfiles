@@ -97,7 +97,7 @@ if [ "${USE_JP_MIRROR:-1}" = "1" ]; then
     echo "🌏 Switching apt mirror to Yamagata University (linux.yz.yamagata-u.ac.jp)..."
     for s_file in "/etc/apt/sources.list.d/ubuntu.sources" "/etc/apt/sources.list"; do
         if [ -f "$s_file" ] && [ -w "$s_file" ] || sudo test -w "$s_file" 2>/dev/null; then
-            sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/\?|${jp_mirror}|g; s|http://security.ubuntu.com/ubuntu/\?|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/\?|${jp_mirror}|g" "$s_file" || true
+            sudo sed -E -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://security.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/?|${jp_mirror}|g" "$s_file" || true
         fi
     done
 fi

@@ -1,3 +1,11 @@
+[user]
+{{- if (hasKey . "name") }}
+    name = {{ .name | quote }}
+{{- end }}
+{{- if (hasKey . "email") }}
+    email = {{ .email | quote }}
+{{- end }}
+
 [core]
     editor = hx
     pager = delta
@@ -11,4 +19,5 @@
 
 [include]
     path = ~/.gitconfig.local
+
 

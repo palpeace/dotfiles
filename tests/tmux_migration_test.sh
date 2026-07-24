@@ -39,7 +39,7 @@ assert_not_contains() {
 }
 
 assert_file_exists "home/dot_config/mise/config.toml"
-assert_contains "home/dot_config/mise/config.toml" 'tmux = "latest"'
+assert_contains "home/dot_config/mise/config.toml" 'tmux = "3.7b"'
 assert_not_contains "home/dot_config/mise/config.toml" 'zellij = "latest"'
 
 assert_file_exists "home/dot_tmux.conf"

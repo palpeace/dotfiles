@@ -1,55 +1,54 @@
 [tools]
-# 1. ランタイム（メジャー固定）
+# 1. ランタイム（メジャー/マイナー固定）
 rust = "stable"
 go = "1.24"
 node = "lts"
 python = "3.12"
 
-# 2. Shell / Navigation (latest)
-"aqua:rossmacarthur/sheldon" = "latest"  # Zsh プラグイン管理
-starship = "latest"   # プロンプト
-atuin = "latest"      # シェル履歴の検索と同期
-zoxide = "latest"     # ディレクトリ移動
-fzf = "latest"        # インタラクティブ検索
-"aqua:tldr-pages/tlrc" = "latest"  # tldr 高速参照
+# 2. Shell / Navigation
+"aqua:rossmacarthur/sheldon" = "0.8.5"  # Zsh プラグイン管理
+starship = "1.26.0"   # プロンプト
+atuin = "18.17.1"      # シェル履歴の検索と同期
+zoxide = "0.10.0"     # ディレクトリ移動
+fzf = "0.74.1"        # インタラクティブ検索
+"aqua:tldr-pages/tlrc" = "1.13.1"  # tldr 高速参照
 
-# 3. Core CLI (latest)
-ripgrep = "latest"    # テキスト検索
-"aqua:sharkdp/fd" = "latest"  # ファイル検索
-bat = "latest"        # 構文ハイライト付き pager
-eza = "latest"        # ls 代替
-jq = "latest"         # JSON 処理
-"npm:trash-cli" = "latest"  # ゴミ箱経由削除
+# 3. Core CLI
+ripgrep = "15.2.0"    # テキスト検索
+"aqua:sharkdp/fd" = "10.4.2"  # ファイル検索
+bat = "0.26.1"        # 構文ハイライト付き pager
+eza = "0.23.5"        # ls 代替
+jq = "1.8.2"          # JSON 処理
+"npm:trash-cli" = "7.2.0"  # ゴミ箱経由削除
 
-# 4. Git (latest)
-github-cli = "latest"  # GitHub CLI (gh)
-lazygit = "latest"     # Git TUI
-delta = "latest"       # diff 視認性改善
+# 4. Git
+github-cli = "2.96.0"  # GitHub CLI (gh)
+lazygit = "0.63.1"     # Git TUI
+delta = "0.19.2"       # diff 視認性改善
 
 # 5. Package Managers / Task Runner
-uv = "latest"          # Python パッケージ管理
-"npm:pnpm" = "latest"  # Node パッケージ管理
-just = "latest"        # 定型タスクランナー
+uv = "0.11.31"          # Python パッケージ管理
+"npm:pnpm" = "11.16.0"  # Node パッケージ管理
+just = "1.57.0"        # 定型タスクランナー
 
 # 6. Network / Containers / System
-xh = "latest"          # HTTP クライアント
-lazydocker = "latest"  # Docker TUI
-bottom = "latest"      # システム監視
-dust = "latest"        # ディレクトリ容量可視化
-tmux = "latest"        # ターミナル multiplexer
-helix = "latest"       # ターミナルエディタ
+xh = "0.26.1"          # HTTP クライアント
+lazydocker = "0.25.2"  # Docker TUI
+bottom = "0.14.6"      # システム監視
+dust = "1.2.4"         # ディレクトリ容量可視化
+tmux = "3.7b"          # ターミナル multiplexer
+helix = "25.07.1"      # ターミナルエディタ
 
 # 7. AI CLI (mise 管理)
-"npm:@github/copilot" = "latest"
+"npm:@github/copilot" = "1.0.73"
 
 # 8. Formatting / LSP (エディタ連携用)
-"npm:prettier" = "3"   # 汎用 formatter (メジャー固定)
-"npm:markdownlint-cli2" = "latest"  # Markdown lint
-"aqua:tamasfe/taplo" = "latest"  # TOML formatter / LSP
-"aqua:artempyanykh/marksman" = "latest"  # Markdown LSP
-"npm:pyright" = "latest"  # Python LSP
-"go:golang.org/x/tools/gopls" = "latest"  # Go LSP
+"npm:prettier" = "3.9.6"   # 汎用 formatter
+"npm:markdownlint-cli2" = "0.23.1"  # Markdown lint
+"aqua:tamasfe/taplo" = "0.10.0"  # TOML formatter / LSP
+"aqua:artempyanykh/marksman" = "2026-02-08"  # Markdown LSP
+"npm:pyright" = "1.1.411"  # Python LSP
+"github:golang/tools" = "gopls/v0.23.0"  # Go LSP (プリビルトバイナリ)
 
 [settings]
 all_compile = false
-

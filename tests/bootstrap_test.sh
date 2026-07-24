@@ -164,7 +164,18 @@ test_bootstrap_execution() {
     [[ -x "$test_root/home/.local/bin/chezmoi" ]]
 }
 
+test_all_scripts_syntax() {
+    local script
+    while IFS= read -r script; do
+        bash -n "$script" || {
+            printf 'Syntax check failed for: %s\n' "$script" >&2
+            exit 1
+        }
+    done < <(find home/dot_local/bin scripts tests -type f 2>/dev/null)
+}
+
 (test_bootstrap_execution)
+(test_all_scripts_syntax)
 
 printf 'bootstrap tests passed\n'
 

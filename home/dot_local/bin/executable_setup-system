@@ -139,14 +139,9 @@ eval "$("$HOME/.local/bin/mise" activate bash)"
 
 # Remaining tools: report failures but continue so one broken tool doesn't
 # block the entire environment.
-# If signature verification fails (e.g. Rekor key format mismatch in mise),
-# retry once with verification disabled.
 echo "📦 Installing remaining tools..."
 if ! "$HOME/.local/bin/mise" install -y; then
-    echo "⚠️  Retrying with signature verification disabled..." >&2
-    if ! MISE_COSIGN_VERIFY=0 "$HOME/.local/bin/mise" install -y; then
-        setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
-    fi
+    setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
 fi
 
 unset GITHUB_TOKEN

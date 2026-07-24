@@ -22,16 +22,21 @@ export BAT_THEME='ansi'
 export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=inline --preview-window=right:50%:wrap'
 
 # --- 2. ツール起動 ---
-eval "$(~/.local/bin/mise activate zsh)"
+if [ -x "$HOME/.local/bin/mise" ] || command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 if command -v sheldon >/dev/null 2>&1; then
   eval "$(sheldon source 2>/dev/null)"
 fi
-
-eval "$(starship init zsh)"
-if [[ -o interactive && -t 0 && -t 1 ]]; then
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+if [[ -o interactive && -t 0 && -t 1 ]] && command -v fzf >/dev/null 2>&1; then
   source <(fzf --zsh)
 fi
-eval "$(atuin init zsh)"
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh)"
+fi
 
 # compinit はツール初期化後に実行（zoxide/atuin の補完を拾うため）
 autoload -Uz compinit
@@ -94,7 +99,11 @@ is-rust-worktree() {
 }
 
 is-markdown-worktree() {
-  rg --files . 2>/dev/null | rg -q '\.(md|mdx)$'
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git ls-files | rg -q '\.(md|mdx)$'
+  else
+    find . -maxdepth 3 \( -name "*.md" -o -name "*.mdx" \) 2>/dev/null | rg -q .
+  fi
 }
 
 sync-dotfiles() {
@@ -115,127 +124,131 @@ update-all() {
 }
 
 dev() {
-  local root
-  root="$(project-root)"
-  cd "$root" || return 1
+  (
+    local root
+    root="$(project-root)"
+    cd "$root" || exit 1
 
-  if has-just-recipe dev; then
-    just dev
-    return
-  fi
+    if has-just-recipe dev; then
+      just dev
+      exit 0
+    fi
 
-  if is-node-worktree; then
-    if command -v pnpm >/dev/null 2>&1; then
-      if [ -f package.json ] && has-package-script dev; then
-        pnpm dev
+    if is-node-worktree; then
+      if command -v pnpm >/dev/null 2>&1; then
+        if [ -f package.json ] && has-package-script dev; then
+          pnpm dev
+        else
+          echo "Node workspace detected."
+          echo "Use 'pnpm install' if needed, then run the project-specific dev command."
+        fi
       else
-        echo "Node workspace detected."
-        echo "Use 'pnpm install' if needed, then run the project-specific dev command."
+        echo "pnpm is not installed. Run setup-system first." >&2
+        exit 1
       fi
-    else
-      echo "pnpm is not installed. Run setup-system first." >&2
-      return 1
+      exit 0
     fi
-    return
-  fi
 
-  if is-rust-worktree; then
-    if command -v bacon >/dev/null 2>&1; then
-      bacon
-    else
-      cargo run
+    if is-rust-worktree; then
+      if command -v bacon >/dev/null 2>&1; then
+        bacon
+      else
+        cargo run
+      fi
+      exit 0
     fi
-    return
-  fi
 
-  if is-markdown-worktree; then
-    echo "Markdown workspace detected."
-    echo "Use 'check' to run prettier / markdownlint checks."
-    return
-  fi
+    if is-markdown-worktree; then
+      echo "Markdown workspace detected."
+      echo "Use 'check' to run prettier / markdownlint checks."
+      exit 0
+    fi
 
-  echo "No supported project type detected in $root." >&2
-  echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
-  return 1
+    echo "No supported project type detected in $root." >&2
+    echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
+    exit 1
+  )
 }
 
 check() {
-  local root
-  root="$(project-root)"
-  cd "$root" || return 1
+  (
+    local root
+    root="$(project-root)"
+    cd "$root" || exit 1
 
-  if has-just-recipe check; then
-    just check
-    return
-  fi
-
-  if is-rust-worktree; then
-    cargo fmt --check &&
-      cargo clippy --all-targets --all-features -- -D warnings &&
-      { command -v cargo-nextest >/dev/null 2>&1 && cargo nextest run || cargo test; }
-    return
-  fi
-
-  if is-node-worktree; then
-    if ! command -v pnpm >/dev/null 2>&1; then
-      echo "pnpm is not installed. Run setup-system first." >&2
-      return 1
+    if has-just-recipe check; then
+      just check
+      exit 0
     fi
 
-    local ran=0
-
-    if has-package-script lint; then
-      pnpm lint || return 1
-      ran=1
+    if is-rust-worktree; then
+      cargo fmt --check &&
+        cargo clippy --all-targets --all-features -- -D warnings &&
+        { command -v cargo-nextest >/dev/null 2>&1 && cargo nextest run || cargo test; }
+      exit 0
     fi
 
-    if has-package-script typecheck; then
-      pnpm typecheck || return 1
-      ran=1
+    if is-node-worktree; then
+      if ! command -v pnpm >/dev/null 2>&1; then
+        echo "pnpm is not installed. Run setup-system first." >&2
+        exit 1
+      fi
+
+      local ran=0
+
+      if has-package-script lint; then
+        pnpm lint || exit 1
+        ran=1
+      fi
+
+      if has-package-script typecheck; then
+        pnpm typecheck || exit 1
+        ran=1
+      fi
+
+      if has-package-script test; then
+        pnpm test || exit 1
+        ran=1
+      fi
+
+      if command -v prettier >/dev/null 2>&1; then
+        prettier --check . || exit 1
+        ran=1
+      fi
+
+      if [ "$ran" -eq 0 ]; then
+        echo "No supported package.json checks found." >&2
+        exit 1
+      fi
+
+      exit 0
     fi
 
-    if has-package-script test; then
-      pnpm test || return 1
-      ran=1
+    if is-markdown-worktree; then
+      local ran=0
+
+      if command -v prettier >/dev/null 2>&1; then
+        prettier --check . || exit 1
+        ran=1
+      fi
+
+      if command -v markdownlint-cli2 >/dev/null 2>&1; then
+        markdownlint-cli2 "**/*.md" "**/*.mdx" || exit 1
+        ran=1
+      fi
+
+      if [ "$ran" -eq 0 ]; then
+        echo "No Markdown check tools found. Run setup-system first." >&2
+        exit 1
+      fi
+
+      exit 0
     fi
 
-    if command -v prettier >/dev/null 2>&1 && rg --files . 2>/dev/null | rg -q '\.(md|mdx|json|ya?ml|ts|tsx|js|jsx)$'; then
-      prettier --check . || return 1
-      ran=1
-    fi
-
-    if [ "$ran" -eq 0 ]; then
-      echo "No supported package.json checks found." >&2
-      return 1
-    fi
-
-    return
-  fi
-
-  if is-markdown-worktree; then
-    local ran=0
-
-    if command -v prettier >/dev/null 2>&1; then
-      prettier --check . || return 1
-      ran=1
-    fi
-
-    if command -v markdownlint-cli2 >/dev/null 2>&1; then
-      markdownlint-cli2 "**/*.md" "**/*.mdx" || return 1
-      ran=1
-    fi
-
-    if [ "$ran" -eq 0 ]; then
-      echo "No Markdown check tools found. Run setup-system first." >&2
-      return 1
-    fi
-
-    return
-  fi
-
-  echo "No supported project type detected in $root." >&2
-  echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
-  return 1
+    echo "No supported project type detected in $root." >&2
+    echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
+    exit 1
+  )
 }
 
 # --- 6. エイリアス ---
@@ -255,4 +268,6 @@ alias claude-hr="$HOME/.local/headroom-experiment/claude-hr.sh"
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh
 
 # zoxide は chpwd フックを最後に登録する必要があるため、設定ファイルの末尾で初期化する。
-eval "$(zoxide init zsh)"
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi

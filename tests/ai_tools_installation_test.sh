@@ -47,7 +47,8 @@ assert_contains "home/dot_local/bin/executable_setup-system" 'https://antigravit
 assert_contains "home/dot_local/bin/executable_setup-system" 'if ! command -v agy >/dev/null 2>&1; then'
 
 assert_contains "home/dot_local/bin/executable_update-system" 'if command -v agy >/dev/null 2>&1; then'
-assert_contains "home/dot_local/bin/executable_update-system" 'agy upgrade'
+assert_contains "home/dot_local/bin/executable_update-system" 'agy update'
 assert_not_contains "home/dot_local/bin/executable_update-system" 'https://antigravity.google/cli/install.sh'
+
 
 printf 'AI tools installation checks passed\n'

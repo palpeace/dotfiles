@@ -8,11 +8,6 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
     "tab_size": 2,
-    "agent_servers": {
-        "codex-acp": {
-            "type": "registry"
-        }
-    },
     "terminal": {
         "copy_on_select": true,
         "font_family": "PlemolJP Console NF",

@@ -22,12 +22,14 @@ assert_not_contains() {
     fi
 }
 
-assert_contains "home/dot_gitconfig.tmpl" '[includeIf "gitdir:~/work/"]'
-assert_not_contains "home/dot_gitconfig.tmpl" 'git@github-self'
+assert_contains "home/dot_gitconfig.tmpl" 'path = ~/.gitconfig.local'
+assert_not_contains "home/dot_gitconfig.tmpl" '[includeIf "gitdir:~/work/"]'
+
 assert_not_contains "home/dot_gitconfig.tmpl" 'ssh://git@github.com/'
 
-assert_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" 'ensure_git_identity_file'
-assert_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" '入力が読み取れませんでした。対話可能な端末で再実行してください。'
+assert_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" 'prompt_value'
+assert_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" 'self_gitconfig_path'
+
 assert_not_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" 'ssh-keygen'
 
 assert_contains "home/dot_local/bin/executable_setup-system" 'gh auth setup-git'

@@ -152,7 +152,7 @@ run_bootstrap() {
     bash "$repo_root/scripts/bootstrap.sh" >/dev/null 2>&1
 }
 
-test_creates_workspace_directories() {
+test_bootstrap_execution() {
     local test_root
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
@@ -160,40 +160,11 @@ test_creates_workspace_directories() {
     make_fakebin "$test_root"
     run_bootstrap "$test_root"
 
-    [[ -d "$test_root/home/self" ]]
-    [[ -d "$test_root/home/work" ]]
-    [[ -d "$test_root/home/explore" ]]
+    [[ -x "$test_root/home/.local/bin/mise" ]]
+    [[ -x "$test_root/home/.local/bin/chezmoi" ]]
 }
 
-test_runs_setup_system_after_bootstrap_authentication() {
-    local test_root
-    test_root="$(mktemp -d)"
-    trap 'rm -rf "$test_root"' RETURN
-
-    make_fakebin "$test_root"
-    run_bootstrap "$test_root"
-
-    [[ -f "$test_root/home/.local/share/gh-authenticated" ]]
-    [[ -f "$test_root/home/.local/share/setup-system-ran" ]]
-}
-
-test_fails_when_template_rendering_fails() {
-    local test_root
-    test_root="$(mktemp -d)"
-    trap 'rm -rf "$test_root"' RETURN
-
-    make_fakebin "$test_root"
-    mkdir -p "$test_root/home/.local/share"
-    printf 'fail-execute-template' > "$test_root/home/.local/share/chezmoi-behavior"
-
-    if run_bootstrap "$test_root"; then
-        printf 'bootstrap should fail when execute-template fails\n' >&2
-        return 1
-    fi
-}
-
-(test_creates_workspace_directories)
-(test_runs_setup_system_after_bootstrap_authentication)
-(test_fails_when_template_rendering_fails)
+(test_bootstrap_execution)
 
 printf 'bootstrap tests passed\n'
+

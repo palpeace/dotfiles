@@ -1,104 +1,48 @@
 #!/bin/bash
 # =================================================================               
-# bootstrap.sh - The ultimate entry point for my dotfiles
+# bootstrap.sh - The ultimate zero-touch entry point for dotfiles
 # =================================================================
 set -euo pipefail
 
-ensure_github_auth_for_setup() {
-    local gh_bin=""
+CHEZMOI_REPO="${CHEZMOI_REPO:-palpeace}"
+NONINTERACTIVE="${NONINTERACTIVE:-0}"
 
-    gh_bin="$(command -v gh 2>/dev/null || true)"
+echo "⚙️  1. WSLシステム設定と基本ライブラリの事前チェック..."
 
-    if [ -z "$gh_bin" ]; then
-        gh_bin="$("$HOME/.local/bin/mise" which gh 2>/dev/null || true)"
+# 1. WSL /etc/wsl.conf の準備
+if [ -w /etc/wsl.conf ] || command -v sudo >/dev/null 2>&1; then
+    if [ ! -f /etc/wsl.conf ] || ! grep -q "systemd=true" /etc/wsl.conf 2>/dev/null; then
+        echo "🔧 /etc/wsl.conf に systemd 有効化設定を追加中..."
+        sudo bash -c 'cat >> /etc/wsl.conf <<EOF
+[boot]
+systemd=true
+[interop]
+appendWindowsPath=false
+EOF' 2>/dev/null || true
     fi
-
-    if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
-        echo "❌ GitHub CLI binary could not be resolved after installation." >&2
-        exit 1
-    fi
-
-    if "$gh_bin" auth status >/dev/null 2>&1; then
-        return 0
-    fi
-
-    echo "🔐 3. GitHub CLI authentication is required for setup-system."
-    echo "🌐 Starting GitHub login in your browser..."
-    "$gh_bin" auth login --web
-
-    if "$gh_bin" auth status >/dev/null 2>&1; then
-        return 0
-    fi
-
-    echo "❌ GitHub CLI authentication did not complete successfully." >&2
-    exit 1
-}
-
-echo "⚙️  1. 最小限の基盤ツールを準備中..."
-echo "🔐 システムパッケージ（git, curl）をインストールするため、sudo 権限を使用します..."
-
-# Switch to Yamagata University mirror for faster downloads in Japan.
-sources_file="/etc/apt/sources.list.d/ubuntu.sources"
-jp_mirror="http://linux.yz.yamagata-u.ac.jp/ubuntu/"
-if [ -f "$sources_file" ] && ! grep -q "$jp_mirror" "$sources_file"; then
-    echo "🌏 Switching apt mirror to linux.yz.yamagata-u.ac.jp..."
-    sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/|${jp_mirror}|g" "$sources_file"
 fi
 
-sudo apt update && sudo apt install -y git curl
+# 2. パッケージ更新と基本ツールの確保
+echo "📦 パッケージリストを更新し git / curl を確認中..."
+sudo apt update -qq && sudo apt install -y git curl
 
-echo "📦 2. mise と GitHub CLI を導入中..."
-# mise 本体のインストール
-curl https://mise.run | sh
+# 3. mise のセットアップ
+echo "📦 2. mise を導入中..."
+if ! command -v mise >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/mise" ]; then
+    curl -fsSL https://mise.run | sh
+fi
 export PATH="$HOME/.local/bin:$PATH"
 
-# gh を有効化
-"$HOME/.local/bin/mise" use --global github-cli@latest
-
-ensure_github_auth_for_setup
-
-# 🚀 4. chezmoi を起動し、全ての環境を展開します
-echo "🚀 4. Initializing chezmoi..."
-
-# 【重要】まずは chezmoi 本体をダウンロードするだけ（-b で場所を指定）
-echo "📥 Downloading chezmoi binary..."
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-
-# 初期化のみ実行
-"$HOME/.local/bin/chezmoi" init palpeace
-
-echo "📦 Applying configurations..."
-"$HOME/.local/bin/chezmoi" apply
-
-echo "🔐 5. Configuring local Git identities..."
-source_path="$("$HOME/.local/bin/chezmoi" source-path)"
-template_path="$source_path/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl"
-
-if [[ ! -f "$template_path" ]]; then
-    printf 'chezmoi template not found under %s\n' "$source_path" >&2
-    exit 1
+# 4. chezmoi のダウンロードと一括反映
+echo "🚀 3. chezmoi の初期化と全設定の一括適用 (chezmoi init --apply)..."
+if ! command -v chezmoi >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/chezmoi" ]; then
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 fi
 
-rendered_script="$(mktemp)"
-trap 'rm -f "$rendered_script"' EXIT
-"$HOME/.local/bin/chezmoi" execute-template < "$template_path" > "$rendered_script"
-bash "$rendered_script"
+"$HOME/.local/bin/chezmoi" init --apply "$CHEZMOI_REPO"
 
-echo "🛠️  6. Installing system dependencies and managed tools..."
-if ! "$HOME/.local/bin/setup-system"; then
-    echo "" >&2
-    echo "⚠️  setup-system did not complete successfully." >&2
-    echo "   chezmoi apply は完了しているので dotfiles は配置済みです。" >&2
-    echo "   以下を実行してリトライしてください:" >&2
-    echo "     ~/.local/bin/setup-system" >&2
-    exit 1
-fi
+echo ""
+echo "✅ スクラップ＆ビルド（環境復元）が完了しました！"
+echo "🪟 Windows 版 Zed の設定を反映する場合は: apply-zed-windows-settings"
+echo "🐳 Docker / GPU を使うマシンでは: configure-machine && setup-optional"
 
-echo "🪟 7. Windows 版 Zed の設定を反映する場合は、必要に応じて次を実行してください:"
-echo "   apply-zed-windows-settings"
-echo "🐳 8. Docker / GPU を使うマシンでは、必要に応じて次を実行してください:"
-echo "   configure-machine"
-echo "   setup-optional"
-
-echo "✅ bootstrap が完了しました。"
-echo "必要なら新しいシェルを開いてください。"

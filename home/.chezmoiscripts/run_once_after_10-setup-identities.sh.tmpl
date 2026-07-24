@@ -1,78 +1,62 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
-if [ "${CHEZMOI_COMMAND:-}" = "apply" ] && [ -n "${CHEZMOI_SOURCE_DIR:-}" ]; then
-    echo "⏭️  Local identity bootstrap is manual-only; skipping during chezmoi apply."
+self_gitconfig_path="$HOME/.gitconfig.local"
+
+if [ -e "$self_gitconfig_path" ]; then
+    echo "⏭️  $self_gitconfig_path は既に存在するためスキップします。"
     exit 0
 fi
 
-echo "🛠️  個人ワークスペースとGit identityの初期設定を開始します..."
+echo "🛠️  Git Identity (~/.gitconfig.local) の初期設定を開始します..."
 
 strip_escape_sequences() {
     sed 's/\x1b\[[0-9;]*[A-Za-z]//g; s/\x1b\][^\x1b]*\x1b\\//g; s/\x1b\].*\x07//g'
 }
 
-prompt_nonempty() {
+prompt_value() {
     local prompt="$1"
+    local default_val="$2"
     local value=""
 
+    if [ -n "${GIT_AUTHOR_NAME:-}" ] && [ "$prompt" = "Git user.name" ]; then
+        echo "$GIT_AUTHOR_NAME"
+        return
+    fi
+
+    if [ -n "${GIT_AUTHOR_EMAIL:-}" ] && [ "$prompt" = "Git user.email" ]; then
+        echo "$GIT_AUTHOR_EMAIL"
+        return
+    fi
+
+    if [ ! -t 0 ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
+        echo "${default_val:-unknown}"
+        return
+    fi
+
     while [ -z "$value" ]; do
-        # Drain any pending terminal responses from stdin
-        if read -r -t 0 2>/dev/null; then
-            while read -r -t 0.1 _discard 2>/dev/null; do :; done
-        fi
-        printf "%s: " "$prompt" >&2
+        printf "%s [%s]: " "$prompt" "${default_val:-}" >&2
         if ! IFS= read -r value; then
-            echo "❌ 入力が読み取れませんでした。対話可能な端末で再実行してください。" >&2
-            exit 1
+            value="$default_val"
+            break
         fi
         value="$(printf "%s" "$value" | strip_escape_sequences)"
+        if [ -z "$value" ]; then
+            value="$default_val"
+        fi
     done
 
     printf "%s" "$value"
 }
 
-ensure_directory() {
-    local dir="$1"
+name="$(prompt_value "Git user.name" "${USER:-palpeace}")"
+email="$(prompt_value "Git user.email" "${USER:-palpeace}@users.noreply.github.com")"
 
-    if [ -d "$dir" ]; then
-        echo "⏭️  $dir は既に存在するためスキップします。"
-        return
-    fi
-
-    mkdir -p "$dir"
-    echo "✅ $dir を作成しました。"
-}
-
-ensure_git_identity_file() {
-    local path="$1"
-    local label="$2"
-    local name=""
-    local email=""
-
-    if [ -e "$path" ]; then
-        echo "⏭️  $path は既に存在するためスキップします。"
-        return
-    fi
-
-    name="$(prompt_nonempty "$label user.name")"
-    email="$(prompt_nonempty "$label user.email")"
-
-    cat >"$path" <<EOF
+cat >"$self_gitconfig_path" <<EOF
 [user]
     name = $name
     email = $email
 EOF
 
-    echo "✅ $path を作成しました。"
-}
+echo "✅ $self_gitconfig_path を作成しました ($name <$email>)。"
 
-self_gitconfig_path="$HOME/.gitconfig.local"
-work_gitconfig_path="$HOME/.gitconfig-work.local"
-
-ensure_directory "$HOME/self"
-ensure_directory "$HOME/work"
-ensure_directory "$HOME/explore"
-
-ensure_git_identity_file "$self_gitconfig_path" "Self"
-ensure_git_identity_file "$work_gitconfig_path" "Work"

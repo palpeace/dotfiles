@@ -1,72 +1,55 @@
 [tools]
-# 用途ごとに並べる。取得元 (aqua:/npm:/go:) は実装都合で、並び順の基準にはしない。
-# グローバルに置くのは「どのプロジェクトでも使う or エディタが PATH 参照する」ツールだけ。
-# プロジェクト固有のツール (bacon 等) は各 PJ の mise.toml で管理する。
-
-# --- 1. ランタイム ---
-# npm:/cargo: バックエンドの前提。setup-system で先にインストールされる。
+# 1. ランタイム（メジャー固定）
 rust = "stable"
 go = "1.24"
 node = "lts"
 python = "3.12"
 
-# --- 2. Shell / Navigation ---
+# 2. Shell / Navigation (latest)
 "aqua:rossmacarthur/sheldon" = "latest"  # Zsh プラグイン管理
 starship = "latest"   # プロンプト
 atuin = "latest"      # シェル履歴の検索と同期
 zoxide = "latest"     # ディレクトリ移動
 fzf = "latest"        # インタラクティブ検索
-"aqua:tldr-pages/tlrc" = "latest"  # tldr の高速参照
+"aqua:tldr-pages/tlrc" = "latest"  # tldr 高速参照
 
-# --- 3. Core CLI ---
+# 3. Core CLI (latest)
 ripgrep = "latest"    # テキスト検索
 "aqua:sharkdp/fd" = "latest"  # ファイル検索
 bat = "latest"        # 構文ハイライト付き pager
 eza = "latest"        # ls 代替
 jq = "latest"         # JSON 処理
-"npm:trash-cli" = "latest"  # 削除をゴミ箱経由にする
+"npm:trash-cli" = "latest"  # ゴミ箱経由削除
 
-# --- 4. Git ---
-github-cli = "latest"  # GitHub 操作
+# 4. Git (latest)
+github-cli = "latest"  # GitHub CLI (gh)
 lazygit = "latest"     # Git TUI
-delta = "latest"       # diff の見やすさ改善
+delta = "latest"       # diff 視認性改善
 
-# --- 5. Package Managers / Task Runner ---
+# 5. Package Managers / Task Runner
 uv = "latest"          # Python パッケージ管理
 "npm:pnpm" = "latest"  # Node パッケージ管理
-just = "latest"        # プロジェクトごとの定型コマンド実行
+just = "latest"        # 定型タスクランナー
 
-# --- 6. Test ---
-"aqua:nextest-rs/nextest/cargo-nextest" = "latest"  # Rust テスト実行
-
-# --- 7. Network / Containers / System ---
+# 6. Network / Containers / System
 xh = "latest"          # HTTP クライアント
 lazydocker = "latest"  # Docker TUI
 bottom = "latest"      # システム監視
-dust = "latest"        # ディレクトリ容量の可視化
-
-# --- 8. Terminal Apps ---
-tmux = "latest"        # ターミナル multiplexing
+dust = "latest"        # ディレクトリ容量可視化
+tmux = "latest"        # ターミナル multiplexer
 helix = "latest"       # ターミナルエディタ
-"npm:decktape" = "latest"  # スライドの PDF 化
 
-# --- 9. AI CLI ---
-# 更新が速いツール群。必要に応じて update-system で追従する。
-"npm:@openai/codex" = "latest"
+# 7. AI CLI (mise 管理)
 "npm:@github/copilot" = "latest"
-"npm:@microsoft/workiq" = "0.2.8"  # Work IQ — M365 read/ask。v0.4.x は WAM broker 認証バグ(microsoft/work-iq#123)で 0.2.8 固定。修正されたら latest へ
-"github:gastownhall/beads" = "latest"  # Beads bd CLI
 
-# --- 10. Formatting ---
-"npm:prettier" = "latest"  # 汎用 formatter
+# 8. Formatting / LSP (エディタ連携用)
+"npm:prettier" = "3"   # 汎用 formatter (メジャー固定)
 "npm:markdownlint-cli2" = "latest"  # Markdown lint
 "aqua:tamasfe/taplo" = "latest"  # TOML formatter / LSP
-
-# --- 11. LSP ---
-# Zed リモートが PATH から参照するのでグローバルに置く。
-"aqua:artempyanykh/marksman" = "latest"  # Markdown
-"npm:pyright" = "latest"  # Python
-"go:golang.org/x/tools/gopls" = "latest"  # Go
+"aqua:artempyanykh/marksman" = "latest"  # Markdown LSP
+"npm:pyright" = "latest"  # Python LSP
+"go:golang.org/x/tools/gopls" = "latest"  # Go LSP
 
 [settings]
 all_compile = false
+

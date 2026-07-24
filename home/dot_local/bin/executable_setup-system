@@ -44,35 +44,24 @@ require_github_cli_auth() {
     fi
 
     if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
-        echo "❌ GitHub CLI binary could not be resolved." >&2
-        exit 1
+        echo "⚠️  GitHub CLI binary could not be resolved. Skipping gh auth setup." >&2
+        return 0
     fi
 
-    if ! "$gh_bin" auth status >/dev/null 2>&1; then
-        if [ -t 0 ] && [ -t 1 ]; then
-            echo "🔐 GitHub CLI authentication is required before setup-system." >&2
-            echo "🔐 Starting: gh auth login --web" >&2
-            "$gh_bin" auth login --web
-        else
-            echo "❌ GitHub CLI authentication is required before setup-system." >&2
-            echo "❌ Run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
-            exit 1
-        fi
+    if "$gh_bin" auth status >/dev/null 2>&1; then
+        export GITHUB_TOKEN="$("$gh_bin" auth token 2>/dev/null || echo "")"
+        "$gh_bin" auth setup-git >/dev/null 2>&1 || true
+        return 0
     fi
 
-    if ! "$gh_bin" auth status >/dev/null 2>&1; then
-        echo "❌ GitHub CLI authentication did not complete successfully." >&2
-        echo "❌ Run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
-        exit 1
-    fi
-
-    export GITHUB_TOKEN
-    GITHUB_TOKEN="$("$gh_bin" auth token 2>/dev/null || echo "")"
-
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo "❌ GitHub CLI is authenticated, but no token was returned." >&2
-        echo "❌ Re-run 'gh auth login --web' in an interactive shell, then rerun setup-system." >&2
-        exit 1
+    if [ -t 0 ] && [ -t 1 ] && [ "${NONINTERACTIVE:-0}" != "1" ]; then
+        echo "🔐 GitHub CLI authentication is recommended." >&2
+        echo "🔐 Starting: gh auth login --web (Press Ctrl+C to skip)" >&2
+        "$gh_bin" auth login --web || true
+        "$gh_bin" auth setup-git >/dev/null 2>&1 || true
+    else
+        echo "⚠️  GitHub CLI is not authenticated. Skipping git credential helper setup." >&2
+        echo "💡 Run 'gh auth login --web' after setup if needed." >&2
     fi
 }
 
@@ -102,13 +91,14 @@ else
     echo "⚠️  Could not resolve an ALSA runtime package (tried libasound2t64, libasound2)." >&2
 fi
 
-# Switch to Yamagata University mirror for faster downloads in Japan.
+# Switch to Japanese mirror if running in Ubuntu and sources file is writable
 sources_file="/etc/apt/sources.list.d/ubuntu.sources"
 jp_mirror="http://linux.yz.yamagata-u.ac.jp/ubuntu/"
-if [ -f "$sources_file" ] && ! grep -q "$jp_mirror" "$sources_file"; then
+if [ "${USE_JP_MIRROR:-0}" = "1" ] && [ -f "$sources_file" ] && ! grep -q "$jp_mirror" "$sources_file"; then
     echo "🌏 Switching apt mirror to linux.yz.yamagata-u.ac.jp..."
-    sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/|${jp_mirror}|g" "$sources_file"
+    sudo sed -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/|${jp_mirror}|g" "$sources_file" || true
 fi
+
 
 echo "🚀 Installing base system dependencies..."
 sudo apt update

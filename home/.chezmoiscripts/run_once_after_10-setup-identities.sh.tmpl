@@ -39,18 +39,27 @@ prompt_value() {
     fi
 
     while [ -z "$value" ]; do
-        printf "%s [%s]: " "$prompt" "${default_val:-}" >&2
+        if [ -n "${default_val:-}" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
+            printf "%s [%s]: " "$prompt" "$default_val" >&2
+        else
+            printf "%s (必須): " "$prompt" >&2
+        fi
+
         if ! IFS= read -r value; then
-            value="$default_val"
             break
         fi
         value="$(printf "%s" "$value" | strip_escape_sequences)"
+
         if [ -z "$value" ]; then
-            value="$default_val"
+            if [ -n "${default_val:-}" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
+                value="$default_val"
+            else
+                echo "⚠️  空入力は受け付けていません。もう一度入力してください。" >&2
+            fi
         fi
     done
 
-    printf "%s" "$value"
+    printf "%s\n" "$value"
 }
 
 # Determine default user name without hardcoding personal identifiers

@@ -49,8 +49,20 @@ prompt_value() {
     printf "%s" "$value"
 }
 
-name="$(prompt_value "Git user.name" "${USER:-palpeace}")"
-email="$(prompt_value "Git user.email" "${USER:-palpeace}@users.noreply.github.com")"
+# Determine default user name without hardcoding personal identifiers
+default_user="${USER:-}"
+if [ "$default_user" = "root" ] || [ "$default_user" = "nobody" ]; then
+    default_user=""
+fi
+
+name="$(prompt_value "Git user.name" "${default_user:-Your Name}")"
+
+default_email=""
+if [ -n "$name" ] && [ "$name" != "Your Name" ]; then
+    default_email="${name}@users.noreply.github.com"
+fi
+
+email="$(prompt_value "Git user.email" "${default_email:-your-email@example.com}")"
 
 cat >"$self_gitconfig_path" <<EOF
 [user]

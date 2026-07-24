@@ -17,6 +17,7 @@ strip_escape_sequences() {
 prompt_value() {
     local prompt="$1"
     local default_val="$2"
+    local is_email="${3:-0}"
     local value=""
 
     if [ -n "${GIT_AUTHOR_NAME:-}" ] && [ "$prompt" = "Git user.name" ]; then
@@ -29,13 +30,28 @@ prompt_value() {
         return
     fi
 
-    if [ ! -t 0 ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
+    # 端末が無く、NONINTERACTIVE設定時かリダイレクトされている場合のフォールバック
+    if [ ! -t 0 ] && [ ! -c /dev/tty ]; then
         if [ -n "$default_val" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
             echo "$default_val"
         else
             echo ""
         fi
         return
+    fi
+
+    if [ "${NONINTERACTIVE:-0}" = "1" ]; then
+        if [ -n "$default_val" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
+            echo "$default_val"
+        else
+            echo ""
+        fi
+        return
+    fi
+
+    local tty_fd=""
+    if [ ! -t 0 ] && [ -c /dev/tty ]; then
+        tty_fd="/dev/tty"
     fi
 
     while [ -z "$value" ]; do
@@ -45,9 +61,16 @@ prompt_value() {
             printf "%s (必須): " "$prompt" >&2
         fi
 
-        if ! IFS= read -r value; then
-            break
+        if [ -n "$tty_fd" ]; then
+            if ! IFS= read -r value < "$tty_fd"; then
+                break
+            fi
+        else
+            if ! IFS= read -r value; then
+                break
+            fi
         fi
+
         value="$(printf "%s" "$value" | strip_escape_sequences)"
 
         if [ -z "$value" ]; then
@@ -56,10 +79,13 @@ prompt_value() {
             else
                 echo "⚠️  空入力は受け付けていません。もう一度入力してください。" >&2
             fi
+        elif [ "$is_email" = "1" ] && [[ "$value" != *@* ]]; then
+            echo "⚠️  有効なメールアドレス形式ではありません (@ が必要です)。もう一度入力してください。" >&2
+            value=""
         fi
     done
 
-    printf "%s\n" "$value"
+    printf "%s" "$value"
 }
 
 # Determine default user name without hardcoding personal identifiers
@@ -68,14 +94,20 @@ if [ "$default_user" = "root" ] || [ "$default_user" = "nobody" ]; then
     default_user=""
 fi
 
-name="$(prompt_value "Git user.name" "${default_user:-Your Name}")"
+echo ""
+echo "👉 [1/2] 表示名を設定します"
+name="$(prompt_value "Git user.name" "${default_user:-Your Name}" 0)"
 
 default_email=""
 if [ -n "$name" ] && [ "$name" != "Your Name" ]; then
     default_email="${name}@users.noreply.github.com"
 fi
 
-email="$(prompt_value "Git user.email" "${default_email:-your-email@example.com}")"
+echo ""
+echo "👉 [2/2] メールアドレスを設定します"
+email="$(prompt_value "Git user.email" "${default_email:-your-email@example.com}" 1)"
+
+echo ""
 
 if [ -z "$name" ] || [ -z "$email" ]; then
     echo "⚠️  Git user.name または user.email が未決定のため $self_gitconfig_path の自動作成をスキップしました。"
@@ -90,4 +122,3 @@ cat >"$self_gitconfig_path" <<EOF
 EOF
 
 echo "✅ $self_gitconfig_path を作成しました ($name <$email>)。"
-

@@ -50,19 +50,16 @@ require_github_cli_auth() {
 
     if "$gh_bin" auth status >/dev/null 2>&1; then
         export GITHUB_TOKEN="$("$gh_bin" auth token 2>/dev/null || echo "")"
-        "$gh_bin" auth setup-git >/dev/null 2>&1 || true
-        return 0
-    fi
-
-    if [ -t 0 ] && [ -t 1 ] && [ "${NONINTERACTIVE:-0}" != "1" ]; then
+    elif [ -t 0 ] && [ -t 1 ] && [ "${NONINTERACTIVE:-0}" != "1" ]; then
         echo "🔐 GitHub CLI authentication is recommended." >&2
         echo "🔐 Starting: gh auth login --web (Press Ctrl+C to skip)" >&2
         "$gh_bin" auth login --web || true
-        "$gh_bin" auth setup-git >/dev/null 2>&1 || true
     else
         echo "⚠️  GitHub CLI is not authenticated. Skipping git credential helper setup." >&2
         echo "💡 Run 'gh auth login --web' after setup if needed." >&2
     fi
+
+    gh auth setup-git >/dev/null 2>&1 || true
 }
 
 resolve_apt_package() {
@@ -126,8 +123,6 @@ if ! command -v mise >/dev/null 2>&1; then
 fi
 
 require_github_cli_auth
-
-gh auth setup-git >/dev/null 2>&1 || echo "⚠️  Could not configure GitHub CLI as git credential helper." >&2
 
 echo "📦 Installing managed tools with mise..."
 export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:-60}"

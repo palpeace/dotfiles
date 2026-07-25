@@ -27,6 +27,13 @@ base_apt_packages=(
     xz-utils
     bubblewrap
     fonts-noto-color-emoji
+    # Python/Ruby 等ランタイムビルド用の必須ライブラリ
+    zlib1g-dev
+    libbz2-dev
+    libreadline-dev
+    libsqlite3-dev
+    libffi-dev
+    liblzma-dev
 )
 
 # Browser runtimes such as Chromium / Playwright need these shared libraries.
@@ -117,8 +124,9 @@ fi
 
 echo "🚀 Installing base system dependencies..."
 export DEBIAN_FRONTEND=noninteractive
+APT_OPTS=(-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 $SUDO_CMD apt update
-$SUDO_CMD apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
+$SUDO_CMD apt install -y "${APT_OPTS[@]}" "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
 echo "🔤 Rebuilding font cache..."
 fc-cache -fv

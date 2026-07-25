@@ -109,7 +109,7 @@ case "${1:-}" in
     cat > "$source_dir/home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" <<'TEMPLATE'
 #!/usr/bin/env bash
 set -euo pipefail
-mkdir -p "$HOME/self" "$HOME/work" "$HOME/explore"
+mkdir -p "$HOME/src"
 TEMPLATE
     ;;
   apply)

@@ -39,7 +39,7 @@ if ! command -v chezmoi >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/chezmoi" ]; 
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 fi
 
-"$HOME/.local/bin/chezmoi" init --apply "$CHEZMOI_REPO"
+"$HOME/.local/bin/chezmoi" init --apply --force "$CHEZMOI_REPO"
 
 echo ""
 echo "✅ スクラップ＆ビルド（環境復元）が完了しました！"

@@ -87,10 +87,7 @@ fi
 echo "🚀 3. chezmoi の初期化と全設定の一括適用 (chezmoi init --apply)..."
 CHEZMOI_BIN="$(command -v chezmoi 2>/dev/null || echo "$HOME/.local/bin/chezmoi")"
 if [ ! -x "$CHEZMOI_BIN" ]; then
-    tmp_chezmoi="$(mktemp)"
-    curl -fsSL get.chezmoi.io -o "$tmp_chezmoi"
-    BINDIR="$HOME/.local/bin" sh "$tmp_chezmoi"
-    rm -f "$tmp_chezmoi"
+    BINDIR="$HOME/.local/bin" sh -c "$(curl -fsSL get.chezmoi.io)"
     CHEZMOI_BIN="$HOME/.local/bin/chezmoi"
 fi
 

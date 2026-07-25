@@ -4,12 +4,13 @@ set -euo pipefail
 repo_dir="$(chezmoi source-path)/.."
 source_settings_file="${repo_dir}/assets/orca/settings.json"
 source_keymap_file="${repo_dir}/assets/orca/keymap.json"
+source_wslconfig_file="${repo_dir}/assets/wslconfig/.wslconfig"
 
 windows_user="${WINDOWS_USER:-$USER}"
 windows_home="/mnt/c/Users/${windows_user}"
 
-# AppData/Roaming/Orca または AppData/Roaming/Zed を探す
 target_dir="${windows_home}/AppData/Roaming/Orca"
+target_wslconfig="${windows_home}/.wslconfig"
 
 if [ ! -d "$windows_home" ]; then
     echo "Windows home not found: $windows_home" >&2
@@ -22,6 +23,7 @@ if [ ! -f "$source_settings_file" ] || [ ! -f "$source_keymap_file" ]; then
     exit 1
 fi
 
+# 1. Orca Settings & Keymaps 適用
 mkdir -p "$target_dir"
 
 if [ -f "${target_dir}/settings.json" ]; then
@@ -41,3 +43,12 @@ cp "$source_keymap_file" "${target_dir}/keymap.json"
 
 echo "✅ Applied Orca settings to ${target_dir}/settings.json"
 echo "✅ Applied Orca keymap to ${target_dir}/keymap.json"
+
+# 2. WSL2 オートスケール & リソース自動最適化設定 (.wslconfig) 適用
+if [ -f "$source_wslconfig_file" ]; then
+    if [ -f "$target_wslconfig" ]; then
+        cp "$target_wslconfig" "${target_wslconfig}.bak.$(date +%Y%m%d%H%M%S)"
+    fi
+    cp "$source_wslconfig_file" "$target_wslconfig"
+    echo "⚡ Applied WSL2 Auto-Scaling & Resource config to $target_wslconfig"
+fi

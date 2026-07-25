@@ -1,0 +1,21 @@
+# =================================================================
+# WSL2 Auto-Scaling & Resource Optimization for Orca IDE
+# =================================================================
+[wsl2]
+# Orca のマルチエージェント並行処理用リソース上限設定
+memory=16GB
+processors=8
+swap=4GB
+
+# --- AUTO-SCALING & MEMORY RECLAIM ---
+# 1. autoMemoryReclaim: 不要になったキャッシュメモリを Windows ホストへ即座に全自動返却 (オートスケール)
+autoMemoryReclaim=dropcache
+
+# 2. sparseVhd: 仮想ディスク容量を使用量に応じて全自動縮小・オートリサイクル
+sparseVhd=true
+
+# --- NETWORK & SYSTEM AUTO-TUNING ---
+# 3. networkingMode: Windows - WSL 間のネットワーク通信をミラー化し超高速化
+networkingMode=mirrored
+autoProxy=true
+dnsTunneling=true

@@ -221,6 +221,10 @@ if ! "$HOME/.local/bin/mise" install -y; then
     setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
 fi
 
+if command -v rustup >/dev/null 2>&1; then
+    rustup component add rust-analyzer 2>/dev/null || true
+fi
+
 # Do not unset GITHUB_TOKEN if it was passed from the environment for CI purposes.
 # unset GITHUB_TOKEN
 

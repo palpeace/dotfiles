@@ -18,8 +18,8 @@ autoMemoryReclaim=gradual
 sparseVhd=true
 
 # --- NETWORK & SYSTEM AUTO-TUNING ---
-# 3. networkingMode: Windows - WSL 間のネットワーク通信をミラー化し超高速化
-# ⚠️ 敵対的レビュー修正: MirroredモードはVPNやDockerのポートフォワーディングを破壊する致命的リスクがあるため無効化。
+# 3. dnsTunneling & autoProxy: VPNやプロキシ環境下でのDNS切断を防ぎ、安定接続を維持
+dnsTunneling=true
+autoProxy=true
+# ⚠️ Mirroredモードは一部のVPNやDockerポートフォワーディングと干渉する場合があるため安全上コメントアウト
 # networkingMode=mirrored
-# autoProxy=true
-# dnsTunneling=true

@@ -56,9 +56,9 @@ AI が提案・生成したコードの行単位・ハンク単位のステー�
 
 ### ④ WSL2 リソースのオートスケール (Auto-Scaling & Reclaim)
 エージェント並行動作時のリソース圧迫を防止するため、Windows 側 `.wslconfig` を自動構成します。
-- `autoMemoryReclaim=dropcache`: キャッシュメモリを Windows ホストへ即座に全自動返却。
+- `autoMemoryReclaim=gradual`: I/Oスラッシングを防ぎつつキャッシュメモリを全自動返却。
 - `sparseVhd=true`: VHD ディスク領域の自動スケーリング・回収。
-- `networkingMode=mirrored`: 通信オーバーヘッドをゼロに最適化。
+- `dnsTunneling=true` / `autoProxy=true`: VPNや社内ネットワーク環境での接続切断を防止。
 
 ### ⑤ Design Mode 連携 (ブラウザ依存ライブラリの配備)
 Orca ADE 内蔵の内蔵 Chromium プレビュー（Design Mode）や Playwright 動作に必要な Ubuntu ライブラリ（`libnss3`, `libnspr4`, `wslu`, `libwebkit2gtk` 等）が `setup-system` で完備されています。

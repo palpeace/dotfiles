@@ -52,15 +52,15 @@ wait_for_apt() {
 echo "⚙️  1. WSLシステム設定と基本ライブラリの事前チェック..."
 
 # 1. WSL /etc/wsl.conf の準備
-if [ ! -f /etc/wsl.conf ] || ! grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null || ! grep -q "^appendWindowsPath=false" /etc/wsl.conf 2>/dev/null; then
+if [ ! -f /etc/wsl.conf ] || ! grep -E -q "^\s*systemd\s*=\s*true" /etc/wsl.conf 2>/dev/null || ! grep -E -q "^\s*appendWindowsPath\s*=\s*false" /etc/wsl.conf 2>/dev/null; then
     echo "🔧 /etc/wsl.conf の冪等な構成変更を実行中..."
     $SUDO_CMD touch /etc/wsl.conf
     # [boot] ブロックの追加と systemd=true
     $SUDO_CMD bash -c 'grep -q "^\[boot\]" /etc/wsl.conf 2>/dev/null || echo -e "\n[boot]" >> /etc/wsl.conf'
-    $SUDO_CMD bash -c 'if ! grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null; then awk "/^\[boot\]/ && !x {print; print \"systemd=true\"; x=1; next} 1" /etc/wsl.conf > /etc/wsl.conf.tmp && mv /etc/wsl.conf.tmp /etc/wsl.conf; fi'
+    $SUDO_CMD bash -c 'if ! grep -E -q "^\s*systemd\s*=\s*true" /etc/wsl.conf 2>/dev/null; then awk "/^\[boot\]/ && !x {print; print \"systemd=true\"; x=1; next} 1" /etc/wsl.conf > /tmp/wsl.conf.tmp && mv /tmp/wsl.conf.tmp /etc/wsl.conf; fi'
     # [interop] ブロックの追加と appendWindowsPath=false
     $SUDO_CMD bash -c 'grep -q "^\[interop\]" /etc/wsl.conf 2>/dev/null || echo -e "\n[interop]" >> /etc/wsl.conf'
-    $SUDO_CMD bash -c 'if ! grep -q "^appendWindowsPath=false" /etc/wsl.conf 2>/dev/null; then awk "/^\[interop\]/ && !x {print; print \"appendWindowsPath=false\"; x=1; next} 1" /etc/wsl.conf > /etc/wsl.conf.tmp && mv /etc/wsl.conf.tmp /etc/wsl.conf; fi'
+    $SUDO_CMD bash -c 'if ! grep -E -q "^\s*appendWindowsPath\s*=\s*false" /etc/wsl.conf 2>/dev/null; then awk "/^\[interop\]/ && !x {print; print \"appendWindowsPath=false\"; x=1; next} 1" /etc/wsl.conf > /tmp/wsl.conf.tmp && mv /tmp/wsl.conf.tmp /etc/wsl.conf; fi'
 fi
 
 # 2. パッケージ更新と基本ツールの確保

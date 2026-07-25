@@ -2,7 +2,7 @@
   "lsp": {
     "rust-analyzer": {
       "binary": {
-        "path": "{{ .chezmoi.homeDir }}/.cargo/bin/rust-analyzer"
+        "path": "{{ .chezmoi.homeDir }}/.local/share/mise/shims/rust-analyzer"
       }
     },
     "taplo": {
@@ -27,13 +27,13 @@
     }
   },
   "agents": {
-    "claude": {
+    "claude_code": {
       "binary": "{{ .chezmoi.homeDir }}/.local/bin/claude"
     },
-    "agy": {
+    "antigravity_cli": {
       "binary": "{{ .chezmoi.homeDir }}/.local/bin/agy"
     },
-    "kiro": {
+    "kiro_cli": {
       "binary": "{{ .chezmoi.homeDir }}/.local/bin/kiro-cli"
     }
   },

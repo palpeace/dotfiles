@@ -25,7 +25,9 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 wait_for_apt() {
-    while :; do
+    local timeout=60
+    local elapsed=0
+    while [ "$elapsed" -lt "$timeout" ]; do
         local locked=0
         for lock in /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock; do
             if command -v fuser >/dev/null 2>&1; then
@@ -36,10 +38,12 @@ wait_for_apt() {
                 if $SUDO_CMD test -f "$lock" && [ "$($SUDO_CMD stat -c %s "$lock" 2>/dev/null || echo 0)" -gt 0 ]; then locked=1; break; fi
             fi
         done
-        [ "$locked" -eq 0 ] && break
+        [ "$locked" -eq 0 ] && return 0
         echo "⏳ Waiting for apt lock to be released..."
         sleep 5
+        elapsed=$((elapsed + 5))
     done
+    echo "⚠️  Timeout waiting for apt lock. Proceeding anyway..." >&2
 }
 
 update_failures=()

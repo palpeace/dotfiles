@@ -11,7 +11,8 @@
 - Git configuration: `home/dot_gitconfig.tmpl`
 - Tmux configuration: `home/dot_tmux.conf`
 - Prompt and tool configuration: `home/dot_config/starship.toml`, `home/dot_config/mise/config.toml`, `home/dot_config/sheldon/plugins.toml`
-- Editor configuration: `home/dot_config/zed/settings.json.tmpl`
+- Editor configuration: `home/dot_config/orca/settings.json.tmpl`, `home/dot_config/zed/settings.json.tmpl`
+- Windows assets & WSL2 config: `assets/orca/...`, `assets/wslconfig/...`
 - Local helper scripts: `home/dot_local/bin/...`
 - Setup hooks and bootstrap helpers: `home/.chezmoiscripts/...`
 

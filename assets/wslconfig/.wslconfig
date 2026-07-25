@@ -10,10 +10,11 @@
 # swap=4GB
 
 # --- AUTO-SCALING & MEMORY RECLAIM ---
-# 1. autoMemoryReclaim: 不要になったキャッシュメモリを Windows ホストへ即座に全自動返却 (オートスケール)
-autoMemoryReclaim=dropcache
+# 1. autoMemoryReclaim: gradual に設定し、I/O キャッシュの全開放による Disk スラッシングを防ぐ
+autoMemoryReclaim=gradual
 
 # 2. sparseVhd: 仮想ディスク容量を使用量に応じて全自動縮小・オートリサイクル
+# ⚠️ 複数 worktree での並列大容量書き込み時は競合リスクがあるため注視すること
 sparseVhd=true
 
 # --- NETWORK & SYSTEM AUTO-TUNING ---

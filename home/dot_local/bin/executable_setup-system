@@ -5,6 +5,17 @@ trap 'echo "❌ setup-system failed unexpectedly at line $LINENO. (Command: $BAS
 PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
 
+SUDO_CMD=""
+if [ "$(id -u)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then
+        SUDO_CMD="sudo -n"
+        $SUDO_CMD true 2>/dev/null || { echo "❌ ERROR: sudo password required or non-interactive sudo failed in setup-system." >&2; exit 1; }
+    else
+        echo "❌ ERROR: Root access or functional sudo is required." >&2
+        exit 1
+    fi
+fi
+
 base_apt_packages=(
     git
     curl
@@ -64,8 +75,6 @@ require_github_cli_auth() {
         echo "⚠️  GitHub CLI is not authenticated. Skipping git credential helper setup." >&2
         echo "💡 Run 'gh auth login --web' after setup if needed." >&2
     fi
-
-    gh auth setup-git >/dev/null 2>&1 || true
 }
 
 resolve_apt_package() {
@@ -99,8 +108,8 @@ jp_mirror="http://linux.yz.yamagata-u.ac.jp/ubuntu"
 if [ "${USE_JP_MIRROR:-1}" = "1" ]; then
     echo "🌏 Switching apt mirror to Yamagata University (linux.yz.yamagata-u.ac.jp)..."
     for s_file in "/etc/apt/sources.list.d/ubuntu.sources" "/etc/apt/sources.list"; do
-        if [ -f "$s_file" ] && [ -w "$s_file" ] || sudo test -w "$s_file" 2>/dev/null; then
-            sudo sed -E -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://security.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/?|${jp_mirror}|g" "$s_file" || true
+        if [ -f "$s_file" ] && [ -w "$s_file" ] || $SUDO_CMD test -w "$s_file" 2>/dev/null; then
+            $SUDO_CMD sed -E -i "s|http://[a-z.]*archive.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://security.ubuntu.com/ubuntu/?|${jp_mirror}|g; s|http://ftp.jaist.ac.jp/pub/Linux/ubuntu/?|${jp_mirror}|g" "$s_file" || true
         fi
     done
 fi
@@ -108,8 +117,8 @@ fi
 
 echo "🚀 Installing base system dependencies..."
 export DEBIAN_FRONTEND=noninteractive
-sudo apt update
-sudo apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
+$SUDO_CMD apt update
+$SUDO_CMD apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
 echo "🔤 Rebuilding font cache..."
 fc-cache -fv
@@ -121,7 +130,7 @@ fi
 
 if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
     echo "🔧 Switching login shell to zsh..."
-    sudo usermod -s "$(command -v zsh)" "$(whoami)"
+    $SUDO_CMD usermod -s "$(command -v zsh)" "$(whoami)"
 fi
 
 if ! command -v mise >/dev/null 2>&1; then

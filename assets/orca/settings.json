@@ -23,15 +23,15 @@
   "agents": {
     "claude_code": {
       "enabled": true,
-      "path": "~/.local/bin/claude"
+      "path": "wsl.exe --exec ~/.local/bin/claude"
     },
     "antigravity_cli": {
       "enabled": true,
-      "path": "~/.local/bin/agy"
+      "path": "wsl.exe --exec ~/.local/bin/agy"
     },
     "kiro_cli": {
       "enabled": true,
-      "path": "~/.local/bin/kiro-cli"
+      "path": "wsl.exe --exec ~/.local/bin/kiro-cli"
     }
   },
   "terminal": {

@@ -7,7 +7,13 @@ source_keymap_file="${repo_dir}/assets/orca/keymap.json"
 source_wslconfig_file="${repo_dir}/assets/wslconfig/.wslconfig"
 
 windows_user="${WINDOWS_USER:-$USER}"
-windows_home="/mnt/c/Users/${windows_user}"
+# Use cmd.exe to accurately resolve the Windows USERPROFILE path, fallback to naive guess
+win_profile="$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r' || true)"
+if [ -n "$win_profile" ]; then
+    windows_home="$(wslpath "$win_profile")"
+else
+    windows_home="/mnt/c/Users/${windows_user}"
+fi
 
 target_dir="${windows_home}/AppData/Roaming/Orca"
 target_wslconfig="${windows_home}/.wslconfig"

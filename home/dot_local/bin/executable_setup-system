@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'echo "❌ setup-system failed unexpectedly at line $LINENO. (Command: $BASH_COMMAND)" >&2' ERR
 
 PATH="$HOME/.local/bin:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 export PATH
@@ -29,6 +30,11 @@ browser_runtime_apt_packages=(
 )
 
 require_github_cli_auth() {
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+        echo "✅ Using existing GITHUB_TOKEN from environment."
+        return 0
+    fi
+
     local gh_bin=""
 
     gh_bin="$(command -v gh 2>/dev/null || true)"
@@ -101,6 +107,7 @@ fi
 
 
 echo "🚀 Installing base system dependencies..."
+export DEBIAN_FRONTEND=noninteractive
 sudo apt update
 sudo apt install -y "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
@@ -114,7 +121,7 @@ fi
 
 if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
     echo "🔧 Switching login shell to zsh..."
-    sudo chsh -s "$(command -v zsh)" "$(whoami)"
+    sudo usermod -s "$(command -v zsh)" "$(whoami)"
 fi
 
 if ! command -v mise >/dev/null 2>&1; then
@@ -144,7 +151,8 @@ if ! "$HOME/.local/bin/mise" install -y; then
     setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
 fi
 
-unset GITHUB_TOKEN
+# Do not unset GITHUB_TOKEN if it was passed from the environment for CI purposes.
+# unset GITHUB_TOKEN
 
 if ! command -v claude >/dev/null 2>&1; then
     echo "🤖 Installing Claude Code..."

@@ -24,7 +24,8 @@ fi
 
 # 2. パッケージ更新と基本ツールの確保
 echo "📦 パッケージリストを更新し git / curl を確認中..."
-sudo apt update -qq && sudo apt install -y git curl
+export DEBIAN_FRONTEND=noninteractive
+sudo -E apt update -qq && sudo -E apt install -y git curl
 
 # 3. mise のセットアップ
 echo "📦 2. mise を導入中..."

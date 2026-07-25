@@ -3,9 +3,11 @@
 # =================================================================
 [wsl2]
 # Orca のマルチエージェント並行処理用リソース上限設定
-memory=16GB
-processors=8
-swap=4GB
+# ⚠️ 敵対的レビュー修正: メモリのハードコード(16GB)は、ホストPCのスペック次第でWindowsをOOMクラッシュさせるため削除。
+# 指定なしの場合、WSLがホストメモリの50%を自動で動的割り当てします。
+# memory=16GB
+# processors=8
+# swap=4GB
 
 # --- AUTO-SCALING & MEMORY RECLAIM ---
 # 1. autoMemoryReclaim: 不要になったキャッシュメモリを Windows ホストへ即座に全自動返却 (オートスケール)
@@ -16,6 +18,7 @@ sparseVhd=true
 
 # --- NETWORK & SYSTEM AUTO-TUNING ---
 # 3. networkingMode: Windows - WSL 間のネットワーク通信をミラー化し超高速化
-networkingMode=mirrored
-autoProxy=true
-dnsTunneling=true
+# ⚠️ 敵対的レビュー修正: MirroredモードはVPNやDockerのポートフォワーディングを破壊する致命的リスクがあるため無効化。
+# networkingMode=mirrored
+# autoProxy=true
+# dnsTunneling=true

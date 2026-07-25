@@ -28,7 +28,9 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 wait_for_apt() {
-    while :; do
+    local timeout=60
+    local elapsed=0
+    while [ "$elapsed" -lt "$timeout" ]; do
         local locked=0
         for lock in /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock; do
             if command -v fuser >/dev/null 2>&1; then
@@ -36,14 +38,15 @@ wait_for_apt() {
             elif command -v lsof >/dev/null 2>&1; then
                 if $SUDO_CMD lsof "$lock" >/dev/null 2>&1; then locked=1; break; fi
             else
-                # fuserもlsofもない場合はロックファイルを直接検証（不完全だがハングは防げる）
-                if $SUDO_CMD test -f "$lock" && [ "$($SUDO_CMD stat -c %s "$lock" 2>/dev/null || echo 0)" -gt 0 ]; then locked=1; break; fi
+                if pgrep -f "apt|dpkg|unattended-upgr" >/dev/null 2>&1; then locked=1; break; fi
             fi
         done
-        [ "$locked" -eq 0 ] && break
+        [ "$locked" -eq 0 ] && return 0
         echo "⏳ Waiting for apt lock to be released (unattended-upgrades might be running)..."
         sleep 5
+        elapsed=$((elapsed + 5))
     done
+    echo "⚠️  Timeout waiting for apt lock. Proceeding anyway..." >&2
 }
 
 echo "⚙️  1. WSLシステム設定と基本ライブラリの事前チェック..."
@@ -70,24 +73,28 @@ $SUDO_CMD apt update -qq && wait_for_apt && $SUDO_CMD apt install -y "${APT_OPTS
 # 3. mise のセットアップ
 echo "📦 2. mise を導入中..."
 mkdir -p "$HOME/.local/bin"
-if ! command -v mise >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/mise" ]; then
+export PATH="$HOME/.local/bin:$PATH"
+MISE_BIN="$(command -v mise 2>/dev/null || echo "$HOME/.local/bin/mise")"
+if [ ! -x "$MISE_BIN" ]; then
     tmp_mise="$(mktemp)"
     curl -fsSL https://mise.run -o "$tmp_mise"
     sh "$tmp_mise"
     rm -f "$tmp_mise"
+    MISE_BIN="$HOME/.local/bin/mise"
 fi
-export PATH="$HOME/.local/bin:$PATH"
 
 # 4. chezmoi のダウンロードと一括反映
 echo "🚀 3. chezmoi の初期化と全設定の一括適用 (chezmoi init --apply)..."
-if ! command -v chezmoi >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/chezmoi" ]; then
+CHEZMOI_BIN="$(command -v chezmoi 2>/dev/null || echo "$HOME/.local/bin/chezmoi")"
+if [ ! -x "$CHEZMOI_BIN" ]; then
     tmp_chezmoi="$(mktemp)"
     curl -fsSL get.chezmoi.io -o "$tmp_chezmoi"
     sh "$tmp_chezmoi" -- -b "$HOME/.local/bin"
     rm -f "$tmp_chezmoi"
+    CHEZMOI_BIN="$HOME/.local/bin/chezmoi"
 fi
 
-"$HOME/.local/bin/chezmoi" init --apply --force "$CHEZMOI_REPO"
+"$CHEZMOI_BIN" init --apply --force "$CHEZMOI_REPO"
 
 echo ""
 echo "🔬 4. 構築完了後の自動テスト (Smoke Tests) を実行中..."

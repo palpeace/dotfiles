@@ -23,7 +23,7 @@ assert_file_absent() {
 assert_contains() {
     local path="$1"
     local pattern="$2"
-    rg -Fq "$pattern" "$path" || {
+    grep -Fq "$pattern" "$path" || {
         printf 'expected %s to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     }
@@ -32,7 +32,7 @@ assert_contains() {
 assert_not_contains() {
     local path="$1"
     local pattern="$2"
-    ! rg -Fq "$pattern" "$path" || {
+    ! grep -Fq "$pattern" "$path" || {
         printf 'expected %s not to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     }

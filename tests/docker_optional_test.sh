@@ -7,7 +7,7 @@ cd "$repo_root"
 assert_contains() {
     local path="$1"
     local pattern="$2"
-    rg -Fq "$pattern" "$path" || {
+    grep -Fq "$pattern" "$path" || {
         printf 'expected %s to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     }
@@ -16,7 +16,7 @@ assert_contains() {
 assert_not_contains() {
     local path="$1"
     local pattern="$2"
-    ! rg -Fq "$pattern" "$path" || {
+    ! grep -Fq "$pattern" "$path" || {
         printf 'expected %s not to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     }
@@ -35,10 +35,10 @@ test_configure_machine_generates_expected_config() {
     export HOME="$test_root/home"
     mkdir -p "$HOME"
 
-    printf '2\n2\n' | bash home/dot_local/bin/executable_configure-machine >/dev/null
+    printf '2\n2\n1\n' | bash home/dot_local/bin/executable_configure-machine >/dev/null
 
-    rg -Fq 'DOTFILES_DOCKER_MODE=engine' "$HOME/.config/dotfiles/machine.env"
-    rg -Fq 'DOTFILES_DOCKER_GPU=nvidia' "$HOME/.config/dotfiles/machine.env"
+    grep -Fq 'DOTFILES_DOCKER_MODE=engine' "$HOME/.config/dotfiles/machine.env"
+    grep -Fq 'DOTFILES_DOCKER_GPU=nvidia' "$HOME/.config/dotfiles/machine.env"
 }
 
 test_configure_machine_preserves_unrelated_keys() {
@@ -55,11 +55,11 @@ DOTFILES_DOCKER_MODE=none
 DOTFILES_DOCKER_GPU=none
 EOF
 
-    printf '1\n' | bash home/dot_local/bin/executable_configure-machine >/dev/null
+    printf '1\n1\n' | bash home/dot_local/bin/executable_configure-machine >/dev/null
 
-    rg -Fq '# existing comment' "$HOME/.config/dotfiles/machine.env"
-    rg -Fq 'EXTRA_KEY=keep' "$HOME/.config/dotfiles/machine.env"
-    rg -Fq 'DOTFILES_DOCKER_MODE=none' "$HOME/.config/dotfiles/machine.env"
+    grep -Fq '# existing comment' "$HOME/.config/dotfiles/machine.env"
+    grep -Fq 'EXTRA_KEY=keep' "$HOME/.config/dotfiles/machine.env"
+    grep -Fq 'DOTFILES_DOCKER_MODE=none' "$HOME/.config/dotfiles/machine.env"
 }
 
 test_setup_optional_requires_machine_config() {
@@ -96,7 +96,7 @@ EOF
 
     bash home/dot_local/bin/executable_setup-optional >/dev/null
 
-    rg -Fq 'invoked' "$HOME/docker-invoked.txt"
+    grep -Fq 'invoked' "$HOME/docker-invoked.txt"
 }
 
 test_setup_docker_engine_rejects_invalid_gpu_mode_before_install() {
@@ -149,7 +149,7 @@ assert_contains "home/dot_local/bin/executable_setup-optional" '"$HOME/.local/bi
 
 assert_contains "home/dot_local/bin/executable_setup-docker-engine" 'require_wsl2_nvidia_runtime()'
 assert_contains "home/dot_local/bin/executable_setup-docker-engine" '/usr/lib/wsl/lib/nvidia-smi'
-assert_contains "home/dot_local/bin/executable_setup-docker-engine" 'sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin'
+assert_contains "home/dot_local/bin/executable_setup-docker-engine" 'docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin'
 
 assert_contains "home/dot_local/bin/executable_configure-machine" "Docker setup for this machine:"
 assert_contains "home/dot_local/bin/executable_configure-machine" "Enable NVIDIA GPU support"

@@ -7,7 +7,7 @@ cd "$repo_root"
 assert_contains() {
     local path="$1"
     local pattern="$2"
-    rg -Fq "$pattern" "$path" || {
+    grep -Fq "$pattern" "$path" || {
         printf 'expected %s to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     }
@@ -16,7 +16,7 @@ assert_contains() {
 assert_not_contains() {
     local path="$1"
     local pattern="$2"
-    if rg -Fq "$pattern" "$path"; then
+    if grep -Fq "$pattern" "$path"; then
         printf 'did not expect %s to contain: %s\n' "$path" "$pattern" >&2
         exit 1
     fi
@@ -32,7 +32,7 @@ assert_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl
 
 assert_not_contains "home/.chezmoiscripts/run_once_after_10-setup-identities.sh.tmpl" 'ssh-keygen'
 
-assert_contains "home/dot_local/bin/executable_setup-system" 'gh auth setup-git'
+assert_contains "home/dot_local/bin/executable_setup-system" 'require_github_cli_auth'
 assert_not_contains "home/dot_local/bin/executable_setup-system" 'ssh-keyscan'
 
 printf 'git identity bootstrap checks passed\n'

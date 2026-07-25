@@ -11,7 +11,7 @@ prompt_choice() {
     local index=1
     local answer=""
 
-    if [ ! -t 0 ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
+    if [ "${NONINTERACTIVE:-0}" = "1" ]; then
         echo "1"
         return 0
     fi
@@ -43,7 +43,7 @@ headroom_mode="${DOTFILES_HEADROOM:-none}"
 
 mkdir -p "$config_dir"
 
-if [ -t 0 ] && [ "${NONINTERACTIVE:-0}" != "1" ]; then
+if [ "${NONINTERACTIVE:-0}" != "1" ]; then
     echo "🧩 Configuring machine-specific options..."
 
     docker_choice="$(prompt_choice \

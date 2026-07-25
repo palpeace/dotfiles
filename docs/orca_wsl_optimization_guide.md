@@ -1,6 +1,6 @@
-# Orca IDE + WSL2 + chezmoi 完全統合＆オートスケール最適化ガイド
+# Orca ADE (Agent Development Environment) + WSL2 + chezmoi 完全統合ガイド
 
-本ドキュメントは、Windows 上の超高速 GUI IDE **Orca** と WSL2 (Linux) 環境、および `chezmoi` / `mise` で構成された開発環境を密連携させ、**マルチエージェントの自動リソース縮小・オートスケール (Auto-Scaling & Reclaim)** とスクラップ＆ビルド（ゼロからの環境完全復元）を最大限に引き出すための全設計書です。
+本ドキュメントは、AI 時代における最先端 Agent IDE **Orca (Orca ADE)** と WSL2 (Linux) 環境、および `chezmoi` / `mise` で構成された開発環境を密連携させ、**マルチエージェントオーケストレーション・Git Worktree 独立実行・WSL2 オートスケール** までのポテンシャルを 100% 引き出すための全設計書です。
 
 ---
 
@@ -10,12 +10,14 @@
 +-------------------------------------------------------------------+
 |                        Windows 11                                 |
 |  +-------------------------------------------------------------+  |
-|  |                        Orca IDE                             |  |
-|  |  - Multi-Agent Orchestrator (Parallel Worktrees)            |  |
+|  |                    Orca ADE (GUI Host)                      |  |
+|  |  - Multi-Agent Parallel Orchestration                       |  |
+|  |  - Built-in Diff & Merge Engine (Hunk/Line level)           |  |
+|  |  - Design Mode (Embedded Chromium for UI Preview)           |  |
 |  |  - Settings (%APPDATA%\Orca\settings.json)                  |  |
 |  +------------------------------|------------------------------+  |
 |  |  WSL2 Auto-Scaling Engine   | (.wslconfig)                  |  |
-|  |  - autoMemoryReclaim (キャッシュメモリの即時全自動返却)       |  |
+|  |  - autoMemoryReclaim (キャッシュメモリの全自動スケール返却)   |  |
 |  |  - sparseVhd (VHD容量のオートスケーリング自動回収)            |  |
 |  +------------------------------|------------------------------+  |
 +---------------------------------|---------------------------------+
@@ -28,53 +30,48 @@
 |  |   ├── assets/wslconfig/.wslconfig (オートスケール設定)       |  |
 |  |   └── assets/orca/ (Windows用設定)                          |  |
 |  +-------------------------------------------------------------+  |
-|  |  mise Runtime & Tools (~/.local/share/mise/shims)           |  |
-|  |   ├── gopls (Go LSP) / pyright (Python LSP)                 |  |
-|  |   ├── taplo (TOML) / marksman (Markdown)                    |  |
-|  |   └── prettier / markdownlint-cli2                          |  |
+|  |  AI Agents & Tools (~/.local/bin / mise shims)             |  |
+|  |   ├── Claude Code / Antigravity CLI (agy) / Kiro CLI        |  |
+|  |   ├── gopls (Go) / pyright (Python) / rust-analyzer (Rust)   |  |
+|  |   └── taplo (TOML) / marksman (MD) / prettier               |  |
 |  +-------------------------------------------------------------+  |
 +-------------------------------------------------------------------+
 ```
 
 ---
 
-## 2. WSL2 リソースのオートスケール (Auto-Scaling & Reclaim) 設定
+## 2. Orca ADE のポテンシャルを最大限に発揮する 7 大統合ポイント
 
-Orca は複数の AI エージェント（Worktree やサブプロセス）を並列動作させるため、過剰なメモリ・ディスク・プロセスリソースを一時的に消費します。
-本構成では、Windows 側の `.wslconfig` を全自動セットアップし、以下の**オートスケーリング機能**を有効化します。
+### ① マルチAIエージェントの直接連携 (Agents Menu & Launchers)
+Orca ADE から WSL 内にインストールされた AI エージェント（**Claude Code**, **Antigravity CLI (agy)**, **Kiro CLI**, **GitHub Copilot**）をシームレスに直接起動・監視できます。
+- 本 dotfiles の `setup-system` により、これらの CLI ツールが全自動で配備され、Orca の Agents 設定でそのまま認識されます。
 
-### 1. `autoMemoryReclaim=dropcache` (メモリの全自動スケール返却)
-- エージェントのタスク完了後、WSL2 内の未使用キャッシュメモリを **Windows ホストへ自動返却 (Reclaim)** します。
-- メモリ不足による WSL や Windows 全体の低下を完全に回避します。
+### ② Parallel Worktree Management (マルチタスク独立実行)
+Orca ADE は `git worktree` をネイティブ活用し、複数の AI エージェントが異なるブランチ・タスクで同時にコードを生成しても衝突しません。
+- 本 dotfiles では、単一の作業ディレクトリ `~/src` を基点として、Orca が安全に Worktrees を自動生成・管理できるよう統合されています。
 
-### 2. `sparseVhd=true` (仮想ディスク領域のオートスケール縮小)
-- ディスク使用量が減少した際、WSL2 の VHDX ファイルサイズを **全自動で縮小・オートリサイクル** します。
+### ③ Advanced Diff & Merge Engine (AI生成コード視認性)
+AI が提案・生成したコードの行単位・ハンク単位のステージングや三方マージ (3-way merge) 視認性を向上させます。
+- `git_gutter` および `inline_blame` を有効化。
 
-### 3. `networkingMode=mirrored` & `autoProxy=true` (通信オートチューニング)
-- ホストと WSL2 間のネットワーク・ポート通信をミラー化し、通信オーバーヘッドをゼロにします。
+### ④ WSL2 リソースのオートスケール (Auto-Scaling & Reclaim)
+エージェント並行動作時のリソース圧迫を防止するため、Windows 側 `.wslconfig` を自動構成します。
+- `autoMemoryReclaim=dropcache`: キャッシュメモリを Windows ホストへ即座に全自動返却。
+- `sparseVhd=true`: VHD ディスク領域の自動スケーリング・回収。
+- `networkingMode=mirrored`: 通信オーバーヘッドをゼロに最適化。
 
----
+### ⑤ Design Mode 連携 (ブラウザ依存ライブラリの配備)
+Orca ADE 内蔵の内蔵 Chromium プレビュー（Design Mode）や Playwright 動作に必要な Ubuntu ライブラリ（`libnss3`, `libnspr4`, `wslu`, `libwebkit2gtk` 等）が `setup-system` で完備されています。
 
-## 3. Orca のポテンシャルを最大限に発揮する 5 大設定
+### ⑥ LSP / Formatter 完全自動化 (Auto-Format on Save)
+`mise` で導入済みの全 LSP（`gopls`, `pyright`, `taplo`, `marksman`, `prettier`）を Orca が自動使用し、ファイル保存時にリアルタイム静的解析とフォーマットを適用します。
 
-### ① LSP / Formatter の完全統合 (Auto-Format on Save)
-WSL 側に `mise` でインストールした LSP ランタイム（`gopls`, `pyright`, `taplo`, `marksman`, `prettier`）のパスを Orca 設定に登録し、ファイル保存時に自動フォーマットと静的解析を有効化します。
-
-### ② 超高速ターミナル統合 (Integrated Terminal)
-Orca 内の統合ターミナルで `zsh` と `mise` shims を瞬時に読み込ませるため、`~/.zshenv` に以下を定義します。
-```zsh
-export PATH="$HOME/.local/share/mise/shims:$PATH"
-```
-
-### ③ インライン Git 視視性と Gutter 統合
-Orca のインライン Diff や Git Gutter (行単位の変更履歴) を有効にし、即座に `lazygit` や差分確認ができるようにします。
-
-### ④ Inlay Hints (型ヒント・引数名表示)
-Rust, Go, Python, TypeScript 開発時に、変数型や関数引数名をコード上にリアルタイム表示します。
+### ⑦ 統合ターミナル (Integrated Terminal) のシームレス化
+Orca の統合ターミナル起動時に `.zshenv` が読まれ、`~/.local/share/mise/shims` と `$HOME/.local/bin` に即座にパスが通ります。
 
 ---
 
-## 4. Windows ↔ WSL 設定同期コマンド
+## 3. Windows ↔ WSL 設定同期コマンド
 
 `chezmoi` 管理下から Windows 側の Orca 設定および `.wslconfig` を一発適用・バックアップできます。
 
@@ -83,13 +80,13 @@ apply-orca-windows-settings
 ```
 
 **自動反映される項目**:
-- `%APPDATA%\Orca\settings.json` (Orca GUI設定)
+- `%APPDATA%\Orca\settings.json` (Orca GUI / Agents / Git 設定)
 - `%APPDATA%\Orca\keymap.json` (キーバインド設定)
 - `%USERPROFILE%\.wslconfig` (WSL2 オートスケール＆メモリ回収設定)
 
 ---
 
-## 5. スクラップ＆ビルドの手順
+## 4. スクラップ＆ビルドの手順
 
 新しい環境（新規PCやWSLの再構築時）では、以下の 1 コマンドで全環境が復元されます。
 

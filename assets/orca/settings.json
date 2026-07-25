@@ -13,11 +13,35 @@
   "inlay_hints": {
     "enabled": true
   },
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": {
+      "enabled": true
+    },
+    "auto_fetch": true
+  },
+  "agents": {
+    "claude_code": {
+      "enabled": true,
+      "path": "~/.local/bin/claude"
+    },
+    "antigravity_cli": {
+      "enabled": true,
+      "path": "~/.local/bin/agy"
+    },
+    "kiro_cli": {
+      "enabled": true,
+      "path": "~/.local/bin/kiro-cli"
+    }
+  },
   "terminal": {
     "shell": {
       "program": "wsl.exe"
     },
     "font_family": "Fira Code",
-    "font_size": 13
+    "font_size": 13,
+    "env": {
+      "TERM": "xterm-256color"
+    }
   }
 }

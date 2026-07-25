@@ -26,6 +26,17 @@
       }
     }
   },
+  "agents": {
+    "claude": {
+      "binary": "{{ .chezmoi.homeDir }}/.local/bin/claude"
+    },
+    "agy": {
+      "binary": "{{ .chezmoi.homeDir }}/.local/bin/agy"
+    },
+    "kiro": {
+      "binary": "{{ .chezmoi.homeDir }}/.local/bin/kiro-cli"
+    }
+  },
   "languages": {
     "Rust": {
       "format_on_save": "on",

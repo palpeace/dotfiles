@@ -89,7 +89,7 @@ CHEZMOI_BIN="$(command -v chezmoi 2>/dev/null || echo "$HOME/.local/bin/chezmoi"
 if [ ! -x "$CHEZMOI_BIN" ]; then
     tmp_chezmoi="$(mktemp)"
     curl -fsSL get.chezmoi.io -o "$tmp_chezmoi"
-    sh "$tmp_chezmoi" -- -b "$HOME/.local/bin"
+    sh "$tmp_chezmoi" -b "$HOME/.local/bin"
     rm -f "$tmp_chezmoi"
     CHEZMOI_BIN="$HOME/.local/bin/chezmoi"
 fi

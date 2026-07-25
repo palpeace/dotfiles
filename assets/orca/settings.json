@@ -4,6 +4,9 @@
   "buffer_font_size": 14,
   "ui_font_family": "Inter",
   "ui_font_size": 14,
+  "autosave": "on_focus_change",
+  "show_indent_guides": true,
+  "show_whitespaces": "selection",
   "telemetry": {
     "metrics": false,
     "diagnostics": false
@@ -19,6 +22,10 @@
       "enabled": true
     },
     "auto_fetch": true
+  },
+  "project_panel": {
+    "dock": "left",
+    "file_icons": true
   },
   "agents": {
     "claude_code": {

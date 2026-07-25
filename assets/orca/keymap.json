@@ -2,7 +2,10 @@
   {
     "context": "Workspace",
     "bindings": {
-      "ctrl-shift-t": "workspace::NewTerminal"
+      "ctrl-shift-t": "workspace::NewTerminal",
+      "ctrl-alt-a": "workspace::ToggleAgentPanel",
+      "ctrl-shift-m": "workspace::ToggleWorktreeManager",
+      "ctrl-shift-d": "workspace::ToggleDesignMode"
     }
   }
 ]

@@ -62,13 +62,13 @@ prompt_value() {
         fi
 
         if [ -n "$tty_fd" ]; then
-            if ! IFS= read -t 30 -r value < "$tty_fd"; then
-                echo -e "\n⚠️  Timeout or EOF reached while reading input." >&2
+            if ! IFS= read -r value < "$tty_fd"; then
+                echo -e "\n⚠️  EOF reached while reading input." >&2
                 break
             fi
         else
-            if ! IFS= read -t 30 -r value; then
-                echo -e "\n⚠️  Timeout or EOF reached while reading input." >&2
+            if ! IFS= read -r value; then
+                echo -e "\n⚠️  EOF reached while reading input." >&2
                 break
             fi
         fi

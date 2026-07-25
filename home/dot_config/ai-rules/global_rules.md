@@ -25,3 +25,7 @@
 
 ## 5. Web開発・UIデザイン標準 (Web Application Defaults)
 - 新規 Web アプリケーション開発時は Vanilla CSS とモダンなデザインシステム（グラデーション、アニメーション、ダークモード、モダンフォント）を採用し、品質の高い UI を構築すること。
+
+## 6. グローバルスキルの参照指針 (Agentic Skills Usage)
+- 環境共通の拡張スキルは `~/.agents/skills/` 配下に自動配備されています。
+- マルチエージェントオーケストレーション、Computer Use（GUI/画面操作）、および特定の専門的タスクの実行時は、`~/.agents/skills/<skill-name>/SKILL.md` に定義された仕様・スクリプトを参照して実行すること。

@@ -51,4 +51,8 @@ assert_contains "home/dot_local/bin/executable_update-system" 'agy update'
 assert_not_contains "home/dot_local/bin/executable_update-system" 'https://antigravity.google/cli/install.sh'
 
 
+# --- ORCA Agentic Skills Checks ---
+assert_contains "home/dot_local/bin/executable_setup-system" 'npx -y skills add https://github.com/stablyai/orca --skill orchestration computer-use orca-cli --global -y'
+assert_contains "home/dot_local/bin/executable_update-system" 'npx -y skills update -g'
+
 printf 'AI tools installation checks passed\n'

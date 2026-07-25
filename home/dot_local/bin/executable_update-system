@@ -48,6 +48,13 @@ wait_for_apt() {
 
 update_failures=()
 
+if command -v chezmoi >/dev/null 2>&1; then
+    echo "🏠 Applying latest chezmoi dotfiles..."
+    if ! chezmoi apply --force; then
+        update_failures+=("chezmoi apply")
+    fi
+fi
+
 echo "📦 Updating OS packages..."
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
@@ -110,6 +117,13 @@ if command -v agy >/dev/null 2>&1; then
     fi
 else
     echo "⏭️  agy is not installed; skipping Antigravity update."
+fi
+
+if command -v npx >/dev/null 2>&1 || [ -x "$HOME/.local/bin/mise" ]; then
+    echo "🤖 Updating Global Agentic Skills..."
+    if ! npx -y skills update -g; then
+        update_failures+=("global agentic skills update")
+    fi
 fi
 
 

@@ -16,7 +16,13 @@ elif command -v cmd.exe >/dev/null 2>&1; then
 fi
 
 if [ -n "$win_profile" ] && command -v wslpath >/dev/null 2>&1; then
-    windows_home="$(wslpath "$win_profile")"
+    # SYSTEM ユーザー (CIランナー等) での誤爆を防ぐ
+    if [[ "$win_profile" =~ "systemprofile" ]]; then
+        echo "⚠️  Detected SYSTEM profile ($win_profile). Falling back to explicit WINDOWS_USER." >&2
+        windows_home="/mnt/c/Users/${windows_user}"
+    else
+        windows_home="$(wslpath "$win_profile")"
+    fi
 else
     windows_home="/mnt/c/Users/${windows_user}"
 fi

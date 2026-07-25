@@ -39,7 +39,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 - ランタイム (rust, node, go, python): npm:/cargo:/go: バックエンドの前提になる
 - シェル環境に統合されるツール (starship, sheldon, zoxide, fzf, atuin 等)
 - どのディレクトリでも日常的に使う CLI (ripgrep, fd, bat, eza, jq, git 関連)
-- エディタ (Zed リモート) が PATH から直接参照する LSP / formatter (pyright, gopls, taplo, marksman, prettier, markdownlint-cli2)
+- エディタ (Orca / Zed リモート) が PATH から直接参照する LSP / formatter (pyright, gopls, taplo, marksman, prettier, markdownlint-cli2)
 - パッケージマネージャ・タスクランナー (pnpm, uv, just)
 
 ### プロジェクトの mise.toml に置くもの
@@ -51,7 +51,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 ### 判断基準
 
 1. 「どのプロジェクトを開いても動いてほしいか？」→ Yes ならグローバル
-2. 「Zed が PATH から参照するか？」→ Yes ならグローバル (LSP / formatter)
+2. 「Orca / Zed が PATH から参照するか？」→ Yes ならグローバル (LSP / formatter)
 3. 「プリビルトバイナリがあるか？」→ No (cargo build 必須) なら PJ 側を優先し、グローバルには原則置かない
 
 ### ツール選定の注意

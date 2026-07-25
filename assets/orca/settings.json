@@ -1,0 +1,23 @@
+{
+  "theme": "One Dark",
+  "buffer_font_family": "Inter",
+  "buffer_font_size": 14,
+  "ui_font_family": "Inter",
+  "ui_font_size": 14,
+  "telemetry": {
+    "metrics": false,
+    "diagnostics": false
+  },
+  "vim_mode": false,
+  "format_on_save": "on",
+  "inlay_hints": {
+    "enabled": true
+  },
+  "terminal": {
+    "shell": {
+      "program": "wsl.exe"
+    },
+    "font_family": "Fira Code",
+    "font_size": 13
+  }
+}

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(chezmoi source-path)/.."
+target_settings_file="${repo_dir}/assets/orca/settings.json"
+target_keymap_file="${repo_dir}/assets/orca/keymap.json"
+
+windows_user="${WINDOWS_USER:-$USER}"
+windows_home="/mnt/c/Users/${windows_user}"
+source_dir="${windows_home}/AppData/Roaming/Orca"
+
+if [ ! -d "$source_dir" ]; then
+    echo "Orca config directory not found: $source_dir" >&2
+    exit 1
+fi
+
+mkdir -p "${repo_dir}/assets/orca"
+
+if [ -f "${source_dir}/settings.json" ]; then
+    cp "${source_dir}/settings.json" "$target_settings_file"
+    echo "Pulled Orca settings to $target_settings_file"
+fi
+
+if [ -f "${source_dir}/keymap.json" ]; then
+    cp "${source_dir}/keymap.json" "$target_keymap_file"
+    echo "Pulled Orca keymap to $target_keymap_file"
+fi

@@ -31,7 +31,14 @@ prompt_value() {
     fi
 
     # 端末が無く、NONINTERACTIVE設定時かリダイレクトされている場合のフォールバック
-    if [ ! -t 0 ] && [ ! -c /dev/tty ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
+    local can_use_tty=0
+    if [ -t 0 ]; then
+        can_use_tty=1
+    elif [ -c /dev/tty ] && true < /dev/tty 2>/dev/null; then
+        can_use_tty=1
+    fi
+
+    if [ "$can_use_tty" = "0" ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
         if [ -n "$default_val" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
             echo "$default_val"
         else
@@ -41,7 +48,9 @@ prompt_value() {
     fi
 
     local tty_fd=""
-    if [ ! -t 0 ] && [ -c /dev/tty ]; then
+    if [ -t 0 ]; then
+        tty_fd="" # Read directly from stdin
+    else
         tty_fd="/dev/tty"
     fi
 
@@ -53,11 +62,13 @@ prompt_value() {
         fi
 
         if [ -n "$tty_fd" ]; then
-            if ! IFS= read -r value < "$tty_fd"; then
+            if ! IFS= read -t 30 -r value < "$tty_fd"; then
+                echo -e "\n⚠️  Timeout or EOF reached while reading input." >&2
                 break
             fi
         else
-            if ! IFS= read -r value; then
+            if ! IFS= read -t 30 -r value; then
+                echo -e "\n⚠️  Timeout or EOF reached while reading input." >&2
                 break
             fi
         fi
@@ -106,10 +117,14 @@ if [ -z "$name" ] || [ -z "$email" ]; then
     exit 0
 fi
 
+# Cleanse inputs to prevent config injection (remove newlines and EOF markers)
+clean_name="$(printf "%s" "$name" | tr -d '\n\r' | sed 's/EOF//g')"
+clean_email="$(printf "%s" "$email" | tr -d '\n\r' | sed 's/EOF//g')"
+
 cat >"$self_gitconfig_path" <<EOF
 [user]
-    name = $name
-    email = $email
+    name = $clean_name
+    email = $clean_email
 EOF
 
 echo "✅ $self_gitconfig_path を作成しました ($name <$email>)。"

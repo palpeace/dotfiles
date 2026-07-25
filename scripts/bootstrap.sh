@@ -11,31 +11,60 @@ export NONINTERACTIVE="${NONINTERACTIVE:-0}"
 SUDO_CMD=""
 if [ "$(id -u)" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then
-        SUDO_CMD="sudo -n"
-        $SUDO_CMD true 2>/dev/null || { echo "❌ ERROR: sudo password required or non-interactive sudo failed." >&2; exit 1; }
+        if sudo -n true 2>/dev/null; then
+            SUDO_CMD="sudo -n"
+        elif [ "${NONINTERACTIVE:-0}" != "1" ] && [ -t 0 ]; then
+            echo "🔐 sudo requires a password. Please authenticate:" >&2
+            sudo -v
+            SUDO_CMD="sudo"
+        else
+            echo "❌ ERROR: sudo password required but running in non-interactive mode." >&2
+            exit 1
+        fi
     else
         echo "❌ ERROR: Root access or functional sudo is required." >&2
         exit 1
     fi
 fi
 
+wait_for_apt() {
+    while :; do
+        local locked=0
+        for lock in /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock; do
+            if command -v fuser >/dev/null 2>&1; then
+                if $SUDO_CMD fuser "$lock" >/dev/null 2>&1; then locked=1; break; fi
+            elif command -v lsof >/dev/null 2>&1; then
+                if $SUDO_CMD lsof "$lock" >/dev/null 2>&1; then locked=1; break; fi
+            else
+                # fuserもlsofもない場合はロックファイルを直接検証（不完全だがハングは防げる）
+                if $SUDO_CMD test -f "$lock" && [ "$($SUDO_CMD stat -c %s "$lock" 2>/dev/null || echo 0)" -gt 0 ]; then locked=1; break; fi
+            fi
+        done
+        [ "$locked" -eq 0 ] && break
+        echo "⏳ Waiting for apt lock to be released (unattended-upgrades might be running)..."
+        sleep 5
+    done
+}
+
 echo "⚙️  1. WSLシステム設定と基本ライブラリの事前チェック..."
 
 # 1. WSL /etc/wsl.conf の準備
-if [ ! -f /etc/wsl.conf ] || ! grep -q "systemd=true" /etc/wsl.conf 2>/dev/null; then
-    echo "🔧 /etc/wsl.conf に systemd 有効化設定を追加中..."
-    $SUDO_CMD bash -c 'cat >> /etc/wsl.conf <<EOF
-[boot]
-systemd=true
-[interop]
-appendWindowsPath=false
-EOF' 2>/dev/null || true
+if [ ! -f /etc/wsl.conf ] || ! grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null || ! grep -q "^appendWindowsPath=false" /etc/wsl.conf 2>/dev/null; then
+    echo "🔧 /etc/wsl.conf の冪等な構成変更を実行中..."
+    # [boot] ブロックの追加と systemd=true
+    $SUDO_CMD bash -c 'grep -q "^\[boot\]" /etc/wsl.conf 2>/dev/null || echo -e "\n[boot]" >> /etc/wsl.conf'
+    $SUDO_CMD bash -c 'grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null || awk "/^\[boot\]/ && !x {print; print \"systemd=true\"; x=1; next} 1" /etc/wsl.conf > /etc/wsl.conf.tmp && mv /etc/wsl.conf.tmp /etc/wsl.conf'
+    # [interop] ブロックの追加と appendWindowsPath=false
+    $SUDO_CMD bash -c 'grep -q "^\[interop\]" /etc/wsl.conf 2>/dev/null || echo -e "\n[interop]" >> /etc/wsl.conf'
+    $SUDO_CMD bash -c 'grep -q "^appendWindowsPath=false" /etc/wsl.conf 2>/dev/null || awk "/^\[interop\]/ && !x {print; print \"appendWindowsPath=false\"; x=1; next} 1" /etc/wsl.conf > /etc/wsl.conf.tmp && mv /etc/wsl.conf.tmp /etc/wsl.conf'
 fi
 
 # 2. パッケージ更新と基本ツールの確保
 echo "📦 パッケージリストを更新し git / curl を確認中..."
 export DEBIAN_FRONTEND=noninteractive
-$SUDO_CMD -E apt update -qq && $SUDO_CMD -E apt install -y git curl
+APT_OPTS=(-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
+wait_for_apt
+$SUDO_CMD apt update -qq && wait_for_apt && $SUDO_CMD apt install -y "${APT_OPTS[@]}" git curl
 
 # 3. mise のセットアップ
 echo "📦 2. mise を導入中..."

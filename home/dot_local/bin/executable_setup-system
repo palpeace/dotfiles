@@ -8,10 +8,25 @@ export PATH
 SUDO_CMD=""
 if [ "$(id -u)" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then
-        SUDO_CMD="sudo -n"
-        $SUDO_CMD true 2>/dev/null || { echo "❌ ERROR: sudo password required or non-interactive sudo failed in setup-system." >&2; exit 1; }
+        if sudo -n true 2>/dev/null; then
+            SUDO_CMD="sudo -n"
+        elif [ "${NONINTERACTIVE:-0}" != "1" ] && [ -t 0 ]; then
+            echo "🔐 sudo requires a password. Please authenticate:" >&2
+            sudo -v
+            SUDO_CMD="sudo"
+        else
+            echo "❌ ERROR: sudo password required but running in non-interactive mode." >&2
+            exit 1
+        fi
     else
         echo "❌ ERROR: Root access or functional sudo is required." >&2
+        exit 1
+    fi
+else
+    # Prevent direct root execution to avoid $HOME pollution unless SUDO_USER is set
+    if [ -n "${SUDO_USER:-}" ] && [ "$HOME" = "/root" ]; then
+        echo "❌ ERROR: setup-system invoked via sudo without preserving user HOME." >&2
+        echo "💡 Rerun without sudo, or use 'sudo -E -u $SUDO_USER setup-system'." >&2
         exit 1
     fi
 fi
@@ -62,8 +77,8 @@ require_github_cli_auth() {
     fi
 
     if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
-        echo "📦 Installing GitHub CLI with mise..."
-        "$HOME/.local/bin/mise" use --global github-cli@latest
+        echo "📦 Installing GitHub CLI directly without polluting config..."
+        "$HOME/.local/bin/mise" install github-cli
         gh_bin="$("$HOME/.local/bin/mise" which gh 2>/dev/null || true)"
     fi
 
@@ -75,9 +90,8 @@ require_github_cli_auth() {
     if "$gh_bin" auth status >/dev/null 2>&1; then
         export GITHUB_TOKEN="$("$gh_bin" auth token 2>/dev/null || echo "")"
     elif [ -t 0 ] && [ -t 1 ] && [ "${NONINTERACTIVE:-0}" != "1" ]; then
-        echo "🔐 GitHub CLI authentication is recommended." >&2
-        echo "🔐 Starting: gh auth login --web (Press Ctrl+C to skip)" >&2
-        "$gh_bin" auth login --web || true
+        echo "🔐 GitHub CLI authentication is recommended to prevent API rate limits (60/hr) on Aqua." >&2
+        echo "💡 To authenticate, run: gh auth login --web" >&2
     else
         echo "⚠️  GitHub CLI is not authenticated. Skipping git credential helper setup." >&2
         echo "💡 Run 'gh auth login --web' after setup if needed." >&2
@@ -122,10 +136,30 @@ if [ "${USE_JP_MIRROR:-1}" = "1" ]; then
 fi
 
 
+wait_for_apt() {
+    while :; do
+        local locked=0
+        for lock in /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock; do
+            if command -v fuser >/dev/null 2>&1; then
+                if $SUDO_CMD fuser "$lock" >/dev/null 2>&1; then locked=1; break; fi
+            elif command -v lsof >/dev/null 2>&1; then
+                if $SUDO_CMD lsof "$lock" >/dev/null 2>&1; then locked=1; break; fi
+            else
+                if $SUDO_CMD test -f "$lock" && [ "$($SUDO_CMD stat -c %s "$lock" 2>/dev/null || echo 0)" -gt 0 ]; then locked=1; break; fi
+            fi
+        done
+        [ "$locked" -eq 0 ] && break
+        echo "⏳ Waiting for apt lock to be released..."
+        sleep 5
+    done
+}
+
 echo "🚀 Installing base system dependencies..."
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
+wait_for_apt
 $SUDO_CMD apt update
+wait_for_apt
 $SUDO_CMD apt install -y "${APT_OPTS[@]}" "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
 echo "🔤 Rebuilding font cache..."
@@ -136,14 +170,29 @@ if ! fc-list | grep -i "Noto Color Emoji"; then
     echo "⚠️  Noto Color Emoji was not found in fc-list output." >&2
 fi
 
-if [ "${SHELL:-}" != "$(command -v zsh)" ]; then
+zsh_path="$(command -v zsh || true)"
+if [ -n "$zsh_path" ] && [ "${SHELL:-}" != "$zsh_path" ]; then
+    if ! grep -q "^${zsh_path}$" /etc/shells; then
+        echo "🔧 Adding $zsh_path to /etc/shells..."
+        echo "$zsh_path" | $SUDO_CMD tee -a /etc/shells >/dev/null
+    fi
     echo "🔧 Switching login shell to zsh..."
-    $SUDO_CMD usermod -s "$(command -v zsh)" "$(whoami)"
+    $SUDO_CMD usermod -s "$zsh_path" "$(whoami)"
+elif [ -z "$zsh_path" ]; then
+    echo "⚠️ zsh is not found in PATH, skipping login shell switch to prevent account breakage." >&2
 fi
 
 if ! command -v mise >/dev/null 2>&1; then
     echo "📦 Installing mise..."
-    curl https://mise.run | sh
+    tmp_sh="$(mktemp)"
+    if curl -fsSL https://mise.run -o "$tmp_sh"; then
+        sh "$tmp_sh"
+    else
+        echo "❌ ERROR: Failed to download mise installer" >&2
+        rm -f "$tmp_sh"
+        exit 1
+    fi
+    rm -f "$tmp_sh"
 fi
 
 require_github_cli_auth
@@ -173,23 +222,35 @@ fi
 
 if ! command -v claude >/dev/null 2>&1; then
     echo "🤖 Installing Claude Code..."
-    if ! curl -fsSL https://claude.ai/install.sh | bash; then
-        setup_failures+=("Claude Code")
+    tmp_sh="$(mktemp)"
+    if curl -fsSL https://claude.ai/install.sh -o "$tmp_sh"; then
+        bash "$tmp_sh" || setup_failures+=("Claude Code")
+    else
+        setup_failures+=("Claude Code (Download failed)")
     fi
+    rm -f "$tmp_sh"
 fi
 
 if ! command -v kiro-cli >/dev/null 2>&1; then
     echo "🤖 Installing Kiro CLI..."
-    if ! curl -fsSL https://cli.kiro.dev/install | bash; then
-        setup_failures+=("Kiro CLI")
+    tmp_sh="$(mktemp)"
+    if curl -fsSL https://cli.kiro.dev/install -o "$tmp_sh"; then
+        bash "$tmp_sh" || setup_failures+=("Kiro CLI")
+    else
+        setup_failures+=("Kiro CLI (Download failed)")
     fi
+    rm -f "$tmp_sh"
 fi
 
 if ! command -v agy >/dev/null 2>&1; then
     echo "🤖 Installing Antigravity CLI..."
-    if ! curl -fsSL https://antigravity.google/cli/install.sh | bash; then
-        setup_failures+=("Antigravity CLI")
+    tmp_sh="$(mktemp)"
+    if curl -fsSL https://antigravity.google/cli/install.sh -o "$tmp_sh"; then
+        bash "$tmp_sh" || setup_failures+=("Antigravity CLI")
+    else
+        setup_failures+=("Antigravity CLI (Download failed)")
     fi
+    rm -f "$tmp_sh"
 fi
 
 if [ ${#setup_failures[@]} -gt 0 ]; then

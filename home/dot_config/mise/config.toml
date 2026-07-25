@@ -48,7 +48,7 @@ helix = "25.07.1"      # ターミナルエディタ
 "aqua:tamasfe/taplo" = "0.10.0"  # TOML formatter / LSP
 "aqua:artempyanykh/marksman" = "2026-02-08"  # Markdown LSP
 "npm:pyright" = "1.1.411"  # Python LSP
-"github:golang/tools" = "gopls/v0.23.0"  # Go LSP (プリビルトバイナリ)
+"go:golang.org/x/tools/gopls" = "v0.23.0"  # Go LSP (go install)
 
 [settings]
 all_compile = false

@@ -135,4 +135,5 @@ update-system
 
 - Git の個人情報（`user.name`, `user.email`）は管理外の `~/.gitconfig.local` に分離され、chezmoi リポジトリには露出されません。
 - 秘密情報（API キー等）は `~/.config/zsh/secrets.zsh` に分離して管理されます。
+- 全 AI エージェント共通のグローバルエンジニアリング規則は `home/dot_config/ai-rules/global_rules.md` で一元管理され、各ツール（Claude Code, Antigravity CLI, Kiro CLI）へ自動同期されます。
 

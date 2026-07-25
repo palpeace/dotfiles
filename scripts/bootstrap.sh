@@ -60,6 +60,34 @@ fi
 "$HOME/.local/bin/chezmoi" init --apply --force "$CHEZMOI_REPO"
 
 echo ""
-echo "✅ スクラップ＆ビルド（環境復元）が完了しました！"
+echo "🔬 4. 構築完了後の自動テスト (Smoke Tests) を実行中..."
+test_dir="$HOME/.local/share/chezmoi/tests"
+if [ -d "$test_dir" ]; then
+    (
+        cd "$HOME/.local/share/chezmoi"
+        failed_tests=0
+        for test_script in tests/*.sh; do
+            if [ -f "$test_script" ]; then
+                echo "▶️  Running test: $test_script"
+                if ! bash "$test_script"; then
+                    echo "❌ Test failed: $test_script"
+                    failed_tests=$((failed_tests + 1))
+                fi
+            fi
+        done
+        
+        if [ "$failed_tests" -gt 0 ]; then
+            echo "🚨 $failed_tests 個のテストが失敗しました。環境構築は不完全です。" >&2
+            exit 1
+        else
+            echo "✅ すべてのテストがパスしました。環境は完全に健全です。"
+        fi
+    ) || exit 1
+else
+    echo "⚠️ テストディレクトリが見つかりません。テストをスキップします。"
+fi
+
+echo ""
+echo "✅ スクラップ＆ビルド（環境復元）がすべて完了しました！"
 echo "🪟 Windows 版 Orca IDE の設定を反映する場合は: apply-orca-windows-settings"
 echo "🐳 Docker / GPU を使うマシンでは: configure-machine && setup-optional"

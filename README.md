@@ -108,7 +108,7 @@ sync-dotfiles
 | Category | Tools |
 | :--- | :--- |
 | **AI Agents (Core)** | Claude Code (`claude`), Copilot, Antigravity CLI (`agy`), Kiro CLI |
-| **Editor** | Helix (`hx`), Orca ADE / Zed 連携 |
+| **Editor** | Helix (`hx`), Orca ADE (`orca` / `oc`), Zed (`ze`) 連携 |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli, tldr (`tlrc`) |
 | **Modern Ops** | lazygit (`lg`), lazydocker (`ld`), bottom (`btm`), xh, dust, tmux |
 | **Formatters / LSP** | Prettier, Markdownlint, Taplo, Marksman, Pyright, Gopls, rust-analyzer |

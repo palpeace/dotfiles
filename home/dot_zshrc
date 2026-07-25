@@ -261,6 +261,20 @@ alias cd="z"
 alias lg="lazygit"
 alias ld="lazydocker"
 alias ze="zed ."
+orca() {
+  local target="${1:-.}"
+  local win_user="${WINDOWS_USER:-$USER}"
+  local orca_exe="/mnt/c/Users/${win_user}/AppData/Local/Programs/Orca/Orca.exe"
+  if [ -f "$orca_exe" ]; then
+    "$orca_exe" "$(wslpath -w "$target" 2>/dev/null || echo "$target")" &>/dev/null &
+  elif command -v Orca.exe >/dev/null 2>&1; then
+    Orca.exe "$(wslpath -w "$target" 2>/dev/null || echo "$target")" &>/dev/null &
+  else
+    echo "⚠️ Orca.exe was not found at $orca_exe" >&2
+    return 1
+  fi
+}
+alias oc="orca"
 # Claude Code を headroom(token圧縮)proxy 経由で起動。素の claude も残す二択。CLAUDE_HR_MODE=cache で切替
 alias claude-hr="$HOME/.local/headroom-experiment/claude-hr.sh"
 

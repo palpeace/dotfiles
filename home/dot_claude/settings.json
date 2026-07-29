@@ -1,0 +1,9 @@
+{
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "tui": "fullscreen",
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.local/bin/claude-statusline"
+  }
+}

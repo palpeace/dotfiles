@@ -107,7 +107,7 @@ sync-dotfiles
 
 | Category | Tools |
 | :--- | :--- |
-| **AI Agents (Core)** | Claude Code (`claude` / `claude-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
+| **AI Agents (Core)** | Claude Code (`claude` / `cch` / `cch-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
 | **Editor** | Helix (`hx`), Orca ADE (`orca` / `oc`), Zed (`ze`) 連携 |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli, tldr (`tlrc`) |
 | **Modern Ops** | lazygit (`lg`), lazydocker (`ld`), bottom (`btm`), xh, dust, tmux |

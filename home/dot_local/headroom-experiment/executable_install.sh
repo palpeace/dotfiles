@@ -16,4 +16,4 @@ else
 fi
 mkdir -p "$ROOT/state"
 "$ROOT/venv/bin/headroom" --version
-echo "done. add alias (already via chezmoi dot_zshrc): claude-hr"
+echo "done. add alias (already via chezmoi dot_zshrc): cch"

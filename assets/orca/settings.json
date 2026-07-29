@@ -30,7 +30,7 @@
   "agents": {
     "claude_code": {
       "enabled": true,
-      "path": "wsl.exe ~ -e bash -lc claude"
+      "path": "wsl.exe ~ -e bash -lc \"$HOME/.local/headroom-experiment/claude-hr.sh --permission-mode auto\""
     },
     "antigravity_cli": {
       "enabled": true,

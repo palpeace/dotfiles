@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code statusLine。~/.claude/settings.json の statusLine.command から呼ばれる。
-# 表示例: /home/murai/src/trial Opus 5 (1M context) CTX 1% 5H 1% 1W 36%
+# 表示例: /home/murai/src/trial Opus 5 (1M context) CTX 1% 5H 1% (2h30m) 1W 36% (3d4h)
 # CTX/5H/1W は 70%未満=緑 70-89%=黄 90%以上=赤 で警告表示する。
 set -euo pipefail
 
@@ -17,6 +17,8 @@ size=$(jq -r '.context_window.context_window_size // empty' <<<"$input")
 ctx=$(jq -r '.context_window.used_percentage // empty' <<<"$input")
 five_h=$(jq -r '.rate_limits.five_hour.used_percentage // empty' <<<"$input")
 week=$(jq -r '.rate_limits.seven_day.used_percentage // empty' <<<"$input")
+five_h_resets=$(jq -r '.rate_limits.five_hour.resets_at // empty' <<<"$input")
+week_resets=$(jq -r '.rate_limits.seven_day.resets_at // empty' <<<"$input")
 
 fmt_size() {
   local n="$1"
@@ -30,9 +32,27 @@ fmt_size() {
   fi
 }
 
-# 閾値に応じて "ラベル 値%" を色付けする。
+# resets_at (epoch秒) までの残り時間を "Xh Ym" / "Xd Yh" 形式にする。
+fmt_remaining() {
+  local resets_at="$1"
+  [ -z "$resets_at" ] && return
+  local now remaining
+  now=$(date +%s)
+  remaining=$((resets_at - now))
+  [ "$remaining" -le 0 ] && return
+  local days=$((remaining / 86400))
+  local hours=$(((remaining % 86400) / 3600))
+  local mins=$(((remaining % 3600) / 60))
+  if [ "$days" -ge 1 ]; then
+    printf '%dd%dh' "$days" "$hours"
+  else
+    printf '%dh%dm' "$hours" "$mins"
+  fi
+}
+
+# 閾値に応じて "ラベル 値%(残り時間)" を色付けする。
 colorize() {
-  local label="$1" pct_raw="$2"
+  local label="$1" pct_raw="$2" resets_at="${3:-}"
   [ -z "$pct_raw" ] && return
   local pct
   pct=$(printf '%.0f' "$pct_raw")
@@ -42,14 +62,20 @@ colorize() {
   elif [ "$pct" -ge 70 ]; then
     color="$YELLOW"
   fi
-  printf '%b%s %s%%%b' "$color" "$label" "$pct" "$RESET"
+  local remaining
+  remaining=$(fmt_remaining "$resets_at")
+  if [ -n "$remaining" ]; then
+    printf '%b%s %s%% (%s)%b' "$color" "$label" "$pct" "$remaining" "$RESET"
+  else
+    printf '%b%s %s%%%b' "$color" "$label" "$pct" "$RESET"
+  fi
 }
 
 size_fmt=$(fmt_size "$size")
 [ -n "$size_fmt" ] && model="$model ($size_fmt context)"
 
 line="$dir $model"
-for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h")" "$(colorize 1W "$week")"; do
+for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")"; do
   [ -n "$part" ] && line="$line $part"
 done
 

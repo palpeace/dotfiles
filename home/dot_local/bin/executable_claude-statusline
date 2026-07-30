@@ -91,8 +91,9 @@ model_fmt=$(printf '%b%s%b' "$mcolor" "$model" "$RESET")
 
 branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
 
-line="$dir $model_fmt"
+line="$dir"
 [ -n "$branch" ] && line="$line ($branch)"
+line="$line $model_fmt"
 for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")"; do
   [ -n "$part" ] && line="$line $part"
 done

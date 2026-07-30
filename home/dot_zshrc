@@ -37,6 +37,9 @@ fi
 if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh)"
 fi
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
 
 # compinit はツール初期化後に実行（zoxide/atuin の補完を拾うため）
 autoload -Uz compinit

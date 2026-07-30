@@ -7,6 +7,8 @@ set -euo pipefail
 GREEN='\033[32m'
 YELLOW='\033[33m'
 RED='\033[31m'
+BLUE='\033[34m'
+MAGENTA='\033[35m'
 RESET='\033[0m'
 
 input="$(cat)"
@@ -71,10 +73,26 @@ colorize() {
   fi
 }
 
+# モデル名に応じて色を変える。Opus系=赤、Sonnet系=青、それ以外=マゼンタ
+model_color() {
+  local name="$1"
+  case "$name" in
+    *Opus*) printf '%s' "$RED" ;;
+    *Sonnet*) printf '%s' "$BLUE" ;;
+    *) printf '%s' "$MAGENTA" ;;
+  esac
+}
+
 size_fmt=$(fmt_size "$size")
 [ -n "$size_fmt" ] && model="$model ($size_fmt context)"
 
-line="$dir $model"
+mcolor=$(model_color "$model")
+model_fmt=$(printf '%b%s%b' "$mcolor" "$model" "$RESET")
+
+branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
+
+line="$dir $model_fmt"
+[ -n "$branch" ] && line="$line ($branch)"
 for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")"; do
   [ -n "$part" ] && line="$line $part"
 done

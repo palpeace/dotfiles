@@ -4,6 +4,11 @@
 
 Modern, minimal, zero-touch, and AI-native development environment optimized for WSL2.
 
+### 💡 Core Philosophy: "The Human is a Director, not a Coder"
+人間の役割は「コードを書くプログラマ」から、AIへの指示とレビューを行う「企画者・監督者」へシフトしました。
+そのため、LSPや重厚なIDEなど**「人間がコードを書くためのツール」は徹底的に排除（ミニマリズム）**されています。
+一方で、AIの挙動を監視し、緊急時にシステムを操作するための**「ターミナル上での状況認識能力と機動力（Situational Awareness）」は必須**であるため、モダンなCLIツール群（eza, bat, starship, zsh-autosuggestions等）は**「監督者のためのコマンドセンターUX」として積極的に維持**しています。
+
 ---
 
 ## 🛠 Features

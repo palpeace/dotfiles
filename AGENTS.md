@@ -39,6 +39,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 - ランタイム (rust, node, go, python): npm:/cargo:/go: バックエンドの前提になる
 - シェル環境に統合されるツール (starship, sheldon, zoxide, fzf, atuin 等)
 - どのディレクトリでも日常的に使う CLI (ripgrep, fd, bat, eza, jq, git 関連)
+  - *※ 人間はコードを書かない「企画者」ですが、AIエージェントの監督やターミナル操作において「状況認識能力と機動力」は必須です。そのため、ターミナルUXを向上させるこれらのモダンCLI群は「IDE等のプログラミング肥大化ツール」とは明確に区別し、積極的にグローバルに配置します。*
 - AIネイティブ環境でのレビュー・指示用ツール (micro, gitui, oxker, yazi, prettier, markdownlint-cli2)
 - パッケージマネージャ・タスクランナー (pnpm, uv, just)
 

@@ -62,20 +62,7 @@ zstyle ':completion:*' completer _extensions _complete _approximate
 # ↑↓ と Ctrl+R は atuin が自動でバインドする
 bindkey '^F' autosuggest-accept
 
-# fzf --zsh が定義する fzf-cd-widget を fd + eza プレビュー版で上書き
-fzf-cd-widget() {
-  local dir
 
-  dir="$(
-    fd --type d --hidden --follow --exclude .git . "${1:-.}" 2>/dev/null |
-      fzf --height 40% --reverse --prompt='cd > ' --preview 'eza --all --icons --group-directories-first --color=always {}'
-  )" || return
-
-  BUFFER="cd ${dir:q}"
-  zle accept-line
-}
-zle -N fzf-cd-widget
-bindkey '^J' fzf-cd-widget
 
 # --- 5. 開発環境メンテナンス ---
 sync-dotfiles() {

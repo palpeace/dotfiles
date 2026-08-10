@@ -72,6 +72,33 @@ sync-dotfiles
 
 ---
 
+## ⌨️ Command Cheat Sheet (エイリアス・ショートカット)
+
+ターミナルでの機動力と状況認識を高めるため、以下の短いコマンド（エイリアス）が設定されています。
+
+| コマンド | 展開される内容 / 使うツール | 用途・説明 |
+| :--- | :--- | :--- |
+| **ファイル操作・移動** | | |
+| `cd` | `z` (zoxide) | 過去の履歴からよしなにディレクトリを推測して高速ジャンプ |
+| `ls`, `ll`, `la` | `eza --icons` | カラフルなアイコン付きでディレクトリ内容を表示 |
+| `tree` | `eza --tree` | ディレクトリ構造をツリー状に可視化 |
+| `cat` | `bat` | シンタックスハイライト付きでファイルの中身をプレビュー |
+| `rm` | `trash` | 完全に削除せず、システムのゴミ箱に安全に移動 |
+| **司令塔ツール (TUI/エディタ)** | | |
+| `mi` | `micro` | CLI上でサクッとファイルを修正するための超軽量エディタ |
+| `y` | `yazi` | IDEのサイドバー代わりに使う超高速なTUIファイラ |
+| `gu` | `gitui` | Gitの差分確認・コミットを行うTUI（レビューの要） |
+| `ox` | `oxker` | Dockerコンテナの状態確認・管理を行うTUI |
+| **AI エージェント** | | |
+| `agy-a` | `agy --dangerously-skip-permissions` | 権限確認をスキップして Antigravity を全自動起動 |
+| `cch` | `claude` (proxy経由) | Claude Code を起動 |
+| `cch-a-opus` | `cch --permission-mode auto ...` | Claude Code (Opusモデル) を完全自動モードで起動 |
+| `cch-p-opus` | `cch --permission-mode plan ...` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
+| **その他** | | |
+| `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |
+
+---
+
 ## 🎯 ツール管理方針 (グローバル vs プロジェクトローカル)
 
 本環境では、グローバル環境 (`~/.config/mise/config.toml`) とプロジェクトローカル (`mise.toml`) の役割を明確に分類・分離しています。

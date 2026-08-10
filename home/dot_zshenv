@@ -1,4 +1,4 @@
 
-# .zshenv is sourced by ALL zsh invocations (interactive, non-interactive, scripts, Orca IDE remote shells).
+# .zshenv is sourced by ALL zsh invocations (interactive, non-interactive, scripts).
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 typeset -U path PATH

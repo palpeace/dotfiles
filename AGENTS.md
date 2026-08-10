@@ -7,12 +7,11 @@
 
 ## Managed areas
 
-- Shell configuration: `home/dot_zshrc`, `home/dot_config/zsh-abbr/...`
+- Shell configuration: `home/dot_zshrc`
 - Git configuration: `home/dot_gitconfig.tmpl`
-- Tmux configuration: `home/dot_tmux.conf`
 - Prompt and tool configuration: `home/dot_config/starship.toml`, `home/dot_config/mise/config.toml`, `home/dot_config/sheldon/plugins.toml`
-- Editor configuration: `home/dot_config/orca/settings.json.tmpl`, `home/dot_config/zed/settings.json.tmpl`
-- Windows assets & WSL2 config: `assets/orca/...`, `assets/wslconfig/...`
+- Editor configuration: `home/dot_config/micro/settings.json`
+- Windows assets & WSL2 config: `assets/wslconfig/...`
 - Local helper scripts: `home/dot_local/bin/...`
 - Setup hooks and bootstrap helpers: `home/.chezmoiscripts/...`
 
@@ -40,7 +39,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 - ランタイム (rust, node, go, python): npm:/cargo:/go: バックエンドの前提になる
 - シェル環境に統合されるツール (starship, sheldon, zoxide, fzf, atuin 等)
 - どのディレクトリでも日常的に使う CLI (ripgrep, fd, bat, eza, jq, git 関連)
-- エディタ (Orca / Zed リモート) が PATH から直接参照する LSP / formatter (pyright, gopls, taplo, marksman, prettier, markdownlint-cli2)
+- AIネイティブ環境でのレビュー・指示用ツール (micro, gitui, oxker, yazi, prettier, markdownlint-cli2)
 - パッケージマネージャ・タスクランナー (pnpm, uv, just)
 
 ### プロジェクトの mise.toml に置くもの
@@ -52,12 +51,12 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 ### 判断基準
 
 1. 「どのプロジェクトを開いても動いてほしいか？」→ Yes ならグローバル
-2. 「Orca / Zed が PATH から参照するか？」→ Yes ならグローバル (LSP / formatter)
+2. 「AIへの指示（micro）やレビュー（gitui, oxker, yazi）に必要か？」→ Yes ならグローバル
 3. 「プリビルトバイナリがあるか？」→ No (cargo build 必須) なら PJ 側を優先し、グローバルには原則置かない
 
 ### ツール選定の注意
 
-- aqua バックエンドのツールは、対象プラットフォーム向けのプリビルトバイナリが GitHub Releases に存在することを確認してから追加する。リリースからバイナリが消えるケースがある (例: tealdeer)。
+- aqua バックエンドのツールは、対象プラットフォーム向けのプリビルトバイナリが GitHub Releases に存在することを確認してから追加する。リリースからバイナリが消えるケースがあるため注意。
 - `cargo:` バックエンドはビルドが必要なため、グローバルには原則置かない。プロジェクトの `mise.toml` で管理する。
 
 ## Setup scripts の設計方針

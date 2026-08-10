@@ -4,7 +4,8 @@
 新規ツールの追加や設定変更を行う場合、以下の基準で配置場所を決定すること：
 - **グローバル (~/.config/mise/config.toml)**:
   - どのプロジェクトでも日常的に使う汎用 CLI (`rg`, `fd`, `bat`, `eza`, `jq`, `just`, `git` 関連)
-  - エディタが PATH から直接参照する LSP / Formatter (`rust-analyzer`, `gopls`, `pyright`, `prettier`, `taplo`, `marksman`)
+  - AIへの指示作成やレビューに使うエディタ・TUI (`micro`, `gitui`, `oxker`, `yazi`)
+  - AIが利用したりCLIから叩くフォーマッター (`prettier`, `markdownlint-cli2`)
   - シェル統合ツール・言語ランタイム (`starship`, `atuin`, `zoxide`, `node`, `rust`, `python`, `go`)
 - **プロジェクトローカル (プロジェクト直下の mise.toml / Cargo.toml / package.json)**:
   - 言語・フレームワーク固有のビルド/テストツール (`bacon`, `cargo-make` 等)

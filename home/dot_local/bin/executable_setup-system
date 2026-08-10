@@ -221,9 +221,7 @@ if ! "$HOME/.local/bin/mise" install -y; then
     setup_failures+=("mise install (some tools failed — rerun 'mise install' to retry)")
 fi
 
-if command -v rustup >/dev/null 2>&1; then
-    rustup component add rust-analyzer 2>/dev/null || true
-fi
+
 
 # Do not unset GITHUB_TOKEN if it was passed from the environment for CI purposes.
 # unset GITHUB_TOKEN
@@ -261,12 +259,7 @@ if ! command -v agy >/dev/null 2>&1; then
     rm -f "$tmp_sh"
 fi
 
-if command -v npx >/dev/null 2>&1 || [ -x "$HOME/.local/bin/mise" ]; then
-    echo "🤖 Installing ORCA Agentic Skills (orchestration, computer-use, orca-cli)..."
-    if ! npx -y skills add https://github.com/stablyai/orca --skill orchestration computer-use orca-cli --global -y; then
-        setup_failures+=("ORCA Agentic Skills")
-    fi
-fi
+
 
 if [ ${#setup_failures[@]} -gt 0 ]; then
     echo "" >&2

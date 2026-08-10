@@ -17,7 +17,7 @@ export PATH="$HOME/.local/bin:$PATH"
 typeset -U path PATH
 export BROWSER='wslview'
 export LESS='-FRX'
-export EDITOR='hx'
+export EDITOR='micro'
 export BAT_THEME='ansi'
 export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=inline --preview-window=right:50%:wrap'
 
@@ -78,37 +78,6 @@ zle -N fzf-cd-widget
 bindkey '^J' fzf-cd-widget
 
 # --- 5. 開発環境メンテナンス ---
-project-root() {
-  git rev-parse --show-toplevel 2>/dev/null || pwd
-}
-
-has-just-recipe() {
-  command -v just >/dev/null 2>&1 || return 1
-  [ -f Justfile ] || [ -f justfile ] || return 1
-  just --summary 2>/dev/null | tr ' ' '\n' | rg -qx "$1"
-}
-
-has-package-script() {
-  [ -f package.json ] || return 1
-  jq -e --arg name "$1" '.scripts[$name] != null' package.json >/dev/null 2>&1
-}
-
-is-node-worktree() {
-  [ -f package.json ] || [ -f pnpm-lock.yaml ] || [ -f turbo.json ]
-}
-
-is-rust-worktree() {
-  [ -f Cargo.toml ] || [ -f Cargo.lock ]
-}
-
-is-markdown-worktree() {
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git ls-files | rg -q '\.(md|mdx)$'
-  else
-    find . -maxdepth 3 \( -name "*.md" -o -name "*.mdx" \) 2>/dev/null | rg -q .
-  fi
-}
-
 sync-dotfiles() {
   local diff_status=0
 
@@ -126,160 +95,20 @@ update-all() {
     update-system
 }
 
-dev() {
-  (
-    local root
-    root="$(project-root)"
-    cd "$root" || exit 1
-
-    if has-just-recipe dev; then
-      just dev
-      exit 0
-    fi
-
-    if is-node-worktree; then
-      if command -v pnpm >/dev/null 2>&1; then
-        if [ -f package.json ] && has-package-script dev; then
-          pnpm dev
-        else
-          echo "Node workspace detected."
-          echo "Use 'pnpm install' if needed, then run the project-specific dev command."
-        fi
-      else
-        echo "pnpm is not installed. Run setup-system first." >&2
-        exit 1
-      fi
-      exit 0
-    fi
-
-    if is-rust-worktree; then
-      if command -v bacon >/dev/null 2>&1; then
-        bacon
-      else
-        cargo run
-      fi
-      exit 0
-    fi
-
-    if is-markdown-worktree; then
-      echo "Markdown workspace detected."
-      echo "Use 'check' to run prettier / markdownlint checks."
-      exit 0
-    fi
-
-    echo "No supported project type detected in $root." >&2
-    echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
-    exit 1
-  )
-}
-
-check() {
-  (
-    local root
-    root="$(project-root)"
-    cd "$root" || exit 1
-
-    if has-just-recipe check; then
-      just check
-      exit 0
-    fi
-
-    if is-rust-worktree; then
-      cargo fmt --check &&
-        cargo clippy --all-targets --all-features -- -D warnings &&
-        { command -v cargo-nextest >/dev/null 2>&1 && cargo nextest run || cargo test; }
-      exit 0
-    fi
-
-    if is-node-worktree; then
-      if ! command -v pnpm >/dev/null 2>&1; then
-        echo "pnpm is not installed. Run setup-system first." >&2
-        exit 1
-      fi
-
-      local ran=0
-
-      if has-package-script lint; then
-        pnpm lint || exit 1
-        ran=1
-      fi
-
-      if has-package-script typecheck; then
-        pnpm typecheck || exit 1
-        ran=1
-      fi
-
-      if has-package-script test; then
-        pnpm test || exit 1
-        ran=1
-      fi
-
-      if command -v prettier >/dev/null 2>&1; then
-        prettier --check . || exit 1
-        ran=1
-      fi
-
-      if [ "$ran" -eq 0 ]; then
-        echo "No supported package.json checks found." >&2
-        exit 1
-      fi
-
-      exit 0
-    fi
-
-    if is-markdown-worktree; then
-      local ran=0
-
-      if command -v prettier >/dev/null 2>&1; then
-        prettier --check . || exit 1
-        ran=1
-      fi
-
-      if command -v markdownlint-cli2 >/dev/null 2>&1; then
-        markdownlint-cli2 "**/*.md" "**/*.mdx" || exit 1
-        ran=1
-      fi
-
-      if [ "$ran" -eq 0 ]; then
-        echo "No Markdown check tools found. Run setup-system first." >&2
-        exit 1
-      fi
-
-      exit 0
-    fi
-
-    echo "No supported project type detected in $root." >&2
-    echo "Expected Justfile/justfile, package.json, Cargo.toml, or Markdown files." >&2
-    exit 1
-  )
-}
-
 # --- 6. エイリアス ---
 alias ls="eza --icons --git"
 alias ll="eza -ahl --icons --git"
 alias la="eza -a --icons --git"
 alias tree="eza --tree --icons --git-ignore"
 alias cat="bat --paging=never"
+alias rm="trash"
+
+alias ghs="gh auth switch"
 alias cd="z"
-alias lg="lazygit"
-alias ld="lazydocker"
-alias ze="zed ."
-# Orca GUI をカレントディレクトリで開く。`orca` は名乗らない —
-# WSL では Orca が ORCA_CLI_COMMAND=orca-ide を export し、エージェントは
-# `orca-ide` / `orca` を CLI として呼ぶ。ここで shadow すると CLI が黙って GUI を開く。
-orca-app() {
-  local target="${1:-.}"
-  local win_user="${WINDOWS_USER:-$USER}"
-  local orca_exe="/mnt/c/Users/${win_user}/AppData/Local/Programs/Orca/Orca.exe"
-  if [ -f "$orca_exe" ]; then
-    "$orca_exe" "$(wslpath -w "$target" 2>/dev/null || echo "$target")" &>/dev/null &
-  elif command -v Orca.exe >/dev/null 2>&1; then
-    Orca.exe "$(wslpath -w "$target" 2>/dev/null || echo "$target")" &>/dev/null &
-  else
-    echo "⚠️ Orca.exe was not found at $orca_exe" >&2
-    return 1
-  fi
-}
+alias gu="gitui"
+alias ox="oxker"
+alias y="yazi"
+alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
 # Claude Code を headroom(token圧縮)proxy 経由で起動。素の claude も残す二択。CLAUDE_HR_MODE=cache で切替
 alias cch="$HOME/.local/headroom-experiment/claude-hr.sh"

@@ -11,7 +11,7 @@ starship = "1.26.0"   # プロンプト
 atuin = "18.17.1"      # シェル履歴の検索と同期
 zoxide = "0.10.0"     # ディレクトリ移動
 fzf = "0.74.1"        # インタラクティブ検索
-"aqua:tldr-pages/tlrc" = "1.13.1"  # tldr 高速参照
+
 
 # 3. Core CLI
 ripgrep = "15.2.0"    # テキスト検索
@@ -23,7 +23,7 @@ jq = "1.8.2"          # JSON 処理
 
 # 4. Git
 github-cli = "2.96.0"  # GitHub CLI (gh)
-lazygit = "0.63.1"     # Git TUI
+"aqua:extrawurst/gitui" = "0.26.3"  # Git TUI
 delta = "0.19.2"       # diff 視認性改善
 
 # 5. Package Managers / Task Runner
@@ -33,22 +33,18 @@ just = "1.57.0"        # 定型タスクランナー
 
 # 6. Network / Containers / System
 xh = "0.26.1"          # HTTP クライアント
-lazydocker = "0.25.2"  # Docker TUI
+"aqua:mrjackwills/oxker" = "0.7.5"  # Docker TUI
 bottom = "0.14.6"      # システム監視
 dust = "1.2.4"         # ディレクトリ容量可視化
-tmux = "3.7b"          # ターミナル multiplexer
-helix = "25.07.1"      # ターミナルエディタ
+"aqua:sxyazi/yazi" = "0.4.2"      # IDEのサイドバー代わりのTUIファイラ
+"aqua:zyedidia/micro" = "2.0.14"  # 司令塔用軽量エディタ
 
 # 7. AI CLI (mise 管理)
-"npm:@github/copilot" = "1.0.73"
+"npm:@github/copilot" = "1.0.73"  # 外部レビュワー用LLM基盤
 
-# 8. Formatting / LSP (エディタ連携用)
+# 8. Formatting (CLI / AI用)
 "npm:prettier" = "3.9.6"   # 汎用 formatter
 "npm:markdownlint-cli2" = "0.23.1"  # Markdown lint
-"aqua:tamasfe/taplo" = "0.10.0"  # TOML formatter / LSP
-"aqua:artempyanykh/marksman" = "2026-02-08"  # Markdown LSP
-"npm:pyright" = "1.1.411"  # Python LSP
-"go:golang.org/x/tools/gopls" = "v0.23.0"  # Go LSP (go install)
 
 [settings]
 all_compile = false

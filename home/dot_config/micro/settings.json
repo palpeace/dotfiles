@@ -1,0 +1,9 @@
+{
+    "colorscheme": "simple",
+    "mouse": true,
+    "clipboard": "terminal",
+    "tabsize": 4,
+    "tabstospaces": true,
+    "softwrap": true,
+    "autoindent": true
+}

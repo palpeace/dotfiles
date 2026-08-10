@@ -123,5 +123,5 @@ fi
 
 echo ""
 echo "✅ スクラップ＆ビルド（環境復元）がすべて完了しました！"
-echo "🪟 Windows 版 Orca IDE の設定を反映する場合は: apply-orca-windows-settings"
+
 echo "🐳 Docker / GPU を使うマシンでは: configure-machine && setup-optional"

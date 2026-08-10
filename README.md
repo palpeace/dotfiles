@@ -2,7 +2,7 @@
 
 [MIT License](./LICENSE) © 2026 palpeace
 
-Modern, minimal, zero-touch, and AI-native development environment optimized for WSL2 & Orca ADE.
+Modern, minimal, zero-touch, and AI-native development environment optimized for WSL2.
 
 ---
 
@@ -12,7 +12,7 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 - **Tool Management**: [mise](https://mise.jdx.dev/) - 言語・CLIツールのバージョン管理
 - **Shell & Prompt**: [Zsh](https://www.zsh.org/) + [Sheldon](https://sheldon.cli.rs/) + [Starship](https://starship.rs/)
 - **AI Native Core**: Claude Code, Copilot, Antigravity CLI (`agy`), Kiro CLI
-- **Orca ADE & WSL2 Direct Integration**: `%APPDATA%\Orca` 設定の自動展開と `.wslconfig` リソース最適化 (`autoMemoryReclaim`, `sparseVhd`, `dnsTunneling`)
+- **WSL2 Direct Integration**: `.wslconfig` リソース最適化 (`autoMemoryReclaim`, `sparseVhd`, `dnsTunneling`)
 - **WSL Zero-Touch**: `/etc/wsl.conf` (`systemd=true`, `appendWindowsPath=false`) の全自動セットアップ対応
 
 ---
@@ -34,21 +34,7 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 
 ---
 
-## 🪟 Windows Orca IDE & WSL2 連携設定
 
-Windows 側の Orca ADE および `.wslconfig` へ設定を一括適用・同期するための専用ヘルパーが用意されています。
-
-```zsh
-# 1. chezmoi の設定を Windows 側 Orca (%APPDATA%\Orca) および %USERPROFILE%\.wslconfig に反映
-apply-orca-windows-settings
-
-# 2. Windows 側で変更した Orca 設定を dotfiles リポジトリの assets/orca へ取り込み
-pull-orca-windows-settings
-```
-
-詳しいアーキテクチャや連動設計については [Orca ADE Optimization Guide](./docs/orca_wsl_optimization_guide.md) を参照してください。
-
----
 
 ## 🧩 マシン個別オプショナル設定 (Docker / GPU / headroom)
 
@@ -89,8 +75,8 @@ sync-dotfiles
 
 1. **どのプロジェクトを開いても常用したいか？**
    → **Yes:** グローバル (`~/.config/mise/config.toml`) に配置
-2. **エディタ (Orca ADE / Zed等) が PATH から直接参照する LSP / Formatter か？**
-   → **Yes:** グローバルに配置 (`pyright`, `gopls`, `prettier`, `taplo`, `marksman`, `rust-analyzer` 等)
+2. **AIへの指示（micro）やレビュー（gitui, oxker, yazi）に必要か？**
+   → **Yes:** グローバルに配置
 3. **ビルド処理 (`cargo build` 等) が必要か？**
    → **Yes:** プロジェクトローカル (`mise.toml`) を優先し、グローバルには原則置かない
 
@@ -98,7 +84,7 @@ sync-dotfiles
 
 | 分類 | 配置場所 | 対象ツール例 |
 | :--- | :--- | :--- |
-| **グローバル** | `~/.config/mise/config.toml` | ランタイム (Rust, Node, Go, Python)、シェル統合 (starship, sheldon, zoxide, fzf, atuin)、日常CLI (ripgrep, fd, bat, eza, jq)、LSP/Formatter |
+| **グローバル** | `~/.config/mise/config.toml` | ランタイム (Rust, Node, Go, Python)、シェル統合 (starship, sheldon, zoxide, fzf, atuin)、日常CLI (ripgrep, fd, bat, eza, jq)、司令塔エディタ/TUI (micro, gitui, oxker, yazi) |
 | **PJローカル** | プロジェクト直下の `mise.toml` | 言語固有ビルド・テストツール (`bacon`, `cargo-make`)、PJ限定ツールチェーン (`decktape`)、チーム統一バージョン |
 
 ---
@@ -108,10 +94,10 @@ sync-dotfiles
 | Category | Tools |
 | :--- | :--- |
 | **AI Agents (Core)** | Claude Code (`claude` / `cch` / `cch-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
-| **Editor** | Helix (`hx`), Orca ADE (`orca` / `oc`), Zed (`ze`) 連携 |
-| **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli, tldr (`tlrc`) |
-| **Modern Ops** | lazygit (`lg`), lazydocker (`ld`), bottom (`btm`), xh, dust, tmux |
-| **Formatters / LSP** | Prettier, Markdownlint, Taplo, Marksman, Pyright, Gopls, rust-analyzer |
+| **Editor / TUI** | micro (`mi`), gitui (`gu`), oxker (`ox`), yazi (`y`) |
+| **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli |
+| **Modern Ops** | xh, dust |
+| **Formatters** | Prettier, Markdownlint |
 
 ---
 

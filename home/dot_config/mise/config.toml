@@ -24,7 +24,7 @@ jq = "1.8.2"          # JSON 処理
 # 4. Git
 github-cli = "2.96.0"  # GitHub CLI (gh)
 "aqua:extrawurst/gitui" = "0.26.3"  # Git TUI
-
+delta = "0.19.2"       # diff 視認性改善
 
 # 5. Package Managers / Task Runner
 uv = "0.11.31"          # Python パッケージ管理
@@ -32,6 +32,7 @@ uv = "0.11.31"          # Python パッケージ管理
 just = "1.57.0"        # 定型タスクランナー
 
 # 6. Network / Containers / System
+xh = "0.26.1"          # HTTP クライアント
 "aqua:mrjackwills/oxker" = "0.7.5"  # Docker TUI
 bottom = "0.14.6"      # システム監視
 dust = "1.2.4"         # ディレクトリ容量可視化

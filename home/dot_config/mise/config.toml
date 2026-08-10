@@ -33,7 +33,7 @@ just = "1.57.0"        # 定型タスクランナー
 
 # 6. Network / Containers / System
 xh = "0.26.1"          # HTTP クライアント
-"aqua:mrjackwills/oxker" = "0.7.5"  # Docker TUI
+"aqua:mrjackwills/oxker" = "0.13.3"  # Docker TUI
 bottom = "0.14.6"      # システム監視
 dust = "1.2.4"         # ディレクトリ容量可視化
 "aqua:sxyazi/yazi" = "0.4.2"      # IDEのサイドバー代わりのTUIファイラ

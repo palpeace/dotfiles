@@ -141,8 +141,4 @@ disabled = true
 [azure]
 disabled = true
 
-# ==========================================
-# Transient Prompt (過去ログのクリーン化)
-# ==========================================
-[transient]
-disabled = false
+

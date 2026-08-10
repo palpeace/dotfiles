@@ -1,0 +1,9 @@
+[manager]
+cwd = { fg = "cyan" }
+
+# フォルダとファイルが見分けやすいように色付け
+hovered         = { fg = "black", bg = "lightblue", bold = true }
+preview_hovered = { underline = true }
+
+folder_offset   = [ 1, 0, 1, 0 ]
+preview_offset  = [ 1, 1, 1, 1 ]

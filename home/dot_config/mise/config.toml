@@ -39,6 +39,9 @@ dust = "1.2.4"         # ディレクトリ容量可視化
 "aqua:sxyazi/yazi" = "0.4.2"      # IDEのサイドバー代わりのTUIファイラ
 "aqua:zyedidia/micro" = "2.0.14"  # 司令塔用軽量エディタ
 
+# 7. AI CLI (mise 管理)
+"npm:@github/copilot" = "1.0.73"  # 外部レビュワー用LLM基盤
+
 
 
 # 8. Formatting (CLI / AI用)

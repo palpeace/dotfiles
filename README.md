@@ -101,7 +101,7 @@ sync-dotfiles
 | **AI Agents (Core)** | Claude Code (`claude` / `cch` / `cch-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
 | **Editor / TUI** | micro (`mi`), gitui (`gu`), oxker (`ox`), yazi (`y`) |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli |
-| **Modern Ops** | xh, dust |
+| **Modern Ops** | dust |
 | **Formatters** | Prettier, Markdownlint |
 
 ---

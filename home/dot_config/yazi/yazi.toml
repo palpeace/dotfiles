@@ -1,5 +1,5 @@
 [manager]
-ratio          = [ 2, 4, 4 ]
+ratio          = [ 1, 3, 6 ]
 sort_by        = "natural"
 sort_sensitive = false
 sort_reverse   = false

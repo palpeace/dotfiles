@@ -1,0 +1,13 @@
+#!/bin/sh
+# chezmoi が「今の ~/.claude/settings.json」を標準入力で渡してくる。
+# その中身を土台に、管理したいキーだけ上書きして出力する。
+# こうしないと CC が実行時に書くキー (model / effortLevel / fastMode 等) が apply のたび消える。
+set -eu
+input=$(cat)
+[ -z "$input" ] && input='{}'
+printf '%s' "$input" | jq '. * {
+  skipDangerousModePermissionPrompt: true,
+  theme: "auto",
+  tui: "fullscreen",
+  statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
+}'

@@ -17,12 +17,41 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 - **Tool Management**: [mise](https://mise.jdx.dev/) - 言語・CLIツールのバージョン管理
 - **Shell & Prompt**: [Zsh](https://www.zsh.org/) + [Sheldon](https://sheldon.cli.rs/) + [Starship](https://starship.rs/)
 - **AI Native Core**: Claude Code, Copilot, Antigravity CLI (`agy`)
-- **WSL2 Direct Integration**: `.wslconfig` リソース最適化 (`autoMemoryReclaim`, `sparseVhd`, `dnsTunneling`)
 - **WSL Zero-Touch**: `/etc/wsl.conf` (`systemd=true`, `appendWindowsPath=false`) の全自動セットアップ対応
+- **WSL2 リソース最適化**: `.wslconfig` は Windows 側のファイルのため本リポジトリの管理外。[Quick Start の Step 0](#0-windows-側の事前設定-初回のみ) を参照
 
 ---
 
 ## 📦 Quick Start (Scrap & Build)
+
+### 0. Windows 側の事前設定 (初回のみ)
+
+`.wslconfig` は Windows 側のファイルで WSL 内からは管理できないため、**`wsl --install` を実行する前に**手動で作成します。
+メモ帳等で `%USERPROFILE%\.wslconfig` を作成し、以下を記述してください。
+
+```ini
+# memory / swap は既定 (ホスト RAM の 50% / その 25%) が妥当なため指定しない。
+# 中途半端に絞るとかえって OOM Killer を誘発する。
+
+[experimental]
+# 解放済みメモリをホストへ段階的に返す。
+# 既定の dropCache はページキャッシュを即時全破棄するためビルドが遅くなる。
+autoMemoryReclaim=gradual
+# 新規作成される VHD を自動でスパース化し、使用量に応じて縮小させる (既定: false)
+sparseVhd=true
+```
+
+> [!IMPORTANT]
+>
+> - `autoMemoryReclaim` と `sparseVhd` は **`[wsl2]` ではなく `[experimental]` セクション**です。
+>   `[wsl2]` 配下に書いても無視されます。
+> - `memory` は `size` 型 (`16GB` 等) のみで、**`50%` のようなパーセント指定は不正**です。
+>   不正な値があるとファイルが malformed と判定され、**設定全体が無視されます**。
+> - `sparseVhd` は**新規に作成される VHD にのみ適用**されます。既存ディストリに後から効かせるには
+>   `wsl --manage <Distro> --set-sparse true` が必要です。スクラップ&ビルドはこれを効かせる好機です。
+> - `dnsTunneling` / `autoProxy` は既定で `true` のため明示不要です。
+
+### 1. ワンライナー実行
 
 新しい WSL インスタンス（`wsl --install` 直後）で以下の 1 コマンドを実行するだけで、全自動で完全復元します。
 
@@ -36,6 +65,19 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 - Git の基本情報 (`~/.gitconfig.local`) の対話生成・設定
 - OS 依存パッケージと `mise` / AI ツールの自動導入
 - 自動ヘルスチェック（Smoke Tests）の実行
+
+### 2. WSL の再起動 (必須)
+
+`/etc/wsl.conf` の `systemd=true` / `appendWindowsPath=false` は**再起動後に初めて有効**になります。
+Windows 側の PowerShell で以下を実行してください。
+
+```powershell
+wsl --shutdown
+```
+
+> [!TIP]
+> 社内プロキシ等で apt ミラー（山形大）へ到達できない場合は、`USE_JP_MIRROR=0` を付けて実行すると
+> 既定のミラーのままセットアップできます: `USE_JP_MIRROR=0 setup-system`
 
 ---
 

@@ -35,9 +35,13 @@ fmt_size() {
 }
 
 # resets_at (epoch秒) までの残り時間を "Xh Ym" / "Xd Yh" 形式にする。
+# epoch 秒以外 (ISO-8601 等) が来たら算術エラーを出さずに黙って諦める。
 fmt_remaining() {
   local resets_at="$1"
   [ -z "$resets_at" ] && return
+  case "$resets_at" in
+    ''|*[!0-9]*) return ;;
+  esac
   local now remaining
   now=$(date +%s)
   remaining=$((resets_at - now))
@@ -89,7 +93,9 @@ size_fmt=$(fmt_size "$size")
 mcolor=$(model_color "$model")
 model_fmt=$(printf '%b%s%b' "$mcolor" "$model" "$RESET")
 
-branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
+# dir が空だと git が statusline プロセスの cwd を見て無関係なブランチを表示する。
+branch=""
+[ -n "$dir" ] && branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
 
 line="$dir"
 [ -n "$branch" ] && line="$line ($branch)"

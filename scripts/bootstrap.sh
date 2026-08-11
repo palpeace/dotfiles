@@ -64,11 +64,13 @@ if [ ! -f /etc/wsl.conf ] || ! grep -E -q "^\s*systemd\s*=\s*true" /etc/wsl.conf
 fi
 
 # 2. パッケージ更新と基本ツールの確保
-echo "📦 パッケージリストを更新し git / curl を確認中..."
+# jq は dot_claude/modify_settings.json が apply 中に使う。mise 経由の jq が入るのは
+# setup-system (= after スクリプト) なので間に合わない。ここで apt から先に入れる。
+echo "📦 パッケージリストを更新し git / curl / jq を確認中..."
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 wait_for_apt
-$SUDO_CMD apt update -qq && wait_for_apt && $SUDO_CMD apt install -y "${APT_OPTS[@]}" git curl
+$SUDO_CMD apt update -qq && wait_for_apt && $SUDO_CMD apt install -y "${APT_OPTS[@]}" git curl jq
 
 # 3. mise のセットアップ
 echo "📦 2. mise を導入中..."
@@ -91,7 +93,18 @@ if [ ! -x "$CHEZMOI_BIN" ]; then
     CHEZMOI_BIN="$HOME/.local/bin/chezmoi"
 fi
 
-"$CHEZMOI_BIN" init --apply --force "$CHEZMOI_REPO"
+if ! "$CHEZMOI_BIN" init --apply --force "$CHEZMOI_REPO"; then
+    echo "" >&2
+    echo "❌ chezmoi init --apply が失敗しました。" >&2
+    echo "" >&2
+    echo "💡 dotfiles のソースは $HOME/.local/share/chezmoi に取得済みです。" >&2
+    echo "   ファイル配置のみ再実行 : chezmoi apply --force" >&2
+    echo "   ツール導入のみ再実行   : $HOME/.local/bin/setup-system" >&2
+    echo "" >&2
+    echo "   setup-system は一部のツール導入に失敗しただけでも exit 1 します。" >&2
+    echo "   その場合 dotfiles 自体は配置済みなので、上記の再実行で復旧できます。" >&2
+    exit 1
+fi
 
 echo ""
 echo "🔬 4. 構築完了後の自動テスト (Smoke Tests) を実行中..."
@@ -123,5 +136,10 @@ fi
 
 echo ""
 echo "✅ スクラップ＆ビルド（環境復元）がすべて完了しました！"
-
+echo ""
+echo "⚠️  仕上げに Windows 側(PowerShell)で WSL を再起動してください:"
+echo "      wsl --shutdown"
+echo "    /etc/wsl.conf の systemd=true と appendWindowsPath=false は"
+echo "    再起動後に初めて有効になります。"
+echo ""
 echo "🐳 Docker / GPU を使うマシンでは: configure-machine && setup-optional"

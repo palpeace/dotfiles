@@ -11,7 +11,6 @@
 - Git configuration: `home/dot_gitconfig.tmpl`
 - Prompt and tool configuration: `home/dot_config/starship.toml`, `home/dot_config/mise/config.toml`, `home/dot_config/sheldon/plugins.toml`
 - Editor configuration: `home/dot_config/micro/settings.json`
-- Windows assets & WSL2 config: `assets/wslconfig/...`
 - Local helper scripts: `home/dot_local/bin/...`
 - Setup hooks and bootstrap helpers: `home/.chezmoiscripts/...`
 
@@ -22,6 +21,21 @@
 - Prefer paths in this repository such as `home/dot_config/...`, `home/dot_local/...`, and `home/.chezmoiscripts/...`.
 - Only edit the live file in `$HOME` directly when the user explicitly asks for it or when the file is not managed by chezmoi.
 - If both a live file and a chezmoi-managed source file exist, treat the file in this repository as the source of truth.
+
+## 管理対象外 (このリポジトリに置かないもの)
+
+- `.wslconfig`: Windows 側 (`%USERPROFILE%`) のファイルで、WSL 内の chezmoi からは配置経路が無い。
+  過去に `assets/wslconfig/` へ置いていたが、配置されないまま Windows 側の実物とドリフトしたため削除した。
+  設定内容は README の Quick Start Step 0 に手順として記載する。
+
+## chezmoi の落とし穴
+
+- スクリプトをテンプレート化できるのは **`.tmpl` 拡張子のみ**。`# chezmoi:template` のような
+  コメント指示子は存在せず、書いても `{{ }}` は展開されない。`run_onchange_` でこれをやると
+  ハッシュが永久に固定され、初回 apply 以降二度と再実行されなくなる。
+- `chezmoi execute-template` は拡張子に関係なく強制展開するため、この誤りの検証には使えない。
+- apply は最初に失敗したターゲットで**全体が中断**する。辞書順で早い `.claude/` 配下が失敗すると
+  `.config/` 以降が一切配置されない。`modify_` スクリプトの外部コマンド依存は特に危険。
 
 ## Config organization
 

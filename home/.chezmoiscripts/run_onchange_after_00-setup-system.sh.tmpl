@@ -1,5 +1,6 @@
 #!/bin/bash
-# chezmoi:template
+# テンプレート化は .tmpl 拡張子でのみ有効。`# chezmoi:template` のような
+# コメント指示子は存在せず、付けても展開されずハッシュが固定化する。
 # mise/config.toml hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
 set -euo pipefail
 

@@ -5,6 +5,13 @@
 set -eu
 input=$(cat)
 [ -z "$input" ] && input='{}'
+
+# jq が無い環境 (初回 bootstrap 等) では既存内容をそのまま返して apply を通す。
+# ここで落ちると .claude/ 以降の全ターゲットが配置されないまま apply が中断する。
+if ! command -v jq >/dev/null 2>&1; then
+    printf '%s' "$input"
+    exit 0
+fi
 printf '%s' "$input" | jq '. * {
   skipDangerousModePermissionPrompt: true,
   theme: "auto",

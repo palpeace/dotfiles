@@ -17,7 +17,6 @@ fi
 
 DOTFILES_DOCKER_MODE="${DOTFILES_DOCKER_MODE:-none}"
 DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
-DOTFILES_HEADROOM="${DOTFILES_HEADROOM:-none}"
 
 case "$DOTFILES_DOCKER_MODE" in
     none)
@@ -32,15 +31,4 @@ case "$DOTFILES_DOCKER_MODE" in
         exit 1
         ;;
 esac
-
-if [ "$DOTFILES_HEADROOM" = "enabled" ]; then
-    if [ ! -x "$HOME/.local/headroom-experiment/venv/bin/headroom" ]; then
-        echo "🤖 Installing headroom (Claude Code token proxy)..."
-        "$HOME/.local/headroom-experiment/install.sh"
-    else
-        echo "✅ headroom is already installed."
-    fi
-else
-    echo "⏭️  headroom not selected for this machine."
-fi
 

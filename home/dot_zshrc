@@ -97,16 +97,14 @@ alias ox="oxker"
 alias y="yazi"
 alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
-# Claude Code を headroom(token圧縮)proxy 経由で起動。素の claude も残す二択。CLAUDE_HR_MODE=cache で切替
-alias cch="$HOME/.local/headroom-experiment/claude-hr.sh"
-alias cch-a="cch --permission-mode auto"
-# cch-<権限>-<モデル>。起動時にモデルを決めるので settings.json の既定値を汚さない。
+# cc-<権限>-<モデル>。起動時にモデルを決めるので settings.json の既定値を汚さない。
 # 権限は a=auto / p=plan。他が要るなら --permission-mode の値をそのまま足す
 # (acceptEdits / dontAsk / bypassPermissions / manual)。
-alias cch-a-opus="cch --permission-mode auto --model 'opus[1m]'"
-alias cch-a-sonnet="cch --permission-mode auto --model 'sonnet[1m]'"
-alias cch-a-haiku="cch --permission-mode auto --model haiku"
-alias cch-p-opus="cch --permission-mode plan --model 'opus[1m]'"
+alias cc-a="claude --permission-mode auto"
+alias cc-a-opus="claude --permission-mode auto --model 'opus[1m]'"
+alias cc-a-sonnet="claude --permission-mode auto --model 'sonnet[1m]'"
+alias cc-a-haiku="claude --permission-mode auto --model haiku"
+alias cc-p-opus="claude --permission-mode plan --model 'opus[1m]'"
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh

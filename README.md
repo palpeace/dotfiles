@@ -41,9 +41,9 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 
 
 
-## 🧩 マシン個別オプショナル設定 (Docker / GPU / headroom)
+## 🧩 マシン個別オプショナル設定 (Docker / GPU)
 
-マシンごとに Docker Engine や GPU アクセラレーション、Claude Code 用トークンプロキシの有無を設定できます。
+マシンごとに Docker Engine や GPU アクセラレーションの有無を設定できます。
 
 ```zsh
 # 対話形式でマシン構成を選択 (成果物は ~/.config/dotfiles/machine.env に保存)
@@ -91,9 +91,9 @@ sync-dotfiles
 | `ox` | `oxker` | Dockerコンテナの状態確認・管理を行うTUI |
 | **AI エージェント** | | |
 | `agy-a` | `agy --dangerously-skip-permissions` | 権限確認をスキップして Antigravity を全自動起動 |
-| `cch` | `claude` (proxy経由) | Claude Code を起動 |
-| `cch-a-opus` | `cch --permission-mode auto ...` | Claude Code (Opusモデル) を完全自動モードで起動 |
-| `cch-p-opus` | `cch --permission-mode plan ...` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
+| `cc-a` | `claude --permission-mode auto` | Claude Code を完全自動モードで起動 |
+| `cc-a-opus` | `claude --permission-mode auto --model 'opus[1m]'` | Claude Code (Opusモデル) を完全自動モードで起動 |
+| `cc-p-opus` | `claude --permission-mode plan --model 'opus[1m]'` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
 | **その他** | | |
 | `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |
 
@@ -125,7 +125,7 @@ sync-dotfiles
 
 | Category | Tools |
 | :--- | :--- |
-| **AI Agents (Core)** | Claude Code (`claude` / `cch` / `cch-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
+| **AI Agents (Core)** | Claude Code (`claude` / `cc-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
 | **Editor / TUI** | micro (`mi`), gitui (`gu`), oxker (`ox`), yazi (`y`) |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli |
 | **Modern Ops** | xh, dust |

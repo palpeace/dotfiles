@@ -25,7 +25,7 @@
 - **検証の徹底**: ファイル編集のみで完了とせず、必ずビルド・テスト・実行コマンドを動かして成功を確認すること。
 
 ## 4. WSL2 & Git 運用標準 (WSL2 & Git Conventions)
-- ソースコードやプロジェクトの作業領域は、Windows 領域 (`/mnt/c/`) ではなく、高速かつパーミッション事故のない WSL2 Linux 領域 (`~/src/`) を優先使用すること。
+- ソースコードやプロジェクトの作業領域は、Windows 領域 (`/mnt/c/`) ではなく、高速かつパーミッション事故のない WSL2 Linux 領域 (`~/repos/`) を優先使用すること。
 - Git コミットメッセージは Prefix 形式 (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`) を採用し、簡潔かつ明確に記述すること。
 
 ## 5. Web開発・UIデザイン標準 (Web Application Defaults)

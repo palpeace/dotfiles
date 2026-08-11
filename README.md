@@ -16,7 +16,7 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 - **Dotfiles Management**: [chezmoi](https://www.chezmoi.io/) - 冪等性を保ったワンライナー環境復元
 - **Tool Management**: [mise](https://mise.jdx.dev/) - 言語・CLIツールのバージョン管理
 - **Shell & Prompt**: [Zsh](https://www.zsh.org/) + [Sheldon](https://sheldon.cli.rs/) + [Starship](https://starship.rs/)
-- **AI Native Core**: Claude Code, Copilot, Antigravity CLI (`agy`), Kiro CLI
+- **AI Native Core**: Claude Code, Copilot, Antigravity CLI (`agy`)
 - **WSL2 Direct Integration**: `.wslconfig` リソース最適化 (`autoMemoryReclaim`, `sparseVhd`, `dnsTunneling`)
 - **WSL Zero-Touch**: `/etc/wsl.conf` (`systemd=true`, `appendWindowsPath=false`) の全自動セットアップ対応
 
@@ -125,7 +125,7 @@ sync-dotfiles
 
 | Category | Tools |
 | :--- | :--- |
-| **AI Agents (Core)** | Claude Code (`claude` / `cc-a`), Copilot, Antigravity CLI (`agy` / `agy-a`), Kiro CLI |
+| **AI Agents (Core)** | Claude Code (`claude` / `cc-a`), Copilot, Antigravity CLI (`agy` / `agy-a`) |
 | **Editor / TUI** | micro (`mi`), gitui (`gu`), oxker (`ox`), yazi (`y`) |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli |
 | **Modern Ops** | xh, dust |
@@ -153,5 +153,5 @@ update-system
 
 - Git の個人情報（`user.name`, `user.email`）は管理外の `~/.gitconfig.local` に分離され、chezmoi リポジトリには露出されません。
 - 秘密情報（API キー等）は `~/.config/zsh/secrets.zsh` に分離して管理されます。
-- 全 AI エージェント共通のグローバルエンジニアリング規則は `home/dot_config/ai-rules/global_rules.md` で一元管理され、各ツール（Claude Code, Antigravity CLI, Kiro CLI）へ自動同期されます。
+- 全 AI エージェント共通のグローバルエンジニアリング規則は `home/dot_config/ai-rules/global_rules.md` で一元管理され、各ツール（Claude Code, Antigravity CLI）へ自動同期されます。
 

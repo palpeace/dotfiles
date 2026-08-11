@@ -34,14 +34,6 @@ assert_contains "home/dot_local/bin/executable_update-system" 'if command -v cla
 assert_contains "home/dot_local/bin/executable_update-system" 'claude update'
 assert_not_contains "home/dot_local/bin/executable_update-system" 'https://claude.ai/install.sh'
 
-# --- Kiro CLI Checks ---
-assert_contains "home/dot_local/bin/executable_setup-system" 'https://cli.kiro.dev/install'
-assert_contains "home/dot_local/bin/executable_setup-system" 'if ! command -v kiro-cli >/dev/null 2>&1; then'
-
-assert_contains "home/dot_local/bin/executable_update-system" 'if command -v kiro-cli >/dev/null 2>&1; then'
-assert_contains "home/dot_local/bin/executable_update-system" 'kiro-cli update'
-assert_not_contains "home/dot_local/bin/executable_update-system" 'https://cli.kiro.dev/install'
-
 # --- Antigravity CLI Checks ---
 assert_contains "home/dot_local/bin/executable_setup-system" 'https://antigravity.google/cli/install.sh'
 assert_contains "home/dot_local/bin/executable_setup-system" 'if ! command -v agy >/dev/null 2>&1; then'

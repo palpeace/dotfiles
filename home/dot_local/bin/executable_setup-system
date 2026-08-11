@@ -237,17 +237,6 @@ if ! command -v claude >/dev/null 2>&1; then
     rm -f "$tmp_sh"
 fi
 
-if ! command -v kiro-cli >/dev/null 2>&1; then
-    echo "🤖 Installing Kiro CLI..."
-    tmp_sh="$(mktemp)"
-    if curl -fsSL https://cli.kiro.dev/install -o "$tmp_sh"; then
-        bash "$tmp_sh" || setup_failures+=("Kiro CLI")
-    else
-        setup_failures+=("Kiro CLI (Download failed)")
-    fi
-    rm -f "$tmp_sh"
-fi
-
 if ! command -v agy >/dev/null 2>&1; then
     echo "🤖 Installing Antigravity CLI..."
     tmp_sh="$(mktemp)"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Claude Code statusLine。~/.claude/settings.json の statusLine.command から呼ばれる。
-# 表示例: ~/repos/trial (main) Opus 5 (1M context) CTX 1% 5H 1% (2h30m) 1W 36% (3d4h)
+# 表示例: ~/repos/trial (main) Opus 5 (1M context) CTX 1% 5H 1% (2h30m) 1W 36% (3d4h) TTL 17:23(42m)
 # CTX/5H/1W は 70%未満=緑 70-89%=黄 90%以上=赤 で警告表示する。
+# TTL はプロンプトキャッシュ(サブスク課金では1h固定)の失効予定時刻。transcript の最終送信から1h後を計算する。
 set -euo pipefail
 
 GREEN='\033[32m'
@@ -21,6 +22,7 @@ five_h=$(jq -r '.rate_limits.five_hour.used_percentage // empty' <<<"$input")
 week=$(jq -r '.rate_limits.seven_day.used_percentage // empty' <<<"$input")
 five_h_resets=$(jq -r '.rate_limits.five_hour.resets_at // empty' <<<"$input")
 week_resets=$(jq -r '.rate_limits.seven_day.resets_at // empty' <<<"$input")
+transcript_path=$(jq -r '.transcript_path // empty' <<<"$input")
 
 fmt_size() {
   local n="$1"
@@ -77,6 +79,42 @@ colorize() {
   fi
 }
 
+# transcript(JSONL)の最終エントリの timestamp + 1h = プロンプトキャッシュTTL失効予定時刻。
+# 1h経過済み(キャッシュが冷えている)場合は何も出さない。
+fmt_cache_ttl() {
+  local path="$1"
+  if [ -z "$path" ] || [ ! -f "$path" ]; then
+    return 0
+  fi
+  local last_ts
+  last_ts=$(tac "$path" 2>/dev/null | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1) || true
+  if [ -z "$last_ts" ]; then
+    return 0
+  fi
+  local last_epoch
+  last_epoch=$(date -d "$last_ts" +%s 2>/dev/null) || true
+  if [ -z "$last_epoch" ]; then
+    return 0
+  fi
+  local now expiry remaining
+  now=$(date +%s)
+  expiry=$((last_epoch + 3600))
+  remaining=$((expiry - now))
+  if [ "$remaining" -le 0 ]; then
+    return 0
+  fi
+  local color="$GREEN"
+  if [ "$remaining" -le 600 ]; then
+    color="$RED"
+  elif [ "$remaining" -le 1800 ]; then
+    color="$YELLOW"
+  fi
+  local expiry_hm mins
+  expiry_hm=$(date -d "@$expiry" +%H:%M)
+  mins=$((remaining / 60))
+  printf '%bTTL %s(%dm)%b' "$color" "$expiry_hm" "$mins" "$RESET"
+}
+
 # モデル名に応じて色を変える。Opus系=赤、Sonnet系=青、それ以外=マゼンタ
 model_color() {
   local name="$1"
@@ -100,7 +138,7 @@ branch=""
 line="$dir"
 [ -n "$branch" ] && line="$line ($branch)"
 line="$line $model_fmt"
-for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")"; do
+for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")" "$(fmt_cache_ttl "$transcript_path")"; do
   [ -n "$part" ] && line="$line $part"
 done
 

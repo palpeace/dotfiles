@@ -19,7 +19,10 @@ ripgrep = "15.2.0"    # テキスト検索
 bat = "0.26.1"        # 構文ハイライト付き pager
 eza = "0.23.5"        # ls 代替
 jq = "1.8.2"          # JSON 処理
-"npm:trash-cli" = "7.2.0"  # ゴミ箱経由削除
+# ゴミ箱経由削除。FreeDesktop 準拠の Python 実装。
+# 旧 npm:trash-cli は WSL を検知して powershell.exe を呼びに行き、interop の無い
+# 環境では ENOENT で落ちて「消したつもりで消えていない」状態を作るため置き換えた。
+"pipx:trash-cli" = "0.24.5.26"  # trash-put / trash-list / trash-restore / trash-empty
 
 # 4. Git
 github-cli = "2.96.0"  # GitHub CLI (gh)

@@ -97,13 +97,13 @@ alias ox="oxker"
 alias y="yazi"
 alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
-# cc-<権限>-<モデル>。起動時にモデルを決めるので settings.json の既定値を汚さない。
-# 権限は a=auto / p=plan。他が要るなら --permission-mode の値をそのまま足す
-# (acceptEdits / dontAsk / bypassPermissions / manual)。
+# 起動時にモデル・権限を決めるので settings.json の既定値を汚さない。
+# auto mode は 2026-08-14 から Pro/Max/Team の新規セッションで既定化されるが、
+# 明示しておいても無害なので当面はフラグを残す。
 alias cc-a="claude --permission-mode auto"
-alias cc-a-opus="claude --permission-mode auto --model 'opus[1m]'"
-alias cc-a-sonnet="claude --permission-mode auto --model 'sonnet[1m]'"
-alias cc-a-haiku="claude --permission-mode auto --model haiku"
+alias opus="claude --permission-mode auto --model 'opus[1m]'"
+alias sonnet="claude --permission-mode auto --model 'sonnet[1m]'"
+alias haiku="claude --permission-mode auto --model haiku"
 alias cc-p-opus="claude --permission-mode plan --model 'opus[1m]'"
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。

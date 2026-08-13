@@ -12,9 +12,24 @@ if ! command -v jq >/dev/null 2>&1; then
     printf '%s' "$input"
     exit 0
 fi
+# 稼働状況の可視化 (Pull ではなく Push で気づくための3層):
+#   terminalProgressBarEnabled  長時間処理中に OSC 9;4 を吐く。Windows Terminal が
+#                               タブとタスクバーに進捗を出すので「動いてるか」がタブで分かる。
+#                               CC 側の既定が元々 true なのでこれは明示ピン留め。将来の
+#                               既定変更に引きずられないためだけに書いている。
+#   preferredNotifChannel       入力待ちでベルを鳴らす。WT 側 bellStyle=["window","taskbar"]
+#                               と組で、待機に入った瞬間にタスクバーが点滅する。
+#   inputNeededNotifEnabled     権限プロンプト/質問が待っているときモバイルへ push (離席用)。
+#
+# なお showStatusInTerminalTab / taskCompleteNotifEnabled はここに書いても無視される。
+# settings.json が受理するキーは固定リストで、この2つは ~/.claude.json (グローバル config)
+# 側のキーであり、かつ 2.1.229 時点でフィーチャーゲート未配信・実装未完のため。
 printf '%s' "$input" | jq '. * {
   skipDangerousModePermissionPrompt: true,
   theme: "auto",
   tui: "fullscreen",
+  terminalProgressBarEnabled: true,
+  preferredNotifChannel: "terminal_bell",
+  inputNeededNotifEnabled: true,
   statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
 }'

@@ -27,6 +27,10 @@
 - `.wslconfig`: Windows 側 (`%USERPROFILE%`) のファイルで、WSL 内の chezmoi からは配置経路が無い。
   過去に `assets/wslconfig/` へ置いていたが、配置されないまま Windows 側の実物とドリフトしたため削除した。
   設定内容は README の Quick Start Step 0 に手順として記載する。
+- Windows Terminal の `settings.json`: 同上。実体は
+  `%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`。
+  `/mnt/c/...` 経由で書けはするが、`.wslconfig` と同じくドリフトするので管理対象にしない。
+  設定内容は README の Quick Start Step 0 に手順として記載する。
 
 ## chezmoi の落とし穴
 

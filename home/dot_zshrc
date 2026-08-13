@@ -82,7 +82,7 @@ update-all() {
     update-system
 }
 
-# --- 6. エイリアス ---
+# --- 6. エイリアス / ショートカット関数 ---
 alias ls="eza --icons --git"
 alias ll="eza -ahl --icons --git"
 alias la="eza -a --icons --git"
@@ -101,7 +101,18 @@ alias ghs="gh auth switch"
 alias cd="z"
 alias gu="gitui"
 alias ox="oxker"
-alias y="yazi"
+# yazi を抜けたとき、最後にいたディレクトリへシェルも移動する (公式ラッパー相当)。
+# 素の alias だと yazi で辿り着いた場所からそのまま AI を起動できない。
+# cat=bat / rm=trash-put の alias があるため command 経由で素のコマンドを呼ぶこと。
+y() {
+  local tmp cwd
+  tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  command rm -f -- "$tmp"
+}
 alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
 # 起動時にモデル・権限を決めるので settings.json の既定値を汚さない。

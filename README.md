@@ -51,6 +51,49 @@ sparseVhd=true
 >   `wsl --manage <Distro> --set-sparse true` が必要です。スクラップ&ビルドはこれを効かせる好機です。
 > - `dnsTunneling` / `autoProxy` は既定で `true` のため明示不要です。
 
+#### Windows Terminal の設定
+
+`.wslconfig` と同じく Windows 側のファイル (`%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`) のため、本リポジトリの管理外です。
+「監督者のコマンドセンター」として以下を設定します。既存の JSON にマージしてください。
+
+```jsonc
+{
+  // タブ / ペイン構成を再起動後に復元する
+  "firstWindowPreference": "persistedWindowLayout",
+  "launchMode": "maximized",
+
+  "profiles": {
+    "defaults": {
+      // AI が入力待ちになった瞬間にタスクバーを点滅させる (Claude Code 側のベルと組で機能)
+      "bellStyle": ["window", "taskbar"],
+      // AI の長い出力を遡れるようにする。既定の 9001 行では即座に溢れる
+      "historySize": 50000
+    }
+  },
+
+  "actions": [
+    { "command": "togglePaneZoom", "id": "User.togglePaneZoom" },
+    { "command": { "action": "splitPane", "split": "right", "size": 0.28, "splitMode": "duplicate" }, "id": "User.splitPane.sidebar" }
+  ],
+  "keybindings": [
+    { "id": "User.togglePaneZoom",    "keys": "alt+shift+z" },
+    { "id": "User.splitPane.sidebar", "keys": "alt+shift+e" }
+  ]
+}
+```
+
+> [!NOTE]
+> `alt+←/→/↑/↓` (ペイン間移動)、`alt+shift+←/→` (ペインのリサイズ)、`alt+shift+d` (分割) は
+> Windows Terminal の**既定バインドなので設定不要**です。上記は既定に無い2つだけを足しています。
+
+##### ペイン運用の指針
+
+- **タブ = 1 プロジェクト / worktree**。ペインは 2 分割までに留める。
+- Claude Code は `tui: "fullscreen"` で動くため、細いペインに入れると描画が崩れる。
+  **細い側 (28%) に yazi / gitui、広い側に Claude Code** を置く。
+- ペインを増やすより `alt+shift+z` (`togglePaneZoom`) で切り替える。
+  普段は細いサイドバー、じっくり見たいときだけ一時的に全画面へズームして戻す。
+
 ### 1. ワンライナー実行
 
 新しい WSL インスタンス（`wsl --install` 直後）で以下の 1 コマンドを実行するだけで、全自動で完全復元します。
@@ -128,7 +171,7 @@ sync-dotfiles
 | `rm` | `trash` | 完全に削除せず、システムのゴミ箱に安全に移動 |
 | **司令塔ツール (TUI/エディタ)** | | |
 | `mi` | `micro` | CLI上でサクッとファイルを修正するための超軽量エディタ |
-| `y` | `yazi` | IDEのサイドバー代わりに使う超高速なTUIファイラ |
+| `y` | `yazi` | IDEのサイドバー代わりに使う超高速なTUIファイラ（**抜けた場所へシェルも `cd` する**） |
 | `gu` | `gitui` | Gitの差分確認・コミットを行うTUI（レビューの要） |
 | `ox` | `oxker` | Dockerコンテナの状態確認・管理を行うTUI |
 | **AI エージェント** | | |
@@ -138,6 +181,41 @@ sync-dotfiles
 | `cc-p-opus` | `claude --permission-mode plan --model 'opus[1m]'` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
 | **その他** | | |
 | `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |
+
+---
+
+## 👁 AI の稼働状況を把握する (Situational Awareness)
+
+「AI が実行中か待機中か」を**確認しに行かない**のが方針です。見に行く (Pull) のをやめ、
+通知させる (Push) 3 層構成にしています。設定は `home/dot_claude/modify_settings.json` で管理されます。
+
+| 層 | 設定キー | 何が起きるか | いつ効くか |
+| :--- | :--- | :--- | :--- |
+| **進捗インジケータ** | `terminalProgressBarEnabled` | 長時間処理中に OSC 9;4 を出力し、Windows Terminal がタブとタスクバーに進捗を描く**はずだが、この環境では動作を確認できなかった**。WT 側は `printf '\033]9;4;3;0\007'` に反応するので受け手は対応済み。CC 側の既定は `true`、ゲート (`tengu_terminal_sidebar`) も無関係と確認済みだが、数分の処理でも描画されない。原因未特定 | （現状は効果なし） |
+| **ベル** | `preferredNotifChannel: "terminal_bell"` | 入力待ちになった瞬間にベル。WT 側の `bellStyle: ["window","taskbar"]` と組でタスクバーが点滅する | 他のウィンドウで作業中 |
+| **モバイル push** | `inputNeededNotifEnabled` | 権限プロンプトや質問が待っているときスマホへ通知 | 離席中 |
+
+> [!NOTE]
+> Claude Code の Agents View は「1 セッション内のサブエージェント一覧」であり、
+> 複数セッションを俯瞰するダッシュボードではありません。複数プロジェクトを並列で回す場合は
+> **Windows Terminal のタブ + 上記の通知**の組み合わせのほうが素直です。
+
+---
+
+## 🗂 yazi と Claude Code の連携
+
+`y` (yazi) を「AI へ渡す対象を探すためのサイドバー」として使うための導線です。
+
+- **`y` で辿り着いた場所からそのまま AI を起動できる**
+  `y` は alias ではなく関数で、yazi 終了時に最後のディレクトリへシェルも `cd` します。
+  そのまま `opus` / `cc-a` を叩けば、そのプロジェクトで Claude Code が起動します。
+- **yazi の中から直接起動する**
+  yazi 上で `C` を押すと、そのディレクトリで Claude Code (Opus / auto) が起動します
+  (`home/dot_config/yazi/keymap.toml`)。
+- **ファイルの指定はパスのコピーより `@` 補完が速い**
+  yazi でプレビューして当たりを付け、Claude Code のプロンプトでは `@` のファジー補完で渡すのが最短です。
+  なお本環境は `appendWindowsPath=false` のため `clip.exe` が `PATH` に無く、
+  yazi の yank (`c` → `p`) はクリップボード連携が OSC 52 頼みになります。
 
 ---
 

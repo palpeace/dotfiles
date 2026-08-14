@@ -20,6 +20,8 @@ fi
 #   preferredNotifChannel       入力待ちでベルを鳴らす。WT 側 bellStyle=["window","taskbar"]
 #                               と組で、待機に入った瞬間にタスクバーが点滅する。
 #   inputNeededNotifEnabled     権限プロンプト/質問が待っているときモバイルへ push (離席用)。
+#   disableAgentView           `claude agents` / --bg / /background / on-demand daemon を無効化。
+#                               WSL2 で agent view (常駐監視プロセス) が重く感じたため停止。
 #
 # なお showStatusInTerminalTab / taskCompleteNotifEnabled はここに書いても無視される。
 # settings.json が受理するキーは固定リストで、この2つは ~/.claude.json (グローバル config)
@@ -31,5 +33,6 @@ printf '%s' "$input" | jq '. * {
   terminalProgressBarEnabled: true,
   preferredNotifChannel: "terminal_bell",
   inputNeededNotifEnabled: true,
+  disableAgentView: true,
   statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
 }'

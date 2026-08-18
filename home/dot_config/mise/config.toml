@@ -50,6 +50,7 @@ dust = "1.2.4"         # ディレクトリ容量可視化
 # 8. Formatting (CLI / AI用)
 "npm:prettier" = "3.9.6"   # 汎用 formatter
 "npm:markdownlint-cli2" = "0.23.1"  # Markdown lint
+pandoc = "3.7.0.2"          # docx/pptx等の原本をmdへ機械変換（AKM sources/ 取り込み用）
 
 [settings]
 all_compile = false

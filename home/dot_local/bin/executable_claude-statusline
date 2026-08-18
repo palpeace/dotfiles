@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code statusLine。~/.claude/settings.json の statusLine.command から呼ばれる。
-# 表示例: ~/repos/trial (main) Opus 5 (1M context) │ CTX 1% │ 5H 1% (18:23) │ 1W 36% (木18:23) │ TTL 17:23
+# 表示例: ~/repos/trial (main) Opus 5 (1M context, high effort) │ CTX 1% │ 5H 1% (18:23) │ 1W 36% (木18:23) │ TTL 17:23
 # CTX/5H/1W は 70%未満=dim(控えめ) 70-89%=黄 90%以上=赤 で警告表示する。
 # 通常値をdimにして黄/赤だけを目立たせることで、項目が増えても警告箇所が一目でわかるようにする。
 # TTL はプロンプトキャッシュ(サブスク課金では1h固定)の失効予定時刻。transcript の最終送信から1h後を計算する。
@@ -28,6 +28,7 @@ week=$(jq -r '.rate_limits.seven_day.used_percentage // empty' <<<"$input")
 five_h_resets=$(jq -r '.rate_limits.five_hour.resets_at // empty' <<<"$input")
 week_resets=$(jq -r '.rate_limits.seven_day.resets_at // empty' <<<"$input")
 transcript_path=$(jq -r '.transcript_path // empty' <<<"$input")
+effort=$(jq -r '.effort.level // empty' <<<"$input")
 
 fmt_size() {
   local n="$1"
@@ -135,7 +136,18 @@ model_color() {
 }
 
 size_fmt=$(fmt_size "$size")
-[ -n "$size_fmt" ] && model="$model ($size_fmt context)"
+
+# display_name が将来 "(1M context)" 等を自前で付与してきても二重表示にならないよう、
+# 既存の末尾括弧書きは一旦剥がしてから size/effort を付け直す。
+model="${model%% (*}"
+
+info_parts=()
+[ -n "$size_fmt" ] && info_parts+=("$size_fmt context")
+[ -n "$effort" ] && info_parts+=("$effort effort")
+if [ ${#info_parts[@]} -gt 0 ]; then
+  joined=$(printf ', %s' "${info_parts[@]}")
+  model="$model (${joined#, })"
+fi
 
 mcolor=$(model_color "$model")
 model_fmt=$(printf '%b%s%b' "$mcolor" "$model" "$RESET")

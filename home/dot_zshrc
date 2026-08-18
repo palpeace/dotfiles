@@ -118,11 +118,27 @@ alias agy-a="agy --dangerously-skip-permissions"
 # 起動時にモデル・権限を決めるので settings.json の既定値を汚さない。
 # auto mode は 2026-08-14 から Pro/Max/Team の新規セッションで既定化されるが、
 # 明示しておいても無害なので当面はフラグを残す。
+# 第1引数が effort レベルなら --effort として渡し、残りは claude にそのまま渡す。
+# 例: opus xhigh "難しいタスク" / sonnet low
+# 各モデルの既定 effort は high (Opus 4.7 系のみ xhigh) なので、無指定なら公式デフォルトのまま起動する。
+# 目安: low=軽い/低レイテンシ重視の作業, medium=コスト重視, high=既定(バランス),
+#       xhigh=複雑な設計・デバッグ, max=難問向けだが過剰思考になりやすいので試してから常用する。
+_cc_launch() {
+  local model="$1" mode="$2"
+  shift 2
+  local effort=""
+  case "${1:-}" in
+    low | medium | high | xhigh | max) effort="$1"; shift ;;
+  esac
+  local args=(--permission-mode "$mode" --model "$model")
+  [ -n "$effort" ] && args+=(--effort "$effort")
+  claude "${args[@]}" "$@"
+}
 alias cc-a="claude --permission-mode auto"
-alias opus="claude --permission-mode auto --model 'opus[1m]'"
-alias sonnet="claude --permission-mode auto --model 'sonnet[1m]'"
-alias haiku="claude --permission-mode auto --model haiku"
-alias cc-p-opus="claude --permission-mode plan --model 'opus[1m]'"
+opus() { _cc_launch 'opus[1m]' auto "$@"; }
+sonnet() { _cc_launch 'sonnet[1m]' auto "$@"; }
+haiku() { claude --permission-mode auto --model haiku "$@"; } # Haiku は effort 非対応
+cc-p-opus() { _cc_launch 'opus[1m]' plan "$@"; }
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh

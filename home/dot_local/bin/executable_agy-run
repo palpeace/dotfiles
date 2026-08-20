@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# agy (Antigravity CLI / Gemini) への委譲をファイル受け渡し規約に固定するラッパ。
+#
+# なぜ在るか: agy の print モードには癖がある。
+#   - AGENTS.md / GEMINI.md を一切読まない（規範は毎回プロンプトに同梱するしかない）
+#   - --add-dir が無いとワークスペースを見失い、ファイル系ツールが $HOME 等に書こうとして拒否される
+#   - 権限で拒否されても空応答ではなく成功したかのような応答を返すことがある
+#   - --json-schema併用時に同じオブジェクトを2回続けて返す個体がある
+# これを呼び出すたびにプロンプトへ書き直すのは高コストなので、契約をコードに固定する。
+#
+# 使い方:
+#   agy-run <workspace-dir> <task-spec-file> --model <m1[,m2,...]> \
+#       [--schema <file>] [--timeout <dur>] [--out <dir>]
+set -uo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: agy-run <workspace-dir> <task-spec-file> --model <m1[,m2,...]> [options]
+
+  <workspace-dir>     agy --add-dir に渡すディレクトリ（必須）
+  <task-spec-file>    規範＋タスク仕様＋出力形式を書いたテキストファイル（必須）。
+                       agy は print モードで AGENTS.md / GEMINI.md を読まないため、
+                       必要な規範はこのファイルに書いて毎回同梱すること。
+  --model <m1,m2,...> 試行するモデルをカンマ区切りで列挙（必須・既定値を持たない）。
+                       先頭から順に試し、失敗したら次のモデルへ降格する。
+                       どのモデルを何番目に使うかは呼び出し側（タスク／リポジトリ）の
+                       可変値であり、このラッパは持たない。
+  --schema <file>     --json-schema に渡すJSONスキーマファイル（省略可）
+  --timeout <dur>     --print-timeout に渡す（既定: 20m）
+  --out <dir>         結果の出力先ディレクトリ（既定: mktemp -d）
+  -h, --help          このヘルプを表示
+
+出力:
+  標準出力には <out> のディレクトリパスだけを書く。中身を全部読まず、
+  jq 等で必要なフィールドだけを取り出すこと。
+    <out>/result.json  agyの応答から先頭1個だけ raw_decode した構造化結果
+    <out>/meta.json     使ったモデル・所要秒・成否
+
+受け入れ判定はこのラッパの責務ではない。agy は失敗を成功と申告することがあるため、
+呼び出し側が result.json の中身か副作用（ファイルの有無・git diff・テスト・lint）で
+必ず検証すること。
+EOF
+}
+
+WORKSPACE=""; SPEC=""; MODELS=""; SCHEMA=""; TIMEOUT="20m"; OUT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --model) MODELS="$2"; shift 2;;
+    --schema) SCHEMA="$2"; shift 2;;
+    --timeout) TIMEOUT="$2"; shift 2;;
+    --out) OUT="$2"; shift 2;;
+    -h|--help) usage; exit 0;;
+    *)
+      if [ -z "$WORKSPACE" ]; then WORKSPACE="$1";
+      elif [ -z "$SPEC" ]; then SPEC="$1";
+      else echo "NG 想定外の引数: $1" >&2; usage >&2; exit 2; fi
+      shift;;
+  esac
+done
+
+[ -n "$WORKSPACE" ] && [ -d "$WORKSPACE" ] || { echo "NG workspace-dirが無い: ${WORKSPACE:-（未指定）}" >&2; usage >&2; exit 2; }
+[ -n "$SPEC" ] && [ -f "$SPEC" ] || { echo "NG task-spec-fileが無い: ${SPEC:-（未指定）}" >&2; usage >&2; exit 2; }
+[ -n "$MODELS" ] || { echo "NG --modelが無い（既定値は持たない設計）" >&2; usage >&2; exit 2; }
+command -v agy >/dev/null || { echo "NG agy が無い" >&2; exit 2; }
+
+OUT="${OUT:-$(mktemp -d)}"
+mkdir -p "$OUT"
+PROMPT="$(cat "$SPEC")"
+WORKSPACE="$(cd "$WORKSPACE" && pwd)"
+
+IFS=',' read -ra MODEL_LIST <<< "$MODELS"
+for m in "${MODEL_LIST[@]}"; do
+  t0=$(date +%s)
+  args=(--add-dir "$WORKSPACE" --model "$m" --output-format json --print-timeout "$TIMEOUT" -p "$PROMPT")
+  [ -n "$SCHEMA" ] && args+=(--json-schema "$SCHEMA")
+  if agy "${args[@]}" > "$OUT/raw.json" 2> "$OUT/stderr-$m.txt"; then
+    t1=$(date +%s)
+    if python3 - "$OUT/raw.json" "$OUT/result.json" <<'PY'
+import json, sys
+raw = open(sys.argv[1], encoding="utf-8").read().strip()
+try:
+    obj, _ = json.JSONDecoder().raw_decode(raw)
+except Exception:
+    sys.exit(1)
+json.dump(obj, open(sys.argv[2], "w"), ensure_ascii=False, indent=1)
+PY
+    then
+      printf '{"model":"%s","seconds":%d,"status":"ok"}\n' "$m" "$((t1 - t0))" > "$OUT/meta.json"
+      echo "$OUT"
+      exit 0
+    fi
+    echo "NG $m: 応答がJSONとして読めない — 次のモデルへ降格" >&2
+  else
+    echo "NG $m: 異常終了（$(tail -c 200 "$OUT/stderr-$m.txt" 2>/dev/null | tr '\n' ' ')）— 次のモデルへ降格" >&2
+  fi
+done
+
+printf '{"status":"failed","tried":"%s"}\n' "$MODELS" > "$OUT/meta.json"
+echo "NG 全モデルが失敗した（$MODELS）" >&2
+exit 1

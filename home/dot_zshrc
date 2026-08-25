@@ -101,9 +101,6 @@ alias ghs="gh auth switch"
 alias cd="z"
 alias gu="gitui"
 alias ox="oxker"
-# herdrの自作プラグイン(palpeace/herdr-setup)。git status/diffにsources//.claude/等の
-# 書き換え権レイヤーを重ねて2ペイン表示する。要: herdr plugin link ~/repos/herdr-setup/layer-view
-alias lv="herdr plugin action invoke open --plugin palpeace.layer-view"
 # yazi を抜けたとき、最後にいたディレクトリへシェルも移動する (公式ラッパー相当)。
 # 素の alias だと yazi で辿り着いた場所からそのまま AI を起動できない。
 # cat=bat / rm=trash-put の alias があるため command 経由で素のコマンドを呼ぶこと。

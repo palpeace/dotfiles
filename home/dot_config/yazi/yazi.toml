@@ -10,6 +10,7 @@ show_symlink   = true
 scrolloff      = 5
 
 [preview]
+wrap            = "yes"
 tab_size        = 2
 max_width       = 1000
 max_height      = 1000

@@ -4,6 +4,11 @@
 # CTX/5H/1W は 70%未満=dim(控えめ) 70-89%=黄 90%以上=赤 で警告表示する。
 # 通常値をdimにして黄/赤だけを目立たせることで、項目が増えても警告箇所が一目でわかるようにする。
 # TTL はプロンプトキャッシュ(サブスク課金では1h固定)の失効予定時刻。transcript の最終送信から1h後を計算する。
+#
+# 起動頻度が高いため、外部プロセスのforkを最小限に抑えている:
+# - フィールド取得は jq を1回だけ呼び、@tsv でまとめて受け取る (個別に呼ぶと10回forkしていた)
+# - 時刻整形は bash 組み込みの printf '%(FMT)T' / $EPOCHSECONDS を使い、date の呼び出しを避ける
+#   (ISO-8601文字列のパースだけは bash に相当機能が無いため date -d を残す)
 set -euo pipefail
 
 DIM='\033[2m'
@@ -15,20 +20,25 @@ RESET='\033[0m'
 
 input="$(cat)"
 
-dir=$(jq -r '.workspace.current_dir // .cwd // empty' <<<"$input")
+IFS=$'\x1f' read -r dir model size ctx five_h week five_h_resets week_resets transcript_path effort < <(
+  jq -r '[
+    (.workspace.current_dir // .cwd // ""),
+    (.model.display_name // ""),
+    (.context_window.context_window_size // ""),
+    (.context_window.used_percentage // ""),
+    (.rate_limits.five_hour.used_percentage // ""),
+    (.rate_limits.seven_day.used_percentage // ""),
+    (.rate_limits.five_hour.resets_at // ""),
+    (.rate_limits.seven_day.resets_at // ""),
+    (.transcript_path // ""),
+    (.effort.level // "")
+  ] | map(tostring) | join("\u001f")' <<<"$input"
+)
+
 # $HOME 配下なら ~ に短縮する (例: /home/murai/repos/trial -> ~/repos/trial)
 if [ -n "${HOME:-}" ] && [ "${dir#"$HOME"}" != "$dir" ]; then
   dir="~${dir#"$HOME"}"
 fi
-model=$(jq -r '.model.display_name // empty' <<<"$input")
-size=$(jq -r '.context_window.context_window_size // empty' <<<"$input")
-ctx=$(jq -r '.context_window.used_percentage // empty' <<<"$input")
-five_h=$(jq -r '.rate_limits.five_hour.used_percentage // empty' <<<"$input")
-week=$(jq -r '.rate_limits.seven_day.used_percentage // empty' <<<"$input")
-five_h_resets=$(jq -r '.rate_limits.five_hour.resets_at // empty' <<<"$input")
-week_resets=$(jq -r '.rate_limits.seven_day.resets_at // empty' <<<"$input")
-transcript_path=$(jq -r '.transcript_path // empty' <<<"$input")
-effort=$(jq -r '.effort.level // empty' <<<"$input")
 
 fmt_size() {
   local n="$1"
@@ -50,21 +60,16 @@ fmt_remaining() {
   case "$resets_at" in
     ''|*[!0-9]*) return ;;
   esac
-  local now remaining
-  now=$(date +%s)
-  remaining=$((resets_at - now))
+  local remaining=$((resets_at - EPOCHSECONDS))
   [ "$remaining" -le 0 ] && return
-  local today reset_day
-  today=$(date +%Y-%m-%d)
-  reset_day=$(date -d "@$resets_at" +%Y-%m-%d)
-  local hm
-  hm=$(date -d "@$resets_at" +%H:%M)
+  local today reset_fields reset_day hm wd
+  printf -v today '%(%Y-%m-%d)T' -1
+  printf -v reset_fields '%(%Y-%m-%d %H:%M %u)T' "$resets_at"
+  read -r reset_day hm wd <<<"$reset_fields"
   if [ "$today" = "$reset_day" ]; then
     printf '%s' "$hm"
   else
     local wdays=(月 火 水 木 金 土 日)
-    local wd
-    wd=$(date -d "@$resets_at" +%u)
     printf '%s%s' "${wdays[$((wd - 1))]}" "$hm"
   fi
 }
@@ -97,8 +102,13 @@ fmt_cache_ttl() {
   if [ -z "$path" ] || [ ! -f "$path" ]; then
     return 0
   fi
+  # ファイル全体を tac すると長時間セッション(数MB〜十数MB)で重くなるため、
+  # 末尾64KBだけを対象にする。それでtimestampが拾えなければ全体にフォールバックする。
   local last_ts
-  last_ts=$(tac "$path" 2>/dev/null | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1) || true
+  last_ts=$(tail -c 65536 "$path" 2>/dev/null | tac 2>/dev/null | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1) || true
+  if [ -z "$last_ts" ]; then
+    last_ts=$(tac "$path" 2>/dev/null | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1) || true
+  fi
   if [ -z "$last_ts" ]; then
     return 0
   fi
@@ -107,10 +117,8 @@ fmt_cache_ttl() {
   if [ -z "$last_epoch" ]; then
     return 0
   fi
-  local now expiry remaining
-  now=$(date +%s)
-  expiry=$((last_epoch + 3600))
-  remaining=$((expiry - now))
+  local expiry=$((last_epoch + 3600))
+  local remaining=$((expiry - EPOCHSECONDS))
   if [ "$remaining" -le 0 ]; then
     return 0
   fi
@@ -121,7 +129,7 @@ fmt_cache_ttl() {
     color="$YELLOW"
   fi
   local expiry_hm
-  expiry_hm=$(date -d "@$expiry" +%H:%M)
+  printf -v expiry_hm '%(%H:%M)T' "$expiry"
   printf '%bTTL %s%b' "$color" "$expiry_hm" "$RESET"
 }
 

@@ -1,9 +1,6 @@
-[manager]
+[mgr]
 cwd = { fg = "cyan" }
 
-# フォルダとファイルが見分けやすいように色付け
-hovered         = { fg = "black", bg = "lightblue", bold = true }
-preview_hovered = { underline = true }
-
-folder_offset   = [ 1, 0, 1, 0 ]
-preview_offset  = [ 1, 1, 1, 1 ]
+# 0.4系の [manager].hovered / preview_hovered / folder_offset / preview_offset は
+# 26.x で削除された模様(後継の [indicator].current 等に書いても反映されないことを実機で確認済み)。
+# ホバー行は標準の reverse video 表示に委ねる。

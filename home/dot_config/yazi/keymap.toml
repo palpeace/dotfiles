@@ -1,11 +1,16 @@
 # yazi を「IDE のサイドバー」として使うための追加キーバインド。
-# プロジェクトを探し当てたその場で AI を起動できるようにするのが目的。
+# プロジェクトを探し当てたその場で AI や git 操作を起動できるようにするのが目的。
 #
-# 注意: yazi 0.4 系のスキーマは [manager] (0.5 で [mgr] に改称)。
+# 注意: スキーマは [mgr] (0.4 系までは [manager])。
 #       shell のフラグは --block / --interactive (--confirm は 0.4 に無い)。
 #       shell は sh -c で実行されるため .zshrc の alias (opus 等) は効かない。
 
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 on   = "C"
 run  = "shell \"claude --permission-mode auto --model 'opus[1m]'\" --block"
 desc = "このディレクトリで Claude Code (Opus / auto) を起動"
+
+[[mgr.prepend_keymap]]
+on   = [ "<C-g>" ]
+run  = "shell \"gitui\" --block"
+desc = "このディレクトリで gitui (差分・ステージ・コミット) を起動"

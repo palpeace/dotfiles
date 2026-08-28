@@ -1,0 +1,69 @@
+name: test
+
+# テストが走るのが「新規マシンの bootstrap 時」だけだと、壊れていることに
+# 気づくのが手遅れになる瞬間 (= 環境を作り直したいとき) になる。push のたびに回す。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: tests/*.sh
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # chezmoi が無いと chezmoi_apply_test.sh は自分をスキップして緑になる。
+      # CI では必ず入れて、実際に apply を流させる。
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsSL get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+
+      - name: Run test suite
+        run: |
+          failed=0
+          for t in tests/*.sh; do
+            echo "::group::$t"
+            if bash "$t"; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error file=$t::test failed"
+              failed=$((failed + 1))
+            fi
+          done
+          [ "$failed" -eq 0 ] || { echo "$failed 件のテストが失敗"; exit 1; }
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+      - name: Lint shell scripts
+        # スクリプトは sudo 付きで OS を触るため、警告は落とさず可視化する。
+        # 失敗させるのは error レベルのみ (既存コードを一斉に直す前提にしない)。
+        run: |
+          mapfile -t files < <(
+            find home/dot_local/bin home/.chezmoiscripts scripts tests -type f 2>/dev/null
+            echo home/dot_claude/modify_settings.json
+          )
+          shellcheck --severity=warning "${files[@]}" || true
+          shellcheck --severity=error "${files[@]}"
+
+  reproduce:
+    name: 新規 Ubuntu での再現 (docker)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify reproduction in a pristine container
+        run: ./scripts/verify-in-docker.sh

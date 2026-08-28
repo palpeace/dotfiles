@@ -26,7 +26,14 @@ fi
 # なお showStatusInTerminalTab / taskCompleteNotifEnabled はここに書いても無視される。
 # settings.json が受理するキーは固定リストで、この2つは ~/.claude.json (グローバル config)
 # 側のキーであり、かつ 2.1.229 時点でフィーチャーゲート未配信・実装未完のため。
-printf '%s' "$input" | jq '. * {
+# jq が落ちても apply 全体を道連れにしない。
+# settings.json は CC が実行時に書くファイルで、クラッシュ・書き込み途中・ディスク満杯
+# などで壊れた JSON になることが実際にある。ここで非ゼロ終了すると chezmoi apply は
+# 辞書順で最初のターゲット (.claude/) で中断し、.config/ .local/bin/ .zshrc .gitconfig が
+# 「1つも配置されないまま」成功も失敗も分からず終わる (AGENTS.md「chezmoi の落とし穴」)。
+# 壊れた入力はそのまま素通しする。ここで修復すると CC の実行時キーを取りこぼすため、
+# 直すのは CC 自身の仕事にして、こちらは apply を止めないことだけに責任を持つ。
+if merged=$(printf '%s' "$input" | jq '. * {
   skipDangerousModePermissionPrompt: true,
   theme: "auto",
   tui: "fullscreen",
@@ -35,4 +42,9 @@ printf '%s' "$input" | jq '. * {
   inputNeededNotifEnabled: true,
   disableAgentView: true,
   statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
-}'
+}' 2>/dev/null) && [ -n "$merged" ]; then
+    printf '%s' "$merged"
+else
+    echo "warning: ~/.claude/settings.json を JSON として読めないため、管理キーを適用せず現状のまま残しました。" >&2
+    printf '%s' "$input"
+fi

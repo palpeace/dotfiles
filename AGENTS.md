@@ -63,7 +63,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 
 ### プロジェクトの mise.toml に置くもの
 
-- 特定言語のビルド・実行ツール (bacon, cargo-make 等) — ただし cargo-nextest は `just check` で汎用的に使うためグローバル
+- 特定言語のビルド・実行ツール (bacon, cargo-make, cargo-nextest 等)
 - プロジェクト固有のツールチェイン
 - チームで揃えるバージョンが重要なツール
 

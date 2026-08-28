@@ -142,17 +142,19 @@ setup-optional
 
 ## ⚡ 日常のシェルヘルパー機能
 
-本環境には、ワークスペースに応じて最適なタスクを実行するヘルパー関数が `.zshrc` に組み込まれています。
+`.zshrc` に定義されているヘルパー関数です。
 
 ```zsh
-# 1. 開発サーバー / タスクの起動 (Justfile, package.json, Cargo.toml を自動判定)
-dev
-
-# 2. コード品質・テストの一括検証 (Justfile, Cargo clippy/nextest, pnpm/prettier/markdownlint)
-check
-
-# 3. chezmoi の変更を安全にドライラン確認して適用
+# 1. chezmoi の変更を差分確認してから適用する
+#    注意: mise/config.toml を変更した後は、run_onchange により setup-system
+#          (apt / mise の実導入) が続けて走る。数分かかり sudo を求められる。
 sync-dotfiles
+
+# 2. dotfiles を取り込んでから、OS パッケージと管理ツールをまとめて更新する
+update-all
+
+# 3. yazi で移動し、抜けた場所へシェルも cd する (alias ではなく関数)
+y
 ```
 
 ---
@@ -168,7 +170,7 @@ sync-dotfiles
 | `ls`, `ll`, `la` | `eza --icons` | カラフルなアイコン付きでディレクトリ内容を表示 |
 | `tree` | `eza --tree` | ディレクトリ構造をツリー状に可視化 |
 | `cat` | `bat` | シンタックスハイライト付きでファイルの中身をプレビュー |
-| `rm` | `trash` | 完全に削除せず、システムのゴミ箱に安全に移動 |
+| `rm` | `trash-put` (trash-cli) | 完全に削除せず、システムのゴミ箱に安全に移動。一覧 `trash-list` / 復元 `trash-restore` / 即時削除は `\rm` |
 | **司令塔ツール (TUI/エディタ)** | | |
 | `mi` | `micro` | CLI上でサクッとファイルを修正するための超軽量エディタ |
 | `y` | `yazi` | IDEのサイドバー代わりに使う超高速なTUIファイラ（**抜けた場所へシェルも `cd` する**） |
@@ -177,7 +179,8 @@ sync-dotfiles
 | **AI エージェント** | | |
 | `agy-a` | `agy --dangerously-skip-permissions` | 権限確認をスキップして Antigravity を全自動起動 |
 | `cc-a` | `claude --permission-mode auto` | Claude Code を完全自動モードで起動 |
-| `cc-a-opus` | `claude --permission-mode auto --model 'opus[1m]'` | Claude Code (Opusモデル) を完全自動モードで起動 |
+| `opus` / `sonnet` | `claude --permission-mode auto --model '<model>[1m]'` | 1M コンテキストで起動。第1引数が `low`〜`max` なら `--effort` として渡す (例: `opus xhigh`) |
+| `haiku` | `claude --permission-mode auto --model haiku` | Haiku で起動 (effort 非対応) |
 | `cc-p-opus` | `claude --permission-mode plan --model 'opus[1m]'` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
 | **その他** | | |
 | `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |

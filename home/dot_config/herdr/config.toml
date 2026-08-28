@@ -1,0 +1,32 @@
+onboarding = false
+[ui]
+agent_panel_sort = "priority"
+show_agent_labels_on_pane_borders = true
+
+[ui.toast]
+delivery = "system"
+
+[keys]
+# ctrl+b は隣接キーの誤爆でセッションに ctrl+c (SIGINT) を送りかねないため ctrl+space に変更。
+# herdr の prefix は単一キーのみ対応（配列は "expected a string" で拒否される。実測済み）。
+prefix = "ctrl+space"
+
+# ワークスペース/エージェントに番号で直接ジャンプ（既定は未設定でpicker経由のみ）
+switch_workspace = "prefix+shift+1..9"
+focus_agent = "prefix+alt+1..9"
+
+# 直前にフォーカスしていたペインへワークスペースを跨いで戻る（既定は未設定）
+last_pane = "prefix+u"
+
+# 生成/破壊系はshiftを必須にして誤操作を防ぐ（新規タブ/ペイン分割/ペイン閉じ）
+new_tab = "prefix+shift+c"
+split_vertical = "prefix+shift+v"
+split_horizontal = "prefix+shift+minus"
+close_pane = "prefix+shift+q"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "gitui"
+width = "80%"
+height = "80%"

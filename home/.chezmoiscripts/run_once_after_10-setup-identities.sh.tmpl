@@ -41,6 +41,12 @@ prompt_value() {
     if [ "$can_use_tty" = "0" ] || [ "${NONINTERACTIVE:-0}" = "1" ]; then
         if [ -n "$default_val" ] && [ "$default_val" != "Your Name" ] && [ "$default_val" != "your-email@example.com" ]; then
             echo "$default_val"
+        elif [ "$is_email" = "1" ]; then
+            # 表示名もログイン名も slug 化できなかった場合に限りここへ来る。
+            # "Developer" のような非アドレスを書くと @ チェックを経ずに
+            # ~/.gitconfig.local へ焼き付き、run_once なので二度と直らない。
+            # 空を返して呼び出し側の「未決定なので作成をスキップ」経路に落とす。
+            echo ""
         else
             echo "Developer"
         fi
@@ -100,9 +106,25 @@ echo ""
 echo "👉 [1/2] 表示名を設定します"
 name="$(prompt_value "Git user.name" "${default_user:-Your Name}" 0)"
 
+# 表示名をそのままローカルパートに使うと "Takumi Murai@..." のような不正アドレスに
+# なる (しかも下の @ チェックは通過してしまう)。英数字以外を - に畳んで slug 化する。
+# なお GitHub の正式な noreply は "<ID>+<username>@users.noreply.github.com" で、
+# ID の無い形式は 2017-07 以前に作られたアカウントでしか受理されない。ここで作るのは
+# あくまで「そのまま Enter を押されたときに壊れないための下書き」であり、
+# push が弾かれる場合は GitHub の Settings > Emails に表示される正式な値を使うこと。
+slugify_local_part() {
+    printf '%s' "$1" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed -e 's/[^a-z0-9]\+/-/g' -e 's/^-*//' -e 's/-*$//'
+}
+
 default_email=""
 if [ -n "$name" ] && [ "$name" != "Your Name" ]; then
-    default_email="${name}@users.noreply.github.com"
+    name_slug="$(slugify_local_part "$name")"
+    # 日本語氏名など非ASCIIのみの表示名では slug が空になる。ローカルパートに
+    # そのまま使える保証があるのはログイン名の方なので、そちらへ落とす。
+    [ -z "$name_slug" ] && name_slug="$(slugify_local_part "${default_user:-}")"
+    [ -n "$name_slug" ] && default_email="${name_slug}@users.noreply.github.com"
 fi
 
 echo ""
@@ -117,9 +139,12 @@ if [ -z "$name" ] || [ -z "$email" ]; then
     exit 0
 fi
 
-# Cleanse inputs to prevent config injection (remove newlines and EOF markers)
-clean_name="$(printf "%s" "$name" | tr -d '\n\r' | sed 's/EOF//g')"
-clean_email="$(printf "%s" "$email" | tr -d '\n\r' | sed 's/EOF//g')"
+# ヒアドキュメントへの注入は改行を落とせば成立しない (EOF 行を作れない) ため、
+# 防御は tr -d '\n\r' だけで足りる。
+# かつて sed 's/EOF//g' も併用していたが、防御に寄与せず正常な入力だけを壊した
+# (例: 大文字表記の名前 "GEOFFREY" が "GFREY" になる)。復活させないこと。
+clean_name="$(printf "%s" "$name" | tr -d '\n\r')"
+clean_email="$(printf "%s" "$email" | tr -d '\n\r')"
 
 cat >"$self_gitconfig_path" <<EOF
 [user]

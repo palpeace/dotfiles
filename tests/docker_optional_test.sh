@@ -27,12 +27,23 @@ make_fakebin() {
     mkdir -p "$root/fakebin"
 }
 
+# 被験スクリプト (configure-machine / setup-optional / setup-docker-engine) は
+# machine.env の場所を "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles" で決める。
+# HOME だけ差し替えても XDG_CONFIG_HOME が環境に残っていればそちらが優先され、
+# テスト用 HOME ではなく実環境の ~/.config を読み書きしてしまう
+# (GitHub Actions の ubuntu-24.04 ランナーは XDG_CONFIG_HOME を設定済みで、
+#  ローカルでは未設定なため CI だけ落ちていた)。両方まとめて固定する。
+use_test_home() {
+    export HOME="$1/home"
+    export XDG_CONFIG_HOME="$HOME/.config"
+}
+
 test_configure_machine_generates_expected_config() {
     local test_root
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     mkdir -p "$HOME"
 
     printf '2\n2\n1\n' | bash home/dot_local/bin/executable_configure-machine >/dev/null
@@ -46,7 +57,7 @@ test_configure_machine_preserves_unrelated_keys() {
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     mkdir -p "$HOME/.config/dotfiles"
     cat > "$HOME/.config/dotfiles/machine.env" <<'EOF'
 # existing comment
@@ -67,7 +78,7 @@ test_setup_optional_requires_machine_config() {
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     mkdir -p "$HOME"
 
     if bash home/dot_local/bin/executable_setup-optional >/dev/null 2>&1; then
@@ -81,7 +92,7 @@ test_setup_optional_invokes_setup_docker_engine() {
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     mkdir -p "$HOME/.config/dotfiles" "$HOME/.local/bin"
     cat > "$HOME/.config/dotfiles/machine.env" <<'EOF'
 DOTFILES_DOCKER_MODE=engine
@@ -104,7 +115,7 @@ test_setup_docker_engine_rejects_invalid_gpu_mode_before_install() {
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     mkdir -p "$HOME/.config/dotfiles"
     cat > "$HOME/.config/dotfiles/machine.env" <<'EOF'
 DOTFILES_DOCKER_GPU=bogus
@@ -121,7 +132,7 @@ test_setup_docker_engine_rejects_nvidia_without_wsl2_runtime() {
     test_root="$(mktemp -d)"
     trap 'rm -rf "$test_root"' RETURN
 
-    export HOME="$test_root/home"
+    use_test_home "$test_root"
     make_fakebin "$test_root"
     export PATH="$test_root/fakebin:$PATH"
     mkdir -p "$HOME/.config/dotfiles"

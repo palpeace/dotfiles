@@ -116,11 +116,12 @@ y() {
 alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
 # 起動時にモデル・権限を決めるので settings.json の既定値を汚さない。
-# auto mode は 2026-08-14 から Pro/Max/Team の新規セッションで既定化されるが、
-# 明示しておいても無害なので当面はフラグを残す。
+# auto mode は「どの設定ソースも mode を指定していないときの既定」になった (2.1.251 で確認)。
+# それでもフラグを明示するのは、既定化がプラン/ゲート配信依存で、settings.json に
+# permissions.defaultMode が入った瞬間に既定から外れるため。明示すれば常に auto で確定する。
 # 第1引数が effort レベルなら --effort として渡し、残りは claude にそのまま渡す。
-# 例: opus xhigh "難しいタスク" / sonnet low
-# 各モデルの既定 effort は high (Opus 4.7 系のみ xhigh) なので、無指定なら公式デフォルトのまま起動する。
+# 例: opus xhigh "難しいタスク" / sonnet low / fable max
+# 無指定ならモデルのカタログ既定 effort (Fable 5 / Opus 5 / Sonnet 5 は high、Opus 4.7 のみ xhigh)。
 # 目安: low=軽い/低レイテンシ重視の作業, medium=コスト重視, high=既定(バランス),
 #       xhigh=複雑な設計・デバッグ, max=難問向けだが過剰思考になりやすいので試してから常用する。
 _cc_launch() {
@@ -135,10 +136,17 @@ _cc_launch() {
   claude "${args[@]}" "$@"
 }
 alias cc-a="claude --permission-mode auto"
+# [1m] は Opus 5 / Sonnet 5 / Fable 5 では既にネイティブ 1M なのでほぼ no-op だが、
+# 1M 付与ゲートに依らずウィンドウを 1M に固定できるので残している。Haiku は 200K なので付けない。
+# Fable 5 は最難関・長時間タスク向けの最上位モデル。Opus の 2 倍単価 ($10/$50) で、
+# 専用の週次上限を超えると usage credits (追加課金) を食うため常用モデルにはしない。
+# 初回は使用同意ダイアログが出るので、対話セッションで一度承認してから -p で使うこと。
+fable() { _cc_launch 'fable[1m]' auto "$@"; }
 opus() { _cc_launch 'opus[1m]' auto "$@"; }
 sonnet() { _cc_launch 'sonnet[1m]' auto "$@"; }
 haiku() { claude --permission-mode auto --model haiku "$@"; } # Haiku は effort 非対応
 cc-p-opus() { _cc_launch 'opus[1m]' plan "$@"; }
+cc-p-fable() { _cc_launch 'fable[1m]' plan "$@"; }
 
 # ローカル秘密 (git/chezmoi 管理外, ~/.config/zsh/secrets.zsh)。あれば読む。
 [[ -f ~/.config/zsh/secrets.zsh ]] && source ~/.config/zsh/secrets.zsh

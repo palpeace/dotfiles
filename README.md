@@ -180,8 +180,9 @@ y
 | `agy-a` | `agy --dangerously-skip-permissions` | 権限確認をスキップして Antigravity を全自動起動 |
 | `cc-a` | `claude --permission-mode auto` | Claude Code を完全自動モードで起動 |
 | `opus` / `sonnet` | `claude --permission-mode auto --model '<model>[1m]'` | 1M コンテキストで起動。第1引数が `low`〜`max` なら `--effort` として渡す (例: `opus xhigh`) |
+| `fable` | `claude --permission-mode auto --model 'fable[1m]'` | 最難関・長時間タスク向けの Fable 5 で起動。Opus の 2 倍単価で、専用の週次上限を超えると usage credits を消費する |
 | `haiku` | `claude --permission-mode auto --model haiku` | Haiku で起動 (effort 非対応) |
-| `cc-p-opus` | `claude --permission-mode plan --model 'opus[1m]'` | Claude Code (Opusモデル) を計画モード(Plan)で起動 |
+| `cc-p-opus` / `cc-p-fable` | `claude --permission-mode plan --model '<model>[1m]'` | Claude Code (Opus / Fable) を計画モード(Plan)で起動 |
 | **その他** | | |
 | `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |
 

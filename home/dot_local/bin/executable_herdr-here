@@ -34,7 +34,11 @@ cd "${cwd:-$HOME}"
 
 hold() {
   printf '%s\n' "$1" >&2
-  read -rsn1 -p 'press any key to close' _ || true
+  # popup は閉じると跡が残らないので、読ませてから閉じる。
+  # 端末が繋がっていない時（CLIからの検証など）は待たない —— 待つと無言で固まる。
+  if [ -t 0 ]; then
+    read -rsn1 -p 'press any key to close' _ || true
+  fi
   exit 1
 }
 
@@ -46,14 +50,18 @@ printf '%s tool=%s pane=%s cwd=%s env_cwd=%s\n' \
   "$(date -Is)" "$tool" "${pane_id:-?}" "$PWD" "${HERDR_ACTIVE_PANE_CWD:-<unset>}" \
   >>"$log_dir/herdr-here.log" 2>/dev/null || true
 
+# 実体の解決は、実体を必要とする分岐の中でだけ行う。
+# 先頭で無条件に走らせると `shell` のような「PATHに無いのが正しい」擬似ツールが
+# command not found に落ちる（実際に落ちた）。
 launcher=()
-if ! command -v "$tool" >/dev/null 2>&1; then
+resolve_launcher() {
+  command -v "$tool" >/dev/null 2>&1 && return 0
   if command -v mise >/dev/null 2>&1 && mise which "$tool" >/dev/null 2>&1; then
     launcher=(mise exec --)
-  else
-    hold "command not found: $tool"
+    return 0
   fi
-fi
+  hold "command not found: $tool"
+}
 
 send_cd() {
   local dest="$1" agent
@@ -65,18 +73,27 @@ send_cd() {
 }
 
 case "$tool" in
+  shell)
+    # popup の使い捨てシェル。ペインを1つも潰さずに数十秒のコマンドを打つための面。
+    # $SHELL は herdr サーバが起動時に抱えた環境から来る。stdin が PTY なので
+    # 引数なしで対話シェルになり、.zshrc も読まれる。
+    exec "${SHELL:-/bin/sh}"
+    ;;
   gitui)
+    resolve_launcher
     git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
       || hold "not a git work tree: $PWD"
     exec "${launcher[@]}" gitui "$@"
     ;;
   yazi)
+    resolve_launcher
     tmp="$(mktemp -t herdr-yazi-cwd.XXXXXX)"
     trap 'rm -f "$tmp"' EXIT
     "${launcher[@]}" yazi "$@" --cwd-file="$tmp"
     send_cd "$(cat "$tmp" 2>/dev/null || true)"
     ;;
   *)
+    resolve_launcher
     exec "${launcher[@]}" "$tool" "$@"
     ;;
 esac

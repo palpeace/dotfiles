@@ -25,21 +25,20 @@ row_gap = 0
 rows = [
   ["state_icon", { token = "workspace", bold = true }, "tab"],
   ["agent", "state_text"],
-  [{ token = "$issue", bold = true }, { token = "terminal_title_stripped", dim = true }],
+  [{ token = "terminal_title_stripped", dim = true }],
 ]
 
-# `$issue` は Agex が自分で書き込む値（`bundles/meta/references/issue.py` が
-# Status を In Progress / Blocked にした時に `pane report-metadata` で載せ、
-# クローズで消す）。**並行セッションが常態なので、サイドバーだけ見て
-# 「どのAgexがどのIssueを進めているか」が分かる状態を作るのが狙い。**
-# herdr の外や Agex 以外のセッションでは空のまま出ない。
+# 2026-09-01、ここに Agex の作業中Issue番号（`$issue`）を出す案を入れて撤回した。
+# **agex のセッションでしか出ないから** —— 一部のペインにしか出ない列は、
+# 空欄が「Issueが無い」のか「その仕組みを持たないセッション」なのかを区別できず、
+# サイドバーを読む側に判定を押し付ける（PO判断「ここだけにしか聞かないなら要らない」）。
 
 # claude だけは種別行を落とす（全部claudeなので冗長）。
 # 別種のエージェント（agy / codex 等）が来た時は上の汎用行が効き、種別と状態が出る。
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   ["state_icon", { token = "workspace", bold = true }, "tab"],
-  [{ token = "$issue", bold = true }, { token = "terminal_title_stripped", dim = true }],
+  [{ token = "terminal_title_stripped", dim = true }],
 ]
 
 # ワークスペース一覧。既定と同じ構成だが、branch を落として git_status を目立たせる。

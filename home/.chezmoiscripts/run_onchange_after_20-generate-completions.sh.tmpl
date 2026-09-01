@@ -1,0 +1,18 @@
+#!/bin/bash
+# テンプレート化は .tmpl 拡張子でのみ有効（00-setup-system と同じ理由）。
+# ツールが自分で吐く zsh 補完はバージョンに縛られるので、生成物を chezmoi に
+# 取り込むとツール更新のたびに古い補完が残る。mise のピンが動いた時だけ焼き直す。
+# mise/config.toml hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+set -euo pipefail
+
+comp_dir="$HOME/.local/share/zsh/site-functions"
+mkdir -p "$comp_dir"
+
+if command -v herdr >/dev/null 2>&1; then
+    echo "🔄 Regenerating zsh completion: herdr"
+    herdr completion zsh >"$comp_dir/_herdr"
+fi
+
+# compinit -C はダンプを検証せずに読むので、関数を足しただけでは拾われない。
+# 消しておくと次のシェルが作り直す。
+rm -f "$HOME"/.zcompdump*

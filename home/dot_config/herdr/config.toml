@@ -1,7 +1,10 @@
 onboarding = false
+
 [ui]
-agent_panel_sort = "priority"
+agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = true
+# 既定は true で、タブを作るたびに名前を聞かれる。prefix+c を1手にする。
+prompt_new_tab_name = false
 
 [ui.toast]
 delivery = "system"
@@ -11,6 +14,15 @@ delivery = "system"
 # herdr の prefix は単一キーのみ対応（配列は "expected a string" で拒否される。実測済み）。
 prefix = "ctrl+space"
 
+# ここから下は「既定に無い動作」だけを置く。既定にある動作を別のキーへ移し替えない
+# —— prefix+? のヘルプも公式ドキュメントも映すのは既定なので、上書きした分だけ
+# 「ヘルプに書いていないことを覚える」負債になる（2026-09-01、PO承認）。
+# 以前ここにあった new_tab / split_vertical / split_horizontal / close_pane の
+# shift 上乗せは撤去した。prefix モードに入る時点でゲートが1段かかっており、
+# かつ close_pane=prefix+shift+q は detach=prefix+q の隣で shift を滑らせると
+# デタッチのつもりでペインが飛ぶ側の事故を作っていた。既定に戻すと
+# x=ペイン / shift+x=タブ の対になり、q はデタッチ専用になる。
+
 # ワークスペース/エージェントに番号で直接ジャンプ（既定は未設定でpicker経由のみ）
 switch_workspace = "prefix+shift+1..9"
 focus_agent = "prefix+alt+1..9"
@@ -18,15 +30,23 @@ focus_agent = "prefix+alt+1..9"
 # 直前にフォーカスしていたペインへワークスペースを跨いで戻る（既定は未設定）
 last_pane = "prefix+u"
 
-# 生成/破壊系はshiftを必須にして誤操作を防ぐ（新規タブ/ペイン分割/ペイン閉じ）
-new_tab = "prefix+shift+c"
-split_vertical = "prefix+shift+v"
-split_horizontal = "prefix+shift+minus"
-close_pane = "prefix+shift+q"
+# 差分とファイルツリーを1打鍵で開く。「新規タブ→gu/y→抜ける→タブを閉じる」の4手を畳む。
+# 既定が使っていない無シフト文字から選ぶ（空きは a d f i m y）。
+# `herdr config check` は衝突を検出しない（prefix+z に被せても ok が返る。実測）ので
+# 空きの判定は人がやるしかない。
+# cwd の解決と yazi の cd 送り返しは herdr-here が担う（[[keys.command]] に cwd は無い）。
+[[keys.command]]
+key = "prefix+d"
+type = "popup"
+command = "herdr-here gitui"
+width = "90%"
+height = "90%"
+description = "Git diff (gitui)"
 
 [[keys.command]]
-key = "prefix+alt+g"
+key = "prefix+f"
 type = "popup"
-command = "gitui"
-width = "80%"
-height = "80%"
+command = "herdr-here yazi"
+width = "90%"
+height = "90%"
+description = "File tree (yazi)"

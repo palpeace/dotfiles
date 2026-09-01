@@ -41,6 +41,10 @@ if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook zsh)"
 fi
 
+# 自前で #compdef を吐くツール（herdr 等）の置き場。生成は chezmoi の
+# run_onchange_after_20-generate-completions が mise/config.toml の変化に合わせて行う。
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
 # compinit はツール初期化後に実行（zoxide/atuin の補完を拾うため）
 autoload -Uz compinit
 zmodload zsh/complist

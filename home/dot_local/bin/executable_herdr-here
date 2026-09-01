@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# herdr の [[keys.command]] からツールを起動するラッパー。
+#
+# 存在理由は4つ:
+#  1. [[keys.command]] は key/type/command/width/height/description しか受け付けない。
+#     cwd を書いても "unknown config key" として黙って捨てられる（HERDR_CONFIG_PATH を
+#     一時ファイルに向けた `herdr config check` で実測）。cwd はここで解決するしかない。
+#  2. popup がフォーカス中ペインの cwd を継承するかは herdr が保証していない。
+#     キー押下時に注入される $HERDR_ACTIVE_PANE_CWD を第一候補にし、無ければ
+#     ソケットAPIで引く。どちらが真でもこのラッパーなら動く。
+#  3. popup は herdr サーバが起動時に抱えた PATH で spawn される。mise でツールを
+#     更新するとサーバを再起動するまで古い実体を指すので、名前で引けなければ
+#     mise exec に落とす。
+#  4. yazi は「抜けた先へシェルを cd させる」のが値打ちだが、popup の中には
+#     そのシェルが居ない。呼び出し元ペインへ cd を送り返して .zshrc の `y` 関数と
+#     同じ挙動を保つ。ただしエージェント占有中のペインには送らない
+#     （claude のプロンプトに cd が流し込まれるため）。
+set -euo pipefail
+
+tool="${1:?usage: herdr-here <tool> [args...]}"
+shift
+
+pane_id="${HERDR_ACTIVE_PANE_ID:-}"
+cwd="${HERDR_ACTIVE_PANE_CWD:-}"
+
+if [[ -z "$cwd" || -z "$pane_id" ]]; then
+  if info="$(herdr pane current 2>/dev/null)"; then
+    [[ -n "$cwd" ]] || cwd="$(jq -r '.result.pane.foreground_cwd // .result.pane.cwd // empty' <<<"$info")"
+    [[ -n "$pane_id" ]] || pane_id="$(jq -r '.result.pane.pane_id // empty' <<<"$info")"
+  fi
+fi
+
+cd "${cwd:-$HOME}"
+
+hold() {
+  printf '%s\n' "$1" >&2
+  read -rsn1 -p 'press any key to close' _ || true
+  exit 1
+}
+
+# popup は閉じると跡が残らない。cwd 解決がどちらの経路で効いたかを
+# 後から確かめる唯一の手段としてここだけ記録する。
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+mkdir -p "$log_dir" 2>/dev/null || true
+printf '%s tool=%s pane=%s cwd=%s env_cwd=%s\n' \
+  "$(date -Is)" "$tool" "${pane_id:-?}" "$PWD" "${HERDR_ACTIVE_PANE_CWD:-<unset>}" \
+  >>"$log_dir/herdr-here.log" 2>/dev/null || true
+
+launcher=()
+if ! command -v "$tool" >/dev/null 2>&1; then
+  if command -v mise >/dev/null 2>&1 && mise which "$tool" >/dev/null 2>&1; then
+    launcher=(mise exec --)
+  else
+    hold "command not found: $tool"
+  fi
+fi
+
+send_cd() {
+  local dest="$1" agent
+  [[ -n "$pane_id" && -n "$dest" && "$dest" != "$PWD" ]] || return 0
+  agent="$(herdr pane get "$pane_id" 2>/dev/null | jq -r '.result.pane.agent // empty')" || return 0
+  [[ -z "$agent" ]] || return 0
+  herdr pane send-text "$pane_id" "cd $(printf '%q' "$dest")" >/dev/null 2>&1 || return 0
+  herdr pane send-keys "$pane_id" enter >/dev/null 2>&1 || true
+}
+
+case "$tool" in
+  gitui)
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      || hold "not a git work tree: $PWD"
+    exec "${launcher[@]}" gitui "$@"
+    ;;
+  yazi)
+    tmp="$(mktemp -t herdr-yazi-cwd.XXXXXX)"
+    trap 'rm -f "$tmp"' EXIT
+    "${launcher[@]}" yazi "$@" --cwd-file="$tmp"
+    send_cd "$(cat "$tmp" 2>/dev/null || true)"
+    ;;
+  *)
+    exec "${launcher[@]}" "$tool" "$@"
+    ;;
+esac

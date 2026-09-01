@@ -2,3 +2,9 @@
 # .zshenv is sourced by ALL zsh invocations (interactive, non-interactive, scripts).
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 typeset -U path PATH
+
+# Debian の /etc/zsh/zshrc は ~/.zshrc より前に compinit を呼ぶ。そのダンプが
+# 先に出来てしまうと、~/.zshrc で fpath に足した補完は compinit -C に拾われない
+# （2026-09-01 実測: _herdr が最後まで登録されなかった原因）。公式の抜け道で止め、
+# compinit は ~/.zshrc の1回だけにする。
+skip_global_compinit=1

@@ -6,6 +6,44 @@ show_agent_labels_on_pane_borders = true
 # 既定は true で、タブを作るたびに名前を聞かれる。prefix+c を1手にする。
 prompt_new_tab_name = false
 
+# サイドバーは「今どのエージェントが何をしていて、誰が詰まっているか」を読む面。
+# 既定より広くするのは、下の rows で各エージェントの作業内容（端末タイトル）を
+# 1行使って出すため。幅が足りないと肝心の行から削られる。
+sidebar_width = 32
+sidebar_max_width = 44
+
+# 既定の "dots" は色の点だけ。blocked（こちらの入力待ち）と working（放っておく）を
+# 形で見分けたいので記号にする —— サイドバーは横目で見る面であって、凝視する面ではない。
+status_indicators = "symbols"
+
+# エージェント一覧の行構成。
+# 既定は [["state_icon","workspace","tab"],["agent"]] だが、2行目の `agent` は
+# エージェントの種別（"claude"）でしかなく、全部claudeの環境では情報量がゼロになる。
+# 代わりに端末タイトル（Claude Codeが現在の作業内容を書き込む）を出す。
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  ["state_icon", { token = "workspace", bold = true }, "tab"],
+  ["agent", "state_text"],
+  [{ token = "terminal_title_stripped", dim = true }],
+]
+
+# claude だけは種別行を落とす（全部claudeなので冗長）。
+# 別種のエージェント（agy / codex 等）が来た時は上の汎用行が効き、種別と状態が出る。
+[ui.sidebar.agents.rows_by_agent]
+claude = [
+  ["state_icon", { token = "workspace", bold = true }, "tab"],
+  [{ token = "terminal_title_stripped", dim = true }],
+]
+
+# ワークスペース一覧。既定と同じ構成だが、branch を落として git_status を目立たせる。
+[ui.sidebar.spaces]
+row_gap = 0
+rows = [
+  ["state_icon", { token = "workspace", bold = true }],
+  [{ token = "branch", dim = true }, "git_status"],
+]
+
 [ui.toast]
 delivery = "system"
 
@@ -14,65 +52,43 @@ delivery = "system"
 # prefix だけは配列非対応（"expected a string" で拒否される。実測済み）。
 prefix = "ctrl+space"
 
-# --- (1) 既定に無い動作 ---
-# 既定にある動作を別のキーへ移し替えない —— prefix+? のヘルプも公式ドキュメントも
-# 映すのは既定なので、上書きした分だけ「ヘルプに書いていないことを覚える」負債になる
-# （2026-09-01、PO承認）。以前あった new_tab / split_* / close_pane の shift 上乗せは撤去した。
+# ここから下は「既定に無い動作」だけを置く。既定にある動作を別のキーへ移し替えない
+# —— prefix+? のヘルプも公式ドキュメントも映すのは既定なので、上書きした分だけ
+# 「ヘルプに書いていないことを覚える」負債になる（2026-09-01、PO承認）。
+#
+# 全角入力中に prefix の次の文字が IME に吸われる件は、2026-09-01 に ctrl+alt の
+# 直接バインドを14個併記して解こうとしたが **PO判断で全撤去した**。
+# 理由は2つ: ①`ctrl+alt+minus` が実キーで届かなかった（公式が「記号＋修飾は端末依存」と
+# 書いている帯）②覚えるキーが2系統に増えて、この作業の目的（覚える量を減らす）に反する。
+# 代わりに Windows 側の Microsoft IME で「無変換 = IME-オフ」を使う。
+# **キーの数を増やさずに済む方を採った。**
 
 # ワークスペースに番号で直接ジャンプ（既定は未設定でpicker経由のみ）
 switch_workspace = "prefix+shift+1..9"
-# エージェントに番号で直接ジャンプ。alt+数字は修飾付きなので全角入力中も IME を素通りする
+# エージェントに番号で直接ジャンプ（既定は未設定）
 focus_agent = "prefix+alt+1..9"
 
-# --- (2) 全角入力中の逃げ道: 同じ文字を ctrl+alt でも受ける ---
-# prefix の次に押す「素の文字」は、全角のとき Windows 側の IME が変換バッファに
-# 吸い込むので herdr まで届かない。IME は Windows、herdr の client は WSL の Linux
-# バイナリなので、設定でも experimental.switch_ascii_input_source_in_prefix でも触れない
-# （後者はそもそも macOS/Windows 限定、かつ Windows では韓国語IMEしか動かさない）。
-# prefix / navigate / resize の「モード」は3つとも同じ弱点を持つ。
-#
-# 修飾付きの打鍵は IME を素通りするので、押す文字はそのままに ctrl+alt を足した
-# 直接バインドを併記する。覚えるのは「全角のときは prefix の代わりに ctrl+alt」の1つだけ。
-# 併記できるのは、アクションのキーが配列を取るから（既定設定には出てこないが受理され、
-# 配列の各要素は個別に検証される。実測）。
-#
-# F6〜F10 は使わない —— 変換中の IME が予約している（ひらがな/カタカナ/半角変換）。
-# ctrl+<文字> 単独も使わない —— ペインの中のシェルやTUIから奪ってしまう。
-# 数字系は触らない —— タブは ctrl+alt+n / ctrl+alt+p、ワークスペースは ctrl+alt+w の
-# picker（矢印キーは IME を素通りする）、エージェントは prefix+alt+数字 で既に届く。
-new_tab = ["prefix+c", "ctrl+alt+c"]
-close_pane = ["prefix+x", "ctrl+alt+x"]
-split_vertical = ["prefix+v", "ctrl+alt+v"]
-split_horizontal = ["prefix+minus", "ctrl+alt+minus"]
-focus_pane_left = ["prefix+h", "ctrl+alt+h"]
-focus_pane_down = ["prefix+j", "ctrl+alt+j"]
-focus_pane_up = ["prefix+k", "ctrl+alt+k"]
-focus_pane_right = ["prefix+l", "ctrl+alt+l"]
-previous_tab = ["prefix+p", "ctrl+alt+p"]
-next_tab = ["prefix+n", "ctrl+alt+n"]
-zoom = ["prefix+z", "ctrl+alt+z"]
-workspace_picker = ["prefix+w", "ctrl+alt+w"]
-
 # 直前にフォーカスしていたペインへワークスペースを跨いで戻る（既定は未設定）
-last_pane = ["prefix+u", "ctrl+alt+u"]
+last_pane = "prefix+u"
 
 # 差分とファイルツリーを1打鍵で開く。「新規タブ→gu/y→抜ける→タブを閉じる」の4手を畳む。
 # 既定が使っていない無シフト文字から選ぶ（空きは a d f i m y）。
 # `herdr config check` は衝突を検出しない（prefix+z に被せても ok が返る。実測）ので
 # 空きの判定は人がやるしかない。
 # cwd の解決と yazi の cd 送り返しは herdr-here が担う（[[keys.command]] に cwd は無い）。
+# 98% は「popup だと分かる縁を残す」ためのPO指定。100%（上限）だと全画面に見える。
 [[keys.command]]
-key = ["prefix+d", "ctrl+alt+d"]
+key = "prefix+d"
 type = "popup"
 command = "herdr-here gitui"
-width = "100%"
-height = "100%"
+width = "98%"
+height = "98%"
 description = "Git diff (gitui)"
 
 [[keys.command]]
-key = ["prefix+f", "ctrl+alt+f"]
+key = "prefix+f"
 type = "popup"
 command = "herdr-here yazi"
-width = "100%"
-height = "100%"
+width = "98%"
+height = "98%"
 description = "File tree (yazi)"

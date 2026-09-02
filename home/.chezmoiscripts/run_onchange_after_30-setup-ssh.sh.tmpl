@@ -1,0 +1,93 @@
+{{- if .ssh_server -}}
+#!/bin/bash
+# テンプレート化は .tmpl 拡張子でのみ有効（00-setup-system と同じ理由）。
+#
+# **入れるかどうかを決めるのは config の ssh_server で、このスクリプトではない。**
+# false の機械では展開結果が空になり、chezmoi はスクリプトごと実行しない。
+# 聞く場所は .chezmoi.toml.tmpl（`chezmoi init` で一度だけ）。
+#
+# ここが持つのは「入れると決めた機械のWSLに何を置くか」だけ。**誰が接続できるか
+# （~/.ssh/authorized_keys）は持たない** —— サーバを入れることと、特定の鍵に
+# アクセスを許すことは別の判断で、後者は git に載せない（PO決定、2026-09-02）。
+#
+# Windows側の portproxy / ファイアウォール / ノートPC側の設定を含む経路の全体像は
+# agex の bundles/meta/remote-access.md が権威。
+set -euo pipefail
+
+# WSL の外（Docker での検証など）では立てない。コンテナは WSL とカーネルを
+# 共有するので /proc/version では見分けられない。
+if [ -z "${WSL_DISTRO_NAME:-}" ] && [ ! -d /run/WSL ]; then
+    echo "⏭️  WSL ではないので sshd の設定をスキップします。"
+    exit 0
+fi
+
+SUDO_CMD=""
+if [ "$(id -u)" -ne 0 ]; then
+    if sudo -n true 2>/dev/null; then
+        SUDO_CMD="sudo -n"
+    elif [ "${NONINTERACTIVE:-0}" != "1" ] && [ -t 0 ]; then
+        echo "🔐 sudo requires a password. Please authenticate:" >&2
+        sudo -v
+        SUDO_CMD="sudo"
+    else
+        echo "❌ ERROR: sudo password required but running in non-interactive mode." >&2
+        exit 1
+    fi
+fi
+
+# 導入するかの判断は上の config で済んでいる。この分岐は再実行を速くするための
+# 冪等性（apt-get update を毎回走らせない）であって、入れるかどうかの判定ではない。
+if ! dpkg -s openssh-server >/dev/null 2>&1; then
+    echo "📦 Installing openssh-server..."
+    $SUDO_CMD apt-get update
+    $SUDO_CMD apt-get install -y openssh-server
+fi
+
+# Include は sshd_config の先頭にあり、先に読まれた値が勝つ。10- で始めることで
+# 50-cloud-init.conf 等より先に効く。
+#
+# Port を書かない。Ubuntu 24.04 は ssh.socket による socket 起動が既定で、
+# その場合 sshd_config の Port は黙って無視される（待受を決めるのは unit の
+# ListenStream）。外向きのポート番号は Windows 側の portproxy が決める。
+conf_path="/etc/ssh/sshd_config.d/10-agex.conf"
+tmp_conf="$(mktemp)"
+cat >"$tmp_conf" <<CONF
+# Managed by chezmoi (run_onchange_after_30-setup-ssh.sh.tmpl). Do not edit in place.
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AllowUsers {{ .chezmoi.username }}
+X11Forwarding no
+CONF
+
+if $SUDO_CMD cmp -s "$tmp_conf" "$conf_path" 2>/dev/null; then
+    echo "⏭️  $conf_path は最新です。"
+else
+    echo "🔧 Writing $conf_path"
+    $SUDO_CMD install -m 0644 -o root -g root "$tmp_conf" "$conf_path"
+fi
+rm -f "$tmp_conf"
+
+# socket 起動か service 起動かで扱う unit が変わる
+if [ "$(systemctl is-enabled ssh.socket 2>/dev/null || true)" = "enabled" ]; then
+    unit="ssh.socket"
+else
+    unit="ssh.service"
+fi
+$SUDO_CMD systemctl enable --now "$unit"
+$SUDO_CMD systemctl restart "$unit"
+
+# 「設定を書いた」で終わらせない。待ち受けていなければ失敗として落とす。
+if ss -tln | grep -qE ':22[[:space:]]'; then
+    echo "✅ sshd listening on 22 ($unit)"
+else
+    echo "❌ ERROR: sshd is not listening on 22 ($unit)." >&2
+    exit 1
+fi
+
+# 鍵を置くのは人。ここでは案内だけ出す。
+if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
+    echo "ℹ️  ~/.ssh/authorized_keys が空です。接続元の公開鍵を置くまで誰も入れません（鍵は git に載せない）。"
+fi
+{{- end -}}

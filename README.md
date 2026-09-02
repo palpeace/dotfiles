@@ -126,9 +126,9 @@ wsl --shutdown
 
 
 
-## 🧩 マシン個別オプショナル設定 (Docker / GPU)
+## 🧩 マシン個別オプショナル設定 (Docker / GPU / SSH server)
 
-マシンごとに Docker Engine や GPU アクセラレーションの有無を設定できます。
+マシンごとに Docker Engine・GPU アクセラレーション・OpenSSH server の有無を設定できます。
 
 ```zsh
 # 対話形式でマシン構成を選択 (成果物は ~/.config/dotfiles/machine.env に保存)
@@ -137,6 +137,10 @@ configure-machine
 # 選択された設定に基づいてオプショナルコンポーネントをセットアップ
 setup-optional
 ```
+
+SSH server は鍵認証のみ (`PasswordAuthentication no`) で入り、`AllowUsers` は実行ユーザだけ。
+**接続を許す鍵 (`~/.ssh/authorized_keys`) はこの仕組みに含めません** — サーバを入れることと、
+特定の鍵にアクセスを許すことは別の判断で、鍵は各マシンで手で置きます (git には載せない)。
 
 ---
 

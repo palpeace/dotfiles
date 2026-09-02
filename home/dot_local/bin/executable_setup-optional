@@ -17,6 +17,7 @@ fi
 
 DOTFILES_DOCKER_MODE="${DOTFILES_DOCKER_MODE:-none}"
 DOTFILES_DOCKER_GPU="${DOTFILES_DOCKER_GPU:-none}"
+DOTFILES_SSH_SERVER="${DOTFILES_SSH_SERVER:-none}"
 
 case "$DOTFILES_DOCKER_MODE" in
     none)
@@ -28,6 +29,20 @@ case "$DOTFILES_DOCKER_MODE" in
         ;;
     *)
         echo "Unsupported DOTFILES_DOCKER_MODE: $DOTFILES_DOCKER_MODE" >&2
+        exit 1
+        ;;
+esac
+
+case "$DOTFILES_SSH_SERVER" in
+    none)
+        echo "🔑 No SSH server selected for this machine."
+        ;;
+    openssh)
+        echo "🔑 Installing OpenSSH server (key-only)..."
+        "$HOME/.local/bin/setup-ssh-server"
+        ;;
+    *)
+        echo "Unsupported DOTFILES_SSH_SERVER: $DOTFILES_SSH_SERVER" >&2
         exit 1
         ;;
 esac

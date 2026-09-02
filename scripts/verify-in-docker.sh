@@ -101,7 +101,7 @@ for l in .claude/CLAUDE.md .config/antigravity/instructions.md; do
     [ -e "$HOME/$l" ] || { echo "  symlink が壊れている: ~/$l"; fail=1; }
 done
 for b in setup-system update-system configure-machine setup-optional \
-         setup-docker-engine claude-statusline agy-run; do
+         setup-docker-engine setup-ssh-server claude-statusline agy-run; do
     [ -x "$HOME/.local/bin/$b" ] || { echo "  実行権限が無い: ~/.local/bin/$b"; fail=1; }
 done
 [ "$fail" = 0 ] || exit 1

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Claude Code の TUI フレーム計測を読み、描画が遅い時の犯人を判定する。
+#
+# 計測は ~/.zshrc が CLAUDE_CODE_FRAME_TIMING_LOG を立てて常時取っている
+# (1フレーム1行の JSONL)。フェーズの意味はバイナリの実装を読んで確認した:
+#   renderer / diff / optimize … Claude Code 自身の React 再構築・差分計算
+#   write                      … 端末への書き込み。端末が詰まるとここに出る
+#   total                      … 上記の合計 (1フレームの所要時間)
+#
+# 判定の基準値は、端末を介さない pty (script(1) → ファイル) での実測:
+#   write p50=0.07ms / p95=0.11ms、total p95=1.13ms (111フレーム, 2026-09-05)
+# 実端末でこの桁から大きく離れた側が犯人になる。
+#
+# 使い方: claude-frames [--last N] [ログファイル]
+#   --last N   直近 N フレームだけを見る (既定: 全部)
+set -euo pipefail
+
+dir="${CLAUDE_FRAMES_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/claude-frames}"
+last=0
+file=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --last) last="${2:?--last には数値が要る}"; shift 2 ;;
+    -h | --help) sed -n '2,20p' "$0"; exit 0 ;;
+    *) file="$1"; shift ;;
+  esac
+done
+
+if [ -z "$file" ]; then
+  # 更新が最も新しいログ = 今動いているセッションのもの
+  file=$(find "$dir" -maxdepth 1 -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+fi
+
+if [ -z "$file" ] || [ ! -s "$file" ]; then
+  echo "計測ログが無い ($dir)。" >&2
+  echo "CLAUDE_CODE_FRAME_TIMING_LOG が立った状態で claude を起動し直すこと。" >&2
+  exit 1
+fi
+
+src="$file"
+if [ "$last" -gt 0 ]; then
+  src=$(mktemp); trap 'rm -f "$src"' EXIT
+  tail -n "$last" "$file" > "$src"
+fi
+
+echo "log: $file  ($(wc -l < "$src") フレーム / $(du -h "$file" | cut -f1))"
+echo
+
+jq -s -r '
+  def p(f; q): (map(f) | sort) as $a | $a[((($a|length)-1)*q)|floor];
+  def r(x): (x*100|round)/100;
+  {
+    total_p50:    r(p(.total;    0.5)),  total_p95:    r(p(.total;    0.95)),
+    renderer_p95: r(p(.renderer; 0.95)), diff_p95:     r(p(.diff;     0.95)),
+    write_p50:    r(p(.write;    0.5)),  write_p95:    r(p(.write;    0.95)),
+    write_max:    r(map(.write) | max),
+    patches_p95:  p(.patches; 0.95)
+  }
+  | "  total     p50 \(.total_p50)ms   p95 \(.total_p95)ms",
+    "  renderer            p95 \(.renderer_p95)ms   (Claude Code 自身)",
+    "  diff                p95 \(.diff_p95)ms   (Claude Code 自身)",
+    "  write     p50 \(.write_p50)ms   p95 \(.write_p95)ms   max \(.write_max)ms   (端末への書き込み)",
+    "  patches             p95 \(.patches_p95) 個/フレーム",
+    "",
+    (if .write_p95 >= 5 then
+       "判定: 端末側がボトルネック。write p95 \(.write_p95)ms は基準 0.11ms の \((.write_p95/0.11)|round) 倍。端末を替える価値がある。"
+     elif .write_p95 >= 1 then
+       "判定: 端末側に遅延の兆候。write p95 \(.write_p95)ms (基準 0.11ms)。設定を疑い、それでも残るなら端末を替える。"
+     elif (.renderer_p95 + .diff_p95) >= 8 then
+       "判定: Claude Code の TUI 自身が重い。端末を替えても直らない。"
+     elif .total_p95 < 3 then
+       "判定: 描画は詰まっていない。遅さの原因は描画以外 (モデルの応答待ち・ツール実行など)。"
+     else
+       "判定: どのフェーズも突出していない。体感と合わないなら --last で遅かった直後だけを見ること。"
+     end)
+' "$src"

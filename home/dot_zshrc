@@ -119,6 +119,17 @@ y() {
 }
 alias mi="micro"
 alias agy-a="agy --dangerously-skip-permissions"
+
+# Claude Code の TUI フレーム計測を常時オンにする (1フレーム1行の JSONL)。
+# 「描画が遅い」の犯人が端末側 (write) か Claude Code 側 (renderer/diff) かは
+# 数字を見ないと分からないため、遅いと気づいてから仕込むのでは間に合わない。
+# 実測コスト: ストリーミング中で約 1.7 行/秒・350B/行 = 約 2MB/時。読むのは `claude-frames`。
+export CLAUDE_FRAMES_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/claude-frames"
+export CLAUDE_CODE_FRAME_TIMING_LOG="$CLAUDE_FRAMES_DIR/$$.jsonl"
+export CLAUDE_CODE_FRAME_TIMING_SAMPLE_EVERY=1
+mkdir -p "$CLAUDE_FRAMES_DIR"
+# 3日より古いログは捨てる。シェル起動時の find 1回だけで、常駐は増やさない。
+find "$CLAUDE_FRAMES_DIR" -maxdepth 1 -name '*.jsonl' -mtime +3 -delete 2>/dev/null
 # 起動時にモデル・権限を決めるので settings.json の既定値を汚さない。
 # auto mode は「どの設定ソースも mode を指定していないときの既定」になった (2.1.251 で確認)。
 # それでもフラグを明示するのは、既定化がプラン/ゲート配信依存で、settings.json に

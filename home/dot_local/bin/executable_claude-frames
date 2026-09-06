@@ -27,8 +27,17 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ -z "$file" ] && [ -s "${CLAUDE_CODE_FRAME_TIMING_LOG:-}" ]; then
+  # 自分が走っているセッションのログ。~/.zshrc が立て、claude 経由の子プロセスまで
+  # 届く (herdr → zsh → claude → bash で実測、2026-09-06)。
+  # **並行セッションがあると「最も新しい」は他人のログを指す** —— 劣化したペインで
+  # 測りたいのに、隣で動いている健全なセッションを測ってしまう。自分のが分かるなら
+  # そちらが常に正しい。
+  file="$CLAUDE_CODE_FRAME_TIMING_LOG"
+fi
+
 if [ -z "$file" ]; then
-  # 更新が最も新しいログ = 今動いているセッションのもの
+  # 環境変数が無い時だけ、更新が最も新しいログに落とす
   file=$(find "$dir" -maxdepth 1 -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
 fi
 

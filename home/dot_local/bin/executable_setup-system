@@ -55,9 +55,12 @@ base_apt_packages=(
 browser_runtime_apt_packages=(
     libnss3
     libnspr4
-    # Work IQ 認証用。現 pin の 0.2.8 は browser auth → wslview(wslu)で Windows 側ブラウザを開く。
+    # ブラウザ認証を Windows 側の既定ブラウザで開く（agy の Work IQ 認証、`gh auth login --web`、
+    # BROWSER=wslview）。**agy の版は 1.1.27**（2026-09-07 実測。0.2.8 と書いていたのは古い）。
     wslu
-    # 0.4.x/0.5.x の MSAL/WAM broker に戻したとき用(webkit2gtk が javascriptcoregtk/soup3 を依存で引く)。
+    # **agy の MSAL/WAM broker 版に戻した時の保険**（webkit2gtk が javascriptcoregtk/soup3 を依存で引く）。
+    # 現に使ってはいない —— 1.1.27 のバイナリは webkit/secret/nss のどれにも動的リンクしていない
+    # （`ldd ~/.local/bin/agy`、2026-09-07 実測）。93MB あるので、保険を降ろすなら最初の候補。
     libwebkit2gtk-4.1-0
     libsecret-1-0
 )
@@ -224,11 +227,13 @@ export MISE_FETCH_REMOTE_VERSIONS_TIMEOUT="${MISE_FETCH_REMOTE_VERSIONS_TIMEOUT:
 setup_failures=()
 
 # mise does not resolve implicit backend dependencies (npm:→node, cargo:→rust).
+# go は 2026-09-07 に落とした (go: バックエンドのツールも Go のプロジェクトも無い)。
+# go: のツールを足す時は config.toml と同時にこの行にも go を戻す。
 # Runtimes are fatal — without them, npm:/cargo:/go: tools cannot install.
 # MISE_QUIET suppresses warnings about unresolvable npm:/cargo: tools that
 # depend on runtimes not yet installed at this point.
-echo "📦 Installing runtimes (rust, node, go, python) first..."
-MISE_QUIET=1 "$HOME/.local/bin/mise" install -y --jobs=1 rust node go python
+echo "📦 Installing runtimes (rust, node, python) first..."
+MISE_QUIET=1 "$HOME/.local/bin/mise" install -y --jobs=1 rust node python
 
 eval "$("$HOME/.local/bin/mise" activate bash)"
 
@@ -262,6 +267,26 @@ if ! command -v agy >/dev/null 2>&1; then
         bash "$tmp_sh" || setup_failures+=("Antigravity CLI")
     else
         setup_failures+=("Antigravity CLI (Download failed)")
+    fi
+    rm -f "$tmp_sh"
+fi
+
+# Codex CLI (OpenAI)。claude / agy と同じ自己更新型なので mise には載せない
+# (置き場の判断は ~/.config/ai-rules/global_rules.md の「自己配置の例外」)。
+#
+# **このスクリプトの先頭で PATH に $HOME/.local/bin を入れてあることが前提。**
+# 公式インストーラは BIN_DIR ($HOME/.local/bin) が PATH に無いと判断した時、
+# Linux + zsh では **~/.zshrc に `# >>> Codex installer >>>` の PATH ブロックを追記する**
+# (install.sh の pick_profile / add_to_path。2026-09-07 に実物を読んで確認)。
+# ~/.zshrc は chezmoi 管理下なので、追記されると次の apply で消えて毎回書き戻る
+# ドリフト源になる。PATH に入っていれば `already on PATH` と出て何も書かない (実測)。
+if ! command -v codex >/dev/null 2>&1; then
+    echo "🤖 Installing Codex CLI..."
+    tmp_sh="$(mktemp)"
+    if curl -fsSL https://chatgpt.com/codex/install.sh -o "$tmp_sh"; then
+        sh "$tmp_sh" || setup_failures+=("Codex CLI")
+    else
+        setup_failures+=("Codex CLI (Download failed)")
     fi
     rm -f "$tmp_sh"
 fi

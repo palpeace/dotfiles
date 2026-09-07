@@ -74,7 +74,9 @@ for target in "${expected_targets[@]}"; do
 done
 
 # symlink_ ターゲットは参照先まで配置されて初めて意味を持つ。
-for link in .claude/CLAUDE.md .config/antigravity/instructions.md; do
+# 3本のAIエージェントCLI (claude / codex / agy) は同じ global_rules.md を指す。
+# 1本でも欠けると、そのCLIだけ規範が届かないまま静かに動く。
+for link in .claude/CLAUDE.md .codex/AGENTS.md .config/antigravity/instructions.md; do
     if [ ! -e "$test_root/dest/$link" ]; then
         printf 'symlink target is dangling: ~/%s -> %s\n' \
             "$link" "$(readlink "$test_root/dest/$link" 2>/dev/null)" >&2

@@ -140,6 +140,18 @@ export MEMO_DIR="$HOME/notes"
 
 alias agy-a="agy --dangerously-skip-permissions"
 
+# codex (OpenAI Codex CLI)。cc-a / agy-a と同じ「止まらずに進む」枠だが、
+# **codex には1語の別名 (--full-auto / --yolo) が無い** (0.153.4 実測) ので2つ並べる。
+#   --sandbox workspace-write   書き込みを作業ツリーに閉じる
+#   --ask-for-approval never    可否を聞かない (possible values は on-request か never だけ)
+# `--dangerously-bypass-approvals-and-sandbox` は取らない —— サンドボックスまで外れる。
+# `codex exec` (非対話) は --ask-for-approval を受けない (原理的に聞かないため。実測)。
+alias cx="codex"
+alias cx-a="codex --sandbox workspace-write --ask-for-approval never"
+# alias には補完が引き継がれない（hr=herdr と同じ）。_codex の生成は
+# 新規時が chezmoi の run_onchange、更新時が update-system の `codex update` 直後。
+(( $+functions[compdef] )) && compdef cx=codex
+
 # Claude Code の TUI フレーム計測を常時オンにする (1フレーム1行の JSONL)。
 # 「描画が遅い」の犯人が端末側 (write) か Claude Code 側 (renderer/diff) かは
 # 数字を見ないと分からないため、遅いと気づいてから仕込むのでは間に合わない。

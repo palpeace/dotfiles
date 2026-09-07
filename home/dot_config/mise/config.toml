@@ -1,7 +1,10 @@
 [tools]
 # 1. ランタイム（メジャー/マイナー固定）
+# ここに置くのは「バックエンド（npm: / cargo: / pipx: / go:）の前提になるもの」だけ。
+# **go は 2026-09-07 に落とした** —— go: のツールも Go のプロジェクト（go.mod）も
+# 1つも無いのに 287MB を占めていた。go: を足す時は、この行と
+# setup-system のランタイム列（--jobs=1 の行）の両方に go を戻す。
 rust = "stable"
-go = "1.24"
 node = "lts"
 python = "3.12"
 
@@ -56,7 +59,10 @@ dust = "1.2.4"         # ディレクトリ容量可視化
 "npm:prettier" = "3.9.6"   # 汎用 formatter
 "npm:markdownlint-cli2" = "0.23.1"  # Markdown lint
 pandoc = "3.7.0.2"          # docx/pptx等の原本をmdへ機械変換（AKM sources/ 取り込み用）
-imagemagick = "latest"      # 画像リサイズ・変換（成果物HTMLへのBase64埋め込み用）
+# `latest` から固定へ（2026-09-07）。ここだけ未固定で、`mise upgrade` のたびに
+# 585MB を無言で入れ替えていた。手順（bundles/meta/decision-support-html.md）が
+# `magick identify` / `magick montage` の出力に依存するので、版は明示で動かす。
+imagemagick = "7.1.2_31"    # 画像リサイズ・変換（成果物HTMLへのBase64埋め込み用）
 
 [settings]
 all_compile = false

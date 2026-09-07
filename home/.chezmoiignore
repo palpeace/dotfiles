@@ -34,9 +34,16 @@ LICENSE
 **/.netrc
 **/.env
 **/.env.*
+# codex: ChatGPT ログインの資格情報。`codex doctor` が auth file として指す実体。
+**/.codex/auth.json
 
-# headroom: venv(再生成可・622MB)・実行時状態(CCR=原文含む機密)・検証データは管理しない。
-# env.sh / claude-hr.sh / install.sh は管理し、venv は install.sh で明示再生成する。
-.local/headroom-experiment/venv
-.local/headroom-experiment/state
-.local/headroom-experiment/trial
+# codex: 管理するのは AGENTS.md の symlink だけ。自己更新のバイナリ(320MB)・
+# セッション履歴・sqlite・ログは再生成物か実行時状態なので入れない。
+# `chezmoi add ~/.codex` を打ち間違えた時の死角を塞ぐためだけに列挙する。
+.codex/packages
+.codex/sessions
+.codex/log
+.codex/tmp
+.codex/*.sqlite*
+.codex/version.json
+.codex/history.jsonl

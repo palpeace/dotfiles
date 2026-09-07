@@ -6,11 +6,11 @@
   - どのプロジェクトでも日常的に使う汎用 CLI (`rg`, `fd`, `bat`, `eza`, `jq`, `just`, `git` 関連)
   - AIへの指示作成やレビューに使うエディタ・TUI (`micro`, `gitui`, `oxker`, `yazi`)
   - AIが利用したりCLIから叩くフォーマッター (`prettier`, `markdownlint-cli2`)
-  - シェル統合ツール・言語ランタイム (`starship`, `atuin`, `zoxide`, `node`, `rust`, `python`, `go`)
+  - シェル統合ツール・言語ランタイム (`starship`, `atuin`, `zoxide`, `node`, `rust`, `python`)。**ランタイムは「そのバックエンドを使うツールが実在する時だけ」置く** —— `go` は 2026-09-07 に落とした（`go:` のツールも `go.mod` も1つも無く 287MB を占めていた）
 - **プロジェクトローカル (プロジェクト直下の mise.toml / Cargo.toml / package.json)**:
   - 言語・フレームワーク固有のビルド/テストツール (`bacon`, `cargo-make` 等)
   - チームで特定バージョンを固定したいツールや、ビルド処理 (`cargo build` 等) が必要なツール
-- **例外（自己更新型のAIエージェントCLI）**: `claude` (Claude Code) や `agy` (Antigravity CLI) のように自身の `update` サブコマンドでバージョン管理する対話/エージェント系CLIは、mise管理下に置かず `~/.local/bin` に直接配置し自己更新に任せる。mise管理下に置くと二重のバージョン管理源が競合するため。
+- **例外（自己更新型のAIエージェントCLI）**: `claude` (Claude Code) / `codex` (OpenAI Codex CLI) / `agy` (Antigravity CLI) のように自身の `update` サブコマンドでバージョン管理する対話/エージェント系CLIは、mise管理下に置かず `~/.local/bin` に直接配置し自己更新に任せる。mise管理下に置くと二重のバージョン管理源が競合するため。**npm 版が公開されていても取らない**（`@openai/codex` は実在するが、`codex update` が自分の入れ方を検出して更新する設計なので、mise のピンと二重になる）。**`~/.local/bin` の実体は3本で揃っていない**（`claude` は `~/.local/share/claude/versions/<版>` への symlink、`codex` は `~/.codex/packages/standalone/current/bin/codex` への symlink、`agy` は実体のバイナリ。2026-09-07 実測）ので、**版を知りたい時はパスではなく `--version` を叩く**。グローバル指示は3本ともこのファイル（`~/.config/ai-rules/global_rules.md`）への symlink が1本ずつ届く（`~/.claude/CLAUDE.md` / `~/.codex/AGENTS.md` / `~/.config/antigravity/instructions.md`）。
 
 **【AIネイティブ環境におけるミニマリズムの境界線 (Must Read for AI Agents)】**
 - 人間は「プログラマ」ではなく「企画・レビュアー」となるため、**人間が手で書くためのIDE・エディタ統合はグローバルに常設しない**。ただしこれは「AIエージェント自身が使う言語サーバ」まで排除する意味ではない——LSPをAgentのコードインテリジェンス（編集後の診断・定義/参照解決）として使う場合は、**必要になったプロジェクトで、プロジェクトスコープに限って導入してよい**（グローバルには置かない）。言語サーバのバイナリ本体はマシン共通にしか置けないため、その入手はツールチェーン付属の手段（`rustup component add` 等）を優先する。

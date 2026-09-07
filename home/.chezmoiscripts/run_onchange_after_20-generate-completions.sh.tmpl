@@ -13,6 +13,14 @@ if command -v herdr >/dev/null 2>&1; then
     herdr completion zsh >"$comp_dir/_herdr"
 fi
 
+# codex は mise のピンに縛られない（自己更新型で ~/.local/bin に居る）。
+# **ここが効くのは新規マシンの初回 apply だけ**で、以後の追随は update-system が
+# `codex update` の直後に同じ1行を叩いて行う。生成が2箇所にあるのはそのため。
+if command -v codex >/dev/null 2>&1; then
+    echo "🔄 Regenerating zsh completion: codex"
+    codex completion zsh >"$comp_dir/_codex"
+fi
+
 # compinit -C はダンプを検証せずに読むので、関数を足しただけでは拾われない。
 # 消しておくと次のシェルが作り直す。
 rm -f "$HOME"/.zcompdump*

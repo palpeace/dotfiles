@@ -54,7 +54,7 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 
 ### グローバルに置くもの
 
-- ランタイム (rust, node, go, python): npm:/cargo:/go: バックエンドの前提になる
+- ランタイム (rust, node, python): npm:/cargo:/pipx: バックエンドの前提になる（`go` は 2026-09-07 に落とした。下の「ランタイムは使うバックエンドがあるものだけ」を見る）
 - シェル環境に統合されるツール (starship, sheldon, zoxide, fzf, atuin 等)
 - どのディレクトリでも日常的に使う CLI (ripgrep, fd, bat, eza, jq, git 関連)
   - *※ 人間はコードを書かない「企画者」ですが、AIエージェントの監督やターミナル操作において「状況認識能力と機動力」は必須です。そのため、ターミナルUXを向上させるこれらのモダンCLI群は「IDE等のプログラミング肥大化ツール」とは明確に区別し、積極的にグローバルに配置します。*
@@ -82,10 +82,21 @@ mise の `~/.config/mise/config.toml` (グローバル) に置くか、プロジ
 
 ### エラーハンドリング
 
-- `setup-system`: ランタイム (rust, node, go, python) のインストール失敗は致命的なので即停止する。残りのツール (mise install, Claude Code, Antigravity CLI) は失敗を記録して続行し、最後にまとめて報告する。
-- `update-system`: `set -e` を使わない。各ステップ (apt, rustup, mise upgrade, sheldon, claude, agy) を個別にエラーハンドリングし、失敗しても次へ進む。最後に失敗一覧を報告する。
+- `setup-system`: ランタイム (rust, node, python) のインストール失敗は致命的なので即停止する。残りのツール (mise install, Claude Code, Codex CLI, Antigravity CLI) は失敗を記録して続行し、最後にまとめて報告する。
+- `update-system`: `set -e` を使わない。各ステップ (apt, rustup, mise self-update, mise upgrade, sheldon, claude, codex, agy) を個別にエラーハンドリングし、失敗しても次へ進む。最後に失敗一覧を報告する。
+- **`mise prune` は「消したと言わずに消さない」**(2026-09-07、mise 2026.8.5 実測)。`--dry-run` は uninstall を予告するのに素の実行は終了0で何もしない。`update-system` は prune の後に `mise ls --prunable` の残りを警告として出すだけにして、削除 (`mise uninstall <tool>@<version>`) は人の操作に残している。mise を上げたら再測する。
 - `bootstrap.sh`: `setup-system` が失敗した場合、dotfiles は配置済みであることを伝え、`setup-system` の再実行を案内する。
 
 ### mise のインストール順序
 
 mise は `npm:` → `node`、`cargo:` → `rust`、`go:` → `go` のような暗黙のバックエンド依存を自動解決しない。`setup-system` ではランタイムを `--jobs=1` で先にインストールしてから、残りのツールを並列インストールする。
+
+**ランタイムは「使うバックエンドがあるものだけ」置く。** 2026-09-07 に `go` を落とした —— `go:` のツールも `go.mod` を持つプロジェクトも1つも無いのに 287MB を占めていた。`go:` のツールを足す時は `config.toml` と `setup-system` のランタイム列の**両方**に戻す（片方だけだと `mise install go` が版を解決できずに落ちる）。
+
+## AI エージェント CLI の置き場
+
+`claude` / `codex` / `agy` の3本は **mise に載せず `~/.local/bin` に置き、自己更新に任せる**（判断基準は `home/dot_config/ai-rules/global_rules.md` の「例外（自己更新型のAIエージェントCLI）」）。`setup-system` が公式インストーラで入れ、`update-system` が各CLIの `update` サブコマンドを叩く。
+
+- **公式インストーラが `~/.zshrc` を書き換えうる。** codex のインストーラは `$HOME/.local/bin` が PATH に無いと判断すると、Linux + zsh では `~/.zshrc` に `# >>> Codex installer >>>` の PATH ブロックを追記する（`install.sh` の `pick_profile` / `add_to_path`）。`~/.zshrc` は chezmoi 管理下なので、**追記されると次の apply で消えて毎回書き戻るドリフト源になる**。`setup-system` は先頭で PATH に `$HOME/.local/bin` を入れているため `already on PATH` で何も書かない（2026-09-07 実測）。**この前提を崩さない。**
+- **グローバル指示は1本を3箇所から symlink する。** 実体は `home/dot_config/ai-rules/global_rules.md` で、`home/dot_claude/symlink_CLAUDE.md` / `home/dot_codex/symlink_AGENTS.md` / `home/dot_config/antigravity/symlink_instructions.md` が同じファイルを指す。**CLIを足す時はこの symlink も足す** —— 無いとそのCLIだけ規範が届かない。
+- **資格情報と実行時状態は `.chezmoiignore` で塞ぐ**（`**/.codex/auth.json` 等）。

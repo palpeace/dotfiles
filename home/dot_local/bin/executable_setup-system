@@ -58,10 +58,17 @@ browser_runtime_apt_packages=(
     # ブラウザ認証を Windows 側の既定ブラウザで開く（agy の Work IQ 認証、`gh auth login --web`、
     # BROWSER=wslview）。**agy の版は 1.1.27**（2026-09-07 実測。0.2.8 と書いていたのは古い）。
     wslu
-    # **agy の MSAL/WAM broker 版に戻した時の保険**（webkit2gtk が javascriptcoregtk/soup3 を依存で引く）。
-    # 現に使ってはいない —— 1.1.27 のバイナリは webkit/secret/nss のどれにも動的リンクしていない
-    # （`ldd ~/.local/bin/agy`、2026-09-07 実測）。93MB あるので、保険を降ろすなら最初の候補。
-    libwebkit2gtk-4.1-0
+    # **`libwebkit2gtk-4.1-0` は 2026-09-07 に落とした**（PO裁定「使ってないならけそう」）。
+    # あれは「WSLの中にブラウザの描画エンジンを置く」パッケージで、agy が MSAL/WAM broker で
+    # **WSL側に認証ウィンドウを描いていた版**（0.4.x / 0.5.x）のために入れていた。現在の 1.1.27 は
+    # `wslview` で Windows 側の既定ブラウザを開くので要らない（`ldd ~/.local/bin/agy` が
+    # webkit/javascriptcore/soup のどれにも動的リンクしていない。実測）。
+    #
+    # **入れ直すと 63パッケージ・159MB が連鎖する**（webkit 93MB ＋ gstreamer / GL /
+    # xdg-desktop-portal / 綴り検査の木）。**Playwright の Chromium はこの木を1本も要求しない**
+    # ——`chrome` / `chrome-headless-shell` / `ffmpeg-linux` を `ldd` で当てて0件、未解決0（実測）。
+    # 要るのは下の libnss3 / libnspr4 / libasound2t64 だけ。
+    # **Playwright の WebKit か Firefox を使う日が来たら戻す**（`playwright install-deps` が入れる）。
     libsecret-1-0
 )
 

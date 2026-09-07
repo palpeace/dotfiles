@@ -105,6 +105,12 @@ alias ghs="gh auth switch"
 alias cd="z"
 alias gu="gitui"
 alias ox="oxker"
+# herdr（AIエージェントの並行監督）。`hd` は /usr/bin/hd（hexdump）が居るので取らない。
+# 素の alias にしておくと `hr status` `hr update` のようにサブコマンドもそのまま通る。
+# compdef は alias に補完が引き継がれないため必要。_herdr は chezmoi の
+# run_onchange_after_20-generate-completions が site-functions へ吐く。
+alias hr="herdr"
+(( $+functions[compdef] )) && compdef hr=herdr
 # yazi を抜けたとき、最後にいたディレクトリへシェルも移動する (公式ラッパー相当)。
 # 素の alias だと yazi で辿り着いた場所からそのまま AI を起動できない。
 # cat=bat / rm=trash-put の alias があるため command 経由で素のコマンドを呼ぶこと。

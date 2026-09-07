@@ -34,7 +34,7 @@ rows = [
 # サイドバーを読む側に判定を押し付ける（PO判断「ここだけにしか聞かないなら要らない」）。
 
 # claude だけは種別行を落とす（全部claudeなので冗長）。
-# 別種のエージェント（agy / codex 等）が来た時は上の汎用行が効き、種別と状態が出る。
+# 別種のエージェント（codex / cursor 等）が来た時は上の汎用行が効き、種別と状態が出る。
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   ["state_icon", { token = "workspace", bold = true }, "tab"],
@@ -111,3 +111,24 @@ command = "herdr-here yazi"
 width = "98%"
 height = "98%"
 description = "File tree (yazi)"
+
+# 簡易メモ。書く側と読む側で別のキーにする —— micro は markdown を描画できず、
+# glow は編集できないので、1つのキーに畳めない（2026-09-07 実測）。
+# 実体は ~/.local/bin/memo / memov。**zsh 関数のままでは popup から呼べない**
+# （[[keys.command]] が起動するのは非対話のコマンドで、関数は PATH に無い）。
+# 空きの無シフト文字は a i m y の4つになった（d f enter u は使用済み）。
+[[keys.command]]
+key = "prefix+m"
+type = "popup"
+command = "herdr-here memo"
+width = "98%"
+height = "98%"
+description = "Memo (micro)"
+
+[[keys.command]]
+key = "prefix+shift+m"
+type = "popup"
+command = "herdr-here memov"
+width = "98%"
+height = "98%"
+description = "Memo view (glow)"

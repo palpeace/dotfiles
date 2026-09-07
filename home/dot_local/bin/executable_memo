@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# POの簡易メモの書き込み口。Windows のメモ帳の置き換え。
+#
+# ## なぜ zsh 関数ではなく実行可能スクリプトか（2026-09-07）
+#
+# 初版は .zshrc の関数だったが、**herdr の popup から呼べない**。
+# `[[keys.command]]` が起動するのは非対話のコマンドで、関数は PATH に無いので
+# herdr-here の `command -v` が落ちる（同じ理由で他のスクリプトからも呼べない）。
+# ここに置けば herdr popup / 素のシェル / スクリプトのどこからでも同じものが動く。
+#
+# ## 置き場を WSL 側の1本に固定する理由
+#
+# メモ帳の既定の保存先は Windows 側で、保存せず閉じれば消え、保存しても
+# AI からは誰も見に行かない。**効くのはエディタを替えたことではなく置き場の固定。**
+# 読む側は memov（glow で描画）。
+set -euo pipefail
+
+# 既定はスクリプト側に置く。herdr の popup は herdr サーバが起動時に抱えた環境で
+# spawn されるので、.zshrc の export が届く保証がない。
+dir="${MEMO_DIR:-$HOME/notes}"
+file="$dir/$(date +%Y-%m-%d).md"
+
+mkdir -p "$dir"
+[ -s "$file" ] || printf '# %s\n' "$(date +%Y-%m-%d)" >"$file"
+
+# 引数があれば開かずに1行追記する。メモ帳を開く動作がまるごと消えるのはこちら。
+if [ "$#" -gt 0 ]; then
+  printf -- '- %s %s\n' "$(date +%H:%M)" "$*" >>"$file"
+  exit 0
+fi
+
+# 実体の解決は herdr-here と同じ理由で mise へ落とす余地を残す
+# （popup は herdr サーバ起動時の PATH で spawn されるため）。
+if command -v micro >/dev/null 2>&1; then
+  exec micro "+$(( $(wc -l <"$file") + 1 ))" "$file"
+elif command -v mise >/dev/null 2>&1 && mise which micro >/dev/null 2>&1; then
+  exec mise exec -- micro "+$(( $(wc -l <"$file") + 1 ))" "$file"
+fi
+printf 'memo: micro が見つからない\n' >&2
+exit 1

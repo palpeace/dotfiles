@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# POの簡易メモの読み口。memo が書いたものを glow で描画する。
+#
+# micro は平文エディタで markdown を描画できない（配布プラグイン31個に
+# プレビュー系はゼロ、colorscheme を替えても見出しとコードが同色のまま。
+# 2026-09-07 実測）。**書く側 micro / 読む側 glow に分ける**のはこのため。
+# bat -l md はハイライトであって描画ではないので代替にならない。
+#
+# 実行可能スクリプトである理由は memo と同じ（herdr の popup から呼ぶ）。
+set -euo pipefail
+
+dir="${MEMO_DIR:-$HOME/notes}"
+file="$dir/${1:-$(date +%Y-%m-%d)}.md"
+
+if [ ! -f "$file" ]; then
+  printf 'memo: %s が無い\n' "$file" >&2
+  exit 1
+fi
+
+if command -v glow >/dev/null 2>&1; then
+  exec glow -p "$file"
+elif command -v mise >/dev/null 2>&1 && mise which glow >/dev/null 2>&1; then
+  exec mise exec -- glow -p "$file"
+fi
+printf 'memo: glow が見つからない\n' >&2
+exit 1

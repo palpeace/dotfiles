@@ -141,6 +141,12 @@ if command -v codex >/dev/null 2>&1; then
     mkdir -p "$comp_dir"
     codex completion zsh >"$comp_dir/_codex" 2>/dev/null ||
         update_failures+=("codex completion zsh")
+    # **関数名が新規の時だけダンプの作り直しが要る。** ~/.zshrc は `compinit -C`
+    # （ダンプを検証せずに読む）なので、_codex を置いただけでは拾われず、
+    # 補完を生成したのに一度も読まれない状態が無言で作れる（2026-09-07 に実測。
+    # `${+_comps[codex]}` が 0 のままだった）。中身の更新だけなら不要だが、
+    # 「ここで初めて生成された」場合を区別できないので毎回消す（次のシェルが作る）。
+    rm -f "$HOME"/.zcompdump*
 else
     echo "⏭️  codex is not installed; skipping Codex CLI update."
 fi

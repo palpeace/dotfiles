@@ -116,3 +116,13 @@ mise は `npm:` → `node`、`cargo:` → `rust`、`go:` → `go` のような�
 - **`~/.claude.json` を `modify_` で書かない。** CC が実行時に書く 60KB のファイルで、キャッシュとプロジェクト履歴が混ざる。公式CLI（`claude mcp add --scope user`）経由にして、形式が変わっても追随させる。`--force` 相当が無いので `claude mcp get` の存在確認と組で冪等にする。
 - **ビルドが要るサーバ本体は dotfiles に置かない。** `~/repos/mcp/<name>` に clone し、`.mcp.json` から絶対パスで指す（`dist` を版管理しない repo なら、clone 後に build が要ることを agex 側に記録する）。
 - 確認は `claude mcp list`（健全性まで見る）。
+
+## Claude Code プラグインの導入
+
+**`user` スコープのものだけ dotfiles が持つ。** 宣言は `home/.chezmoiscripts/run_onchange_after_31-install-user-plugins.sh`。
+
+- **受け皿は MCP と違う。** marketplace は `~/.claude/settings.json` の `extraKnownMarketplaces`、有効化は同じファイルの `enabledPlugins` に落ちる（実測）。**そこは `modify_settings.json` が既に管理している**ので、apply で消えない。
+- **それでも宣言が要る。** 新しいマシンでは settings.json が空から始まり、`modify_` は管理キーしか書かない。**プラグインの実体（clone とキャッシュ）も CLI でしか入らない。**
+- **冪等の取り方**: marketplace は `claude plugin marketplace list` の行、プラグインは `claude plugin list --json` の `.id` で存在を見てから足す。`claude plugin install` は `-y` が要る（stdin/stdout が TTY でないため）。`--scope` の既定は `user`。
+- **版は固定できない**（CLI に口が無い）。更新は `claude plugin update <id>` を人が叩く。
+- 常時の文脈コストは `claude plugin details <id>` が出す。**足す前に見る。**

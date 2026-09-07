@@ -59,28 +59,57 @@ echo
 jq -s -r '
   def p(f; q): (map(f) | sort) as $a | $a[((($a|length)-1)*q)|floor];
   def r(x): (x*100|round)/100;
-  {
+  # **突発 (spike) を定常と分けて数える。** 1フレームで total 5ms を超えるのは
+  # 定常ではない (pty の床は p95 1.13ms)。数フレームの突発が小さな窓の p95 を
+  # 占めると、道具が「定常が壊れている」と読み違える。
+  . as $all
+  | ([$all[] | select(.total >= 5)] | length) as $spike_n
+  | ([$all[] | select(.total < 5)]) as $clean
+  | {
+    n:            ($all | length),
     total_p50:    r(p(.total;    0.5)),  total_p95:    r(p(.total;    0.95)),
     renderer_p95: r(p(.renderer; 0.95)), diff_p95:     r(p(.diff;     0.95)),
     write_p50:    r(p(.write;    0.5)),  write_p95:    r(p(.write;    0.95)),
     write_max:    r(map(.write) | max),
-    patches_p95:  p(.patches; 0.95)
+    patches_p95:  p(.patches; 0.95),
+    spike_n:      $spike_n,
+    spike_pct:    r($spike_n * 100 / ($all | length)),
+    # 突発を除いた定常値。突発しか無い窓では 0 を返さず null にして、下の表示から落とす
+    total_p95_clean: (if ($clean | length) > 0 then r(($clean | p(.total; 0.95))) else null end),
+    write_p95_clean: (if ($clean | length) > 0 then r(($clean | p(.write; 0.95))) else null end)
   }
+  # Claude Code 側 = renderer + diff。端末側 = write。**判定はこの2つの比で行う。**
+  | . + { app_p95: r(.renderer_p95 + .diff_p95) }
   | "  total     p50 \(.total_p50)ms   p95 \(.total_p95)ms",
     "  renderer            p95 \(.renderer_p95)ms   (Claude Code 自身)",
     "  diff                p95 \(.diff_p95)ms   (Claude Code 自身)",
     "  write     p50 \(.write_p50)ms   p95 \(.write_p95)ms   max \(.write_max)ms   (端末への書き込み)",
     "  patches             p95 \(.patches_p95) 個/フレーム",
     "",
-    (if .write_p95 >= 5 then
-       "判定: 端末側がボトルネック。write p95 \(.write_p95)ms は基準 0.11ms の \((.write_p95/0.11)|round) 倍。端末を替える価値がある。"
+    # **層の比較を、絶対値の閾値より先に見る。** 2026-09-07 まで `write >= 5` を
+    # 最初に判定しており、**renderer が write の22倍あっても「端末を替える価値がある」**
+    # と言い切っていた (実測: renderer p95 614.9ms / write p95 27.58ms でその表示)。
+    # 端末を替えても total の 4% しか減らない場面で、道具が端末の交換を勧めていた。
+    (if .app_p95 >= (.write_p95 * 2) and .app_p95 >= 8 then
+       "判定: Claude Code の TUI 自身が重い。Claude Code 側 \(.app_p95)ms が端末側 \(.write_p95)ms を上回るので、端末を替えても直らない。"
+     elif .write_p95 >= 5 then
+       "判定: 端末側がボトルネック。write p95 \(.write_p95)ms は基準 0.11ms の \((.write_p95/0.11)|round) 倍で、Claude Code 側 \(.app_p95)ms より重い。端末を替える価値がある。"
      elif .write_p95 >= 1 then
        "判定: 端末側に遅延の兆候。write p95 \(.write_p95)ms (基準 0.11ms)。設定を疑い、それでも残るなら端末を替える。"
-     elif (.renderer_p95 + .diff_p95) >= 8 then
+     elif .app_p95 >= 8 then
        "判定: Claude Code の TUI 自身が重い。端末を替えても直らない。"
      elif .total_p95 < 3 then
        "判定: 描画は詰まっていない。遅さの原因は描画以外 (モデルの応答待ち・ツール実行など)。"
      else
        "判定: どのフェーズも突出していない。体感と合わないなら --last で遅かった直後だけを見ること。"
-     end)
+     end),
+    # **窓が小さいと、数フレームの突発が定常のように見える。** `--last 200` は
+    # 「劣化した数分が数時間に薄まって消える」のを防ぐために入れたが、逆側
+    # (0.03% の突発が窓の p95 を占める) を作っていた。外れ値の数と、それを除いた
+    # 定常値を必ず併記する。**どちらが本当かは人が決める。道具は両方を出す。**
+    (if .spike_n > 0 and .total_p95_clean != null then
+       "  ※ 突発 \(.spike_n) フレーム (\(.n) 中 \(.spike_pct)%、total 5ms 超) を除くと total p95 \(.total_p95_clean)ms / write p95 \(.write_p95_clean)ms。" +
+       (if .spike_pct <= 20 then "定常はこちら —— 上の p95 は突発が窓を占めた結果である。窓を広げて数え直すこと。"
+        else "突発が窓の多くを占めるので、この窓は定常を表していない。" end)
+     else empty end)
 ' "$src"

@@ -16,7 +16,8 @@ Modern, minimal, zero-touch, and AI-native development environment optimized for
 - **Dotfiles Management**: [chezmoi](https://www.chezmoi.io/) - 冪等性を保ったワンライナー環境復元
 - **Tool Management**: [mise](https://mise.jdx.dev/) - 言語・CLIツールのバージョン管理
 - **Shell & Prompt**: [Zsh](https://www.zsh.org/) + [Sheldon](https://sheldon.cli.rs/) + [Starship](https://starship.rs/)
-- **AI Native Core**: Claude Code, Copilot, Antigravity CLI (`agy`)
+- **AI Native Core**: Claude Code, Codex CLI (`codex`), Antigravity CLI (`agy`), Copilot
+- **AI 拡張の宣言的復元**: user スコープの MCP サーバと Claude Code プラグインを、宣言から冪等に入れ直す（[詳細](#-ai-拡張-mcp--プラグイン)）
 - **WSL Zero-Touch**: `/etc/wsl.conf` (`systemd=true`, `appendWindowsPath=false`) の全自動セットアップ対応
 - **WSL2 リソース最適化**: `.wslconfig` は Windows 側のファイルのため本リポジトリの管理外。[Quick Start の Step 0](#0-windows-側の事前設定-初回のみ) を参照
 
@@ -183,12 +184,57 @@ y
 | **AI エージェント** | | |
 | `agy-a` | `agy --dangerously-skip-permissions` | 権限確認をスキップして Antigravity を全自動起動 |
 | `cc-a` | `claude --permission-mode auto` | Claude Code を完全自動モードで起動 |
+| `cx` | `codex` | Codex CLI を起動（初回は `codex login` で ChatGPT にサインインする） |
+| `cx-a` | `codex --sandbox workspace-write --ask-for-approval never` | 可否を聞かずに進む。**codex には `--full-auto` のような1語の別名が無い**ので2つ並べる。サンドボックスまで外す `--dangerously-bypass-approvals-and-sandbox` は取らない |
 | `opus` / `sonnet` | `claude --permission-mode auto --model '<model>[1m]'` | 1M コンテキストで起動。第1引数が `low`〜`max` なら `--effort` として渡す (例: `opus xhigh`) |
 | `fable` | `claude --permission-mode auto --model 'fable[1m]'` | 最難関・長時間タスク向けの Fable 5 で起動。Opus の 2 倍単価で、専用の週次上限を超えると usage credits を消費する |
 | `haiku` | `claude --permission-mode auto --model haiku` | Haiku で起動 (effort 非対応) |
 | `cc-p-opus` / `cc-p-fable` | `claude --permission-mode plan --model '<model>[1m]'` | Claude Code (Opus / Fable) を計画モード(Plan)で起動 |
 | **その他** | | |
 | `ghs` | `gh auth switch` | GitHubの認証アカウントを素早く切り替え |
+
+---
+
+## 🔌 AI 拡張 (MCP / プラグイン)
+
+**AI エージェント CLI 3本（`claude` / `codex` / `agy`）は mise ではなく `~/.local/bin` に置き、自己更新に任せます。** それぞれの `update` サブコマンドがバージョン管理源になるため、mise のピンと二重にしません。**グローバル指示は `~/.config/ai-rules/global_rules.md` 1本**で、`~/.claude/CLAUDE.md` / `~/.codex/AGENTS.md` / `~/.config/antigravity/instructions.md` の3つが symlink で同じファイルを指します。
+
+### 自動で入るもの / 手が要るもの
+
+`chezmoi apply` はスクリプトを番号順に流すので、**`claude` が入った後（00）に MCP（30）とプラグイン（31）が走ります。**
+
+| 何を | どこで宣言しているか | 新しい WSL で |
+| ---- | -------------------- | ------------- |
+| AI CLI 3本の導入・更新 | `setup-system` / `update-system` | **自動** |
+| user スコープの MCP サーバ | `.chezmoiscripts/run_onchange_after_30-register-user-mcp.sh` | **自動** |
+| user スコープのプラグイン | `.chezmoiscripts/run_onchange_after_31-install-user-plugins.sh` | **自動** |
+| 各 CLI のログイン | — | **手作業**（`claude` / `codex login` / `agy`） |
+
+- **登録は公式 CLI 経由で行い、`~/.claude.json` を直接書きません。** あれは CC が実行時に書くファイルでキャッシュと履歴が混ざるため、形式が変わっても追随するよう `claude mcp add` / `claude plugin install` に寄せています。存在確認（`claude mcp get` / `claude plugin list --json`）と組にして冪等です。
+- **失敗したら非ゼロで落とします。** `run_onchange` は実行した時点で「済み」として記録されるので、握り潰すと初回の失敗が二度と再試行されません。落とせば次の `chezmoi apply` が拾い直します。
+- **ログインは自動化しません。** ブラウザ認証（`codex login` は「Sign in with ChatGPT」）が要るので、初回だけ人が通します。
+
+### いま入っているもの
+
+| 名前 | 種類 | 何ができるか | 常時コスト |
+| ---- | ---- | ------------ | ---------- |
+| `playwright` | MCP（user） | ブラウザ操作。ページを開く / 押す / 入力する / 撮る | 24 ツール |
+| `codex@openai-codex` | プラグイン（user） | Claude Code から Codex を呼ぶ（レビュー・委譲） | ~449 tok |
+
+**`playwright`** は手元の Chromium を `--executable-path` で共有するのでブラウザを二重に持ちません（無ければ MCP が初回に取得）。`--isolated` なのでログイン状態を残さず、`file://` は既定でワークスペース内に制限されます。
+
+**`codex@openai-codex`** は OpenAI 公式のプラグインで、**MCP サーバは足さず**スラッシュコマンドとサブエージェントだけを足します。使い方は Claude Code の中で `/help` に出ますが、主なものは次のとおりです。
+
+| コマンド | 何をするか |
+| -------- | ---------- |
+| `/codex:setup` | codex の導入とログインを確認する（**最初にこれ**） |
+| `/codex:review` | 未コミットの変更やブランチをレビューさせる |
+| `/codex:adversarial-review` | 設計判断やトレードオフに反論させる |
+| `/codex:rescue` | 調査・修正・続きを Codex に委譲する |
+| `/codex:transfer` | いまの文脈から Codex の会話スレッドを作る |
+| `/codex:status` / `/codex:result` / `/codex:cancel` | 走らせたジョブを見る / 受け取る / 止める |
+
+> **プラグインの版は固定できません**（CLI に口が無い）。更新は `claude plugin update <id>` を人が叩きます。足す前のコストは `claude plugin details <id>` が出します。
 
 ---
 
@@ -253,7 +299,8 @@ y
 
 | Category | Tools |
 | :--- | :--- |
-| **AI Agents (Core)** | Claude Code (`claude` / `cc-a`), Copilot, Antigravity CLI (`agy` / `agy-a`) |
+| **AI Agents (Core)** | Claude Code (`claude` / `cc-a`), Codex CLI (`codex` / `cx` / `cx-a`), Antigravity CLI (`agy` / `agy-a`), Copilot |
+| **AI 拡張** | Playwright MCP (user), Codex プラグイン (user) — [詳細](#-ai-拡張-mcp--プラグイン) |
 | **Editor / TUI** | micro (`mi`), gitui (`gu`), oxker (`ox`), yazi (`y`) |
 | **CLI Essentials** | fzf, ripgrep (`rg`), fd, eza, bat, zoxide (`z`), jq, trash-cli |
 | **Modern Ops** | xh, dust |

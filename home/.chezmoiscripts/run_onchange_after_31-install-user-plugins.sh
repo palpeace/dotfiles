@@ -30,6 +30,11 @@ if ! command -v claude >/dev/null 2>&1; then
     exit 0
 fi
 
+# **失敗したら非ゼロで落ちる。** run_onchange は実行された時点で「済み」として
+# 記録されるので、握り潰すと**初回に失敗した導入が二度と再試行されない**
+# （型 silent-success）。落とせば次の apply で再実行される。
+failures=()
+
 add_marketplace() {
     local name="$1" source="$2"
     if claude plugin marketplace list 2>/dev/null | grep -qE "^[[:space:]]*❯[[:space:]]+${name}$"; then
@@ -37,7 +42,10 @@ add_marketplace() {
         return 0
     fi
     echo "🧩 marketplace を足す: $name（$source）"
-    claude plugin marketplace add "$source" || echo "⚠️  marketplace '$name' の登録に失敗した" >&2
+    if ! claude plugin marketplace add "$source"; then
+        echo "⚠️  marketplace '$name' の登録に失敗した" >&2
+        failures+=("marketplace:$name")
+    fi
 }
 
 install_plugin() {
@@ -48,7 +56,10 @@ install_plugin() {
     fi
     echo "🧩 プラグインを user スコープへ導入: $id"
     # -y: stdin/stdout が TTY でない時に必須。--scope の既定は user
-    claude plugin install "$id" -y || echo "⚠️  プラグイン '$id' の導入に失敗した" >&2
+    if ! claude plugin install "$id" -y; then
+        echo "⚠️  プラグイン '$id' の導入に失敗した" >&2
+        failures+=("plugin:$id")
+    fi
 }
 
 # --- codex（OpenAI 公式。Claude Code から codex を呼ぶ）---
@@ -60,3 +71,8 @@ install_plugin() {
 # 常時の文脈コストは `claude plugin details codex@openai-codex` が出す（1.0.6 で ~449 tok）。
 add_marketplace "openai-codex" "openai/codex-plugin-cc"
 install_plugin "codex@openai-codex"
+
+if [ ${#failures[@]} -gt 0 ]; then
+    echo "⚠️  user スコープのプラグイン導入に失敗が残った: ${failures[*]}" >&2
+    exit 1
+fi

@@ -32,6 +32,11 @@ if ! command -v claude >/dev/null 2>&1; then
     exit 0
 fi
 
+# **失敗したら非ゼロで落ちる。** run_onchange は実行された時点で「済み」として
+# 記録されるので、ここで握り潰すと**初回に失敗した登録が二度と再試行されない**
+# （型 silent-success）。落とせば apply が失敗として報告し、次の apply で再実行される。
+failures=()
+
 register() {
     local name="$1"
     shift
@@ -40,7 +45,10 @@ register() {
         return 0
     fi
     echo "🔌 MCP を user スコープへ登録: $name"
-    claude mcp add --scope user "$name" -- "$@" || echo "⚠️  MCP '$name' の登録に失敗した" >&2
+    if ! claude mcp add --scope user "$name" -- "$@"; then
+        echo "⚠️  MCP '$name' の登録に失敗した" >&2
+        failures+=("mcp:$name")
+    fi
 }
 
 # --- Playwright（ブラウザ操作。どのプロジェクトでも意味を持つので user）---
@@ -74,3 +82,8 @@ register playwright "${playwright_args[@]}"
 # **agy**: **MCPサーバにならない。** `agy mcp` はサーバを"使う"側の管理
 #   （add/remove/list/enable/disable）で、agy 自身を出す口は無い（`--help` に
 #   serve / stdio / mcp-server が無く、あるのは `mic-serve` だけ。実測）。
+
+if [ ${#failures[@]} -gt 0 ]; then
+    echo "⚠️  user スコープの MCP 登録に失敗が残った: ${failures[*]}" >&2
+    exit 1
+fi

@@ -166,6 +166,24 @@ fi
 wait_for_apt
 $SUDO_CMD apt install -y "${APT_OPTS[@]}" "${base_apt_packages[@]}" "${browser_runtime_apt_packages[@]}"
 
+# WSL2 の先回りスワップを抑える。
+#
+# **既定の vm.swappiness=60 は、メモリに余裕があってもページを追い出す。** 実測
+# (2026-09-07): 空き 7.7GB / 12GB のまま 586MB がスワップに出ていて、その追い出された
+# ページを触り直す待ちで Claude Code の1フレームが最大10秒止まった (CPU は 0.35% しか
+# 使っておらず、計算ではなく待ち)。スワップは D: の vhdx にあり C: より遅い。
+#
+# 10 にすると「本当に足りなくなるまで追い出さない」。**足りなくなった時に追い出すのは
+# 変わらない**ので、OOM の安全網 (swap=8GB) はそのまま残す。
+# 記録と判定条件: agex の bundles/meta/workstation.md
+echo "🧠 Setting vm.swappiness=10 (WSL2 proactive swap-out causes multi-second TUI stalls)..."
+if [ "$(cat /proc/sys/vm/swappiness 2>/dev/null || echo 60)" != "10" ] \
+   || [ ! -f /etc/sysctl.d/90-agex-swappiness.conf ]; then
+    printf '# WSL2 の先回りスワップを抑える（agex #248）。空きがあってもページアウトする\n# 既定 60 では、追い出したページの読み直しで TUI が数秒止まる。\nvm.swappiness = 10\n' \
+      | $SUDO_CMD tee /etc/sysctl.d/90-agex-swappiness.conf >/dev/null
+    $SUDO_CMD sysctl -q -p /etc/sysctl.d/90-agex-swappiness.conf
+fi
+
 echo "🔤 Rebuilding font cache..."
 fc-cache -fv
 

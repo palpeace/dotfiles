@@ -64,10 +64,13 @@ register playwright "${playwright_args[@]}"
 
 # --- 入れていないもの（判断を残す）---
 #
-# **codex**: `codex mcp-server` は動く（ツールは `codex` / `codex-reply` の2本だけ）が、
-#   **起動時に「deprecated。将来のリリースで削除する」と警告する**（0.153.4 実測）。
-#   加えて ChatGPT のサブスクが未開通で auth が通らない。**引き金**: サブスクが開通し、
-#   かつ非推奨でない起動方法が判明したら入れる。
+# **codex**: **MCP では入れない。** `codex mcp-server` は動く（ツールは `codex` /
+#   `codex-reply` の2本）が非推奨で、**公式の後継は MCP ではなく Claude Code の
+#   プラグイン** `openai/codex-plugin-cc`（`@openai/codex-mcp` という npm パッケージは
+#   存在しない。2026-09-08 実測）。**受け皿はこのファイルではなく
+#   `~/.claude/settings.json` の `enabledPlugins`** で、そちらは modify_settings.json が
+#   既に管理している。**引き金**: ChatGPT のサブスクが開通したら入れる
+#   （`/codex:setup` が `codex login` を要求する）。
 # **agy**: **MCPサーバにならない。** `agy mcp` はサーバを"使う"側の管理
 #   （add/remove/list/enable/disable）で、agy 自身を出す口は無い（`--help` に
 #   serve / stdio / mcp-server が無く、あるのは `mic-serve` だけ。実測）。

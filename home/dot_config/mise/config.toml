@@ -18,6 +18,10 @@ fzf = "0.74.1"        # インタラクティブ検索
 ripgrep = "15.2.0"    # テキスト検索
 "aqua:sharkdp/fd" = "10.4.2"  # ファイル検索
 bat = "0.26.1"        # 構文ハイライト付き pager
+# Markdown を端末で「描画」する（見出しの反転ブロック・箇条書きの •・表の罫線組み）。
+# bat は md をハイライトするだけで ** や | が残り表も揃わないので、別物として併置する。
+# 用途は micro で書いた md の確認と bundles/ の拾い読み。書く側は micro、読む側は glow。
+"aqua:charmbracelet/glow" = "3.0.0"  # Markdown の端末描画
 eza = "0.23.5"        # ls 代替
 jq = "1.8.2"          # JSON 処理
 # ゴミ箱経由削除。FreeDesktop 準拠の Python 実装。

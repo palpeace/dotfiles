@@ -118,6 +118,32 @@ y() {
   command rm -f -- "$tmp"
 }
 alias mi="micro"
+
+# 簡易メモ。Windows のメモ帳を置き換える。
+# 効くのは「エディタを替えたこと」ではなく置き場を WSL 側の1本に固定したことで、
+# メモ帳の既定の保存先は Windows 側 (/mnt/c 越し・CRLF・遅い) なうえ、保存せず
+# 閉じれば消え、保存しても AI からは誰も見に行かない。書く側 micro / 読む側 glow。
+# 1日1ファイルにするのは、あとで日付だけで辿れるようにするため。
+#   memo            今日のファイルを末尾で開く
+#   memo <text>     開かずに時刻つきで1行追記する (メモ帳を開く手間の大半はこれで消える)
+#   memov [YYYY-MM-DD]  glow で描画して読む (既定は今日)
+# Agex に渡す原文は別口。リポジトリ直下の .inbox.md に置いて /ingest が食う。
+export MEMO_DIR="$HOME/notes"
+memo() {
+  local f="$MEMO_DIR/$(date +%Y-%m-%d).md"
+  [[ -d $MEMO_DIR ]] || mkdir -p "$MEMO_DIR"
+  [[ -s $f ]] || print -r -- "# $(date +%Y-%m-%d)" > "$f"
+  if (( $# )); then
+    print -r -- "- $(date +%H:%M) $*" >> "$f"
+    return
+  fi
+  micro "+$(( $(wc -l < "$f") + 1 ))" "$f"
+}
+memov() {
+  local f="$MEMO_DIR/${1:-$(date +%Y-%m-%d)}.md"
+  [[ -f $f ]] || { print -ru2 -- "memo: $f が無い"; return 1; }
+  glow -p "$f"
+}
 alias agy-a="agy --dangerously-skip-permissions"
 
 # Claude Code の TUI フレーム計測を常時オンにする (1フレーム1行の JSONL)。

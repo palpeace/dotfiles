@@ -1,9 +1,20 @@
 [tools]
 # 1. ランタイム（メジャー/マイナー固定）
-# ここに置くのは「バックエンド（npm: / cargo: / pipx: / go:）の前提になるもの」だけ。
-# **go は 2026-09-07 に落とした** —— go: のツールも Go のプロジェクト（go.mod）も
-# 1つも無いのに 287MB を占めていた。go: を足す時は、この行と
-# setup-system のランタイム列（--jobs=1 の行）の両方に go を戻す。
+# ここに置くのは「バックエンド（npm: / cargo: / pipx: / go:）の前提になるもの」と、
+# **rustup のように mise の外に実体を持つツールチェインの入口**。
+#
+# **go は 2026-09-07 に落とした** —— go: のツールも Go のプロジェクト（go.mod / *.go）も
+# 1つも無いのに 287MB を占めていた（~/repos と ~/agex を深さ無制限で実測）。
+# go: のツールを足す時は、この行と setup-system のランタイム列（--jobs=1 の行）の
+# 両方に go を戻す（片方だけだと版を解決できずに落ちる）。
+#
+# **rust は落とさない。** mise が持つのは入口だけで（installs/rust は ~/.cargo/bin への
+# symlink 8KB）、実体は rustup 側の ~/.rustup。**そこに居る rust-analyzer が
+# zerostop（Rust 13クレート）の LSP としてホストで動いている** ——
+# repo 側のプラグインが `command: "rust-analyzer"` を指し、`just setup` が
+# `rustup component add rust-analyzer` を叩く。ビルドとテストは Docker の中の cargo だが、
+# **LSP だけはホストのツールチェインを要求する**（言語サーバのバイナリはマシン共通に
+# しか置けない、という global_rules.md の但し書きがこの実例）。
 rust = "stable"
 node = "lts"
 python = "3.12"

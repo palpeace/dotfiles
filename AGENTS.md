@@ -100,3 +100,19 @@ mise は `npm:` → `node`、`cargo:` → `rust`、`go:` → `go` のような�
 - **公式インストーラが `~/.zshrc` を書き換えうる。** codex のインストーラは `$HOME/.local/bin` が PATH に無いと判断すると、Linux + zsh では `~/.zshrc` に `# >>> Codex installer >>>` の PATH ブロックを追記する（`install.sh` の `pick_profile` / `add_to_path`）。`~/.zshrc` は chezmoi 管理下なので、**追記されると次の apply で消えて毎回書き戻るドリフト源になる**。`setup-system` は先頭で PATH に `$HOME/.local/bin` を入れているため `already on PATH` で何も書かない（2026-09-07 実測）。**この前提を崩さない。**
 - **グローバル指示は1本を3箇所から symlink する。** 実体は `home/dot_config/ai-rules/global_rules.md` で、`home/dot_claude/symlink_CLAUDE.md` / `home/dot_codex/symlink_AGENTS.md` / `home/dot_config/antigravity/symlink_instructions.md` が同じファイルを指す。**CLIを足す時はこの symlink も足す** —— 無いとそのCLIだけ規範が届かない。
 - **資格情報と実行時状態は `.chezmoiignore` で塞ぐ**（`**/.codex/auth.json` 等）。
+
+## MCP サーバの登録
+
+**`user` スコープのものだけ dotfiles が持つ。** `home/.chezmoiscripts/run_onchange_after_30-register-user-mcp.sh` が唯一の宣言で、他の3つの登録先には手を出さない。
+
+| 登録先                     | 実体                                             | 誰が持つか                                    |
+| -------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| `project`                  | リポジトリ直下の `.mcp.json`                     | **その repo**（コミットされるので clone で戻る） |
+| **`user`**                 | `~/.claude.json` の `mcpServers`                 | **dotfiles**（chezmoi 管理外なので作り直すと消える） |
+| `local`                    | `~/.claude.json` の `projects.<パス>.mcpServers` | 使わない                                      |
+| アカウント側のコネクタ     | ローカルに無い                                   | claude.ai 側。**管理対象が存在しない**        |
+
+- **判定は「そのプロジェクトの外で意味を持つか」。** repo の面やデータを触るもの（TickTick の特定リスト、部署DB）は `project`。ブラウザのような汎用の道具が `user`。
+- **`~/.claude.json` を `modify_` で書かない。** CC が実行時に書く 60KB のファイルで、キャッシュとプロジェクト履歴が混ざる。公式CLI（`claude mcp add --scope user`）経由にして、形式が変わっても追随させる。`--force` 相当が無いので `claude mcp get` の存在確認と組で冪等にする。
+- **ビルドが要るサーバ本体は dotfiles に置かない。** `~/repos/mcp/<name>` に clone し、`.mcp.json` から絶対パスで指す（`dist` を版管理しない repo なら、clone 後に build が要ることを agex 側に記録する）。
+- 確認は `claude mcp list`（健全性まで見る）。

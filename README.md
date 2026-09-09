@@ -208,6 +208,7 @@ y
 | AI CLI 3本の導入・更新 | `setup-system` / `update-system` | **自動** |
 | user スコープの MCP サーバ | `.chezmoiscripts/run_onchange_after_30-register-user-mcp.sh` | **自動** |
 | user スコープのプラグイン | `.chezmoiscripts/run_onchange_after_31-install-user-plugins.sh` | **自動** |
+| user スコープの skill | `home/dot_claude/skills/`（chezmoi が実体を配るのでスクリプト不要） | **自動** |
 | 各 CLI のログイン | — | **手作業**（`claude` / `codex login` / `agy`） |
 
 - **登録は公式 CLI 経由で行い、`~/.claude.json` を直接書きません。** あれは CC が実行時に書くファイルでキャッシュと履歴が混ざるため、形式が変わっても追随するよう `claude mcp add` / `claude plugin install` に寄せています。存在確認（`claude mcp get` / `claude plugin list --json`）と組にして冪等です。
@@ -220,6 +221,7 @@ y
 | ---- | ---- | ------------ | ---------- |
 | `playwright` | MCP（user） | ブラウザ操作。ページを開く / 押す / 入力する / 撮る | 24 ツール |
 | `codex@openai-codex` | プラグイン（user） | Claude Code から Codex を呼ぶ（レビュー・委譲） | ~449 tok |
+| `readable-japanese` | skill（user） | 日本語の返答・文書を読める形に整える規範（`check-ng.sh` 付き） | ~300 tok |
 
 **`playwright`** は手元の Chromium を `--executable-path` で共有するのでブラウザを二重に持ちません（無ければ MCP が初回に取得）。`--isolated` なのでログイン状態を残さず、`file://` は既定でワークスペース内に制限されます。
 
@@ -233,6 +235,8 @@ y
 | `/codex:rescue` | 調査・修正・続きを Codex に委譲する |
 | `/codex:transfer` | いまの文脈から Codex の会話スレッドを作る |
 | `/codex:status` / `/codex:result` / `/codex:cancel` | 走らせたジョブを見る / 受け取る / 止める |
+
+**`readable-japanese`** は自作の skill で、`~/.claude/skills/` に置くだけで user スコープに入ります（登録スクリプトは要りません）。常時載るのは name と description だけで、本体（返答の型・装飾の使用条件・長文の規範・隠している語の分類）は呼ばれた時に読まれます。`scripts/check-ng.sh <ファイル>` は 33 パターンの表を当てて `path:line: [hard] 「語」 → 直し方` を出し、hard を1件でも拾えば終了コード 1 で落ちます。**skill は呼ばれない限り効かない**ので、毎回の返答に効かせる経路は `~/.config/ai-rules/global_rules.md` の第7節が持ちます（そこから SKILL.md を指しており、`claude` / `codex` / `agy` の3本に同じ1条が届きます）。
 
 > **プラグインの版は固定できません**（CLI に口が無い）。更新は `claude plugin update <id>` を人が叩きます。足す前のコストは `claude plugin details <id>` が出します。
 

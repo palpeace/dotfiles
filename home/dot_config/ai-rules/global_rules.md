@@ -35,3 +35,8 @@
 ## 6. グローバルスキルの参照指針 (Agentic Skills Usage)
 - 環境共通の拡張スキルは `~/.agents/skills/` 配下に自動配備されています。
 - マルチエージェントオーケストレーション、Computer Use（GUI/画面操作）、および特定の専門的タスクの実行時は、`~/.agents/skills/<skill-name>/SKILL.md` に定義された仕様・スクリプトを参照して実行すること。
+
+## 7. 出力と文章の規範 (Response & Writing Style)
+- **ユーザーへの返答を書くたび、および文書（設計文書・README・Issue・PR・コミットメッセージ・記事）を書くか推敲するたびに `~/.claude/skills/readable-japanese/SKILL.md` を読み、その規範に従うこと。** 呼び出し（`/readable-japanese`）を待たない。
+- 骨は4つ。答えを冒頭1文に置く／作業ログではなく何が変わったかを書く／箇条書き・見出し・表・太字は SKILL.md の使用条件を満たす時だけ使う／答え・根拠・主体・量を隠す語（「承知しました」「問題ありません」「〜が求められる」「適切に」）を書かない。細部は同ディレクトリの `references/` を引くこと。
+- 長い文書は `~/.claude/skills/readable-japanese/scripts/check-ng.sh <ファイル>` を当て、hard を0件にしてから出すこと。

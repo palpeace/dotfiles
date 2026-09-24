@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Docker Engine を Ubuntu（WSL2）に直接入れる。何度実行してもよい。
-# Docker Desktop は使わない。GPU（NVIDIA Container Toolkit）は入れない。
+# Docker Desktop は使わない。
+# Windows 側に NVIDIA のドライバがある端末では、NVIDIA Container Toolkit も入れて
+# コンテナから GPU を使えるようにする（docker run --gpus all）。
+# WSL の中に Linux 用の NVIDIA ドライバは入れない（Windows 側のドライバを使う）。
 set -euo pipefail
 
 . /etc/os-release
@@ -37,3 +40,32 @@ fi
 sudo systemctl enable --now docker
 systemctl is-active --quiet docker || { echo "docker が起動していない" >&2; exit 1; }
 echo "Docker Engine: $(docker --version)"
+
+# --- NVIDIA GPU（Windows 側に NVIDIA のドライバがあるときだけ）---
+# WSL は Windows のドライバがあると /usr/lib/wsl/lib/nvidia-smi を置く。それを判定に使う。
+if [ ! -x /usr/lib/wsl/lib/nvidia-smi ]; then
+  echo "NVIDIA の GPU は無いので、NVIDIA Container Toolkit は入れない"
+  exit 0
+fi
+
+if ! dpkg -s nvidia-container-toolkit >/dev/null 2>&1; then
+  echo "==> NVIDIA Container Toolkit の apt リポジトリを登録する"
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/nvidia-container-toolkit.gpg
+  curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+    | sed 's#deb https://#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.gpg] https://#g' \
+    | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list >/dev/null
+
+  echo "==> NVIDIA Container Toolkit を入れる"
+  sudo apt-get "${apt_opts[@]}" update
+  sudo apt-get "${apt_opts[@]}" install -y nvidia-container-toolkit
+fi
+
+# Docker に nvidia ランタイムを登録する（済んでいれば何も変わらない）
+if ! grep -q nvidia /etc/docker/daemon.json 2>/dev/null; then
+  sudo nvidia-ctk runtime configure --runtime=docker
+  sudo systemctl restart docker
+fi
+echo "NVIDIA Container Toolkit: $(nvidia-ctk --version | head -1)"
+echo "確かめる: docker run --rm --gpus all ubuntu nvidia-smi"

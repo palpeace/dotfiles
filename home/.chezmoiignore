@@ -12,3 +12,22 @@
 **/*.log
 .gitconfig.work
 .zsh_history
+
+# 鍵・クラウド・パッケージレジストリの認証情報
+**/.ssh/**
+**/.aws/**
+**/.gnupg/**
+**/.kube/config
+**/.npmrc
+**/.netrc
+**/.docker/config.json
+**/.cargo/credentials*
+
+# codex / agy: 管理するのは指示ファイルの symlink だけ。バイナリ・履歴・状態は入れない
+**/.codex/auth.json
+.codex/packages
+.codex/sessions
+.codex/log
+.codex/tmp
+.codex/*.sqlite*
+.codex/version.json

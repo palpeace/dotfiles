@@ -1,0 +1,29 @@
+# 認証情報・秘密（Public リポジトリに置かない）
+*credentials*
+auth.json
+.claude.json
+hosts.yml
+secrets.zsh
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.gitconfig.work
+
+# 実行時の状態・ログ・履歴
+*.jsonl
+*.log
+.zsh_history
+.bash_history
+
+# 端末固有の上書き
+*.local
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+*.swp

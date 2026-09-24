@@ -1,0 +1,14 @@
+# .gitignore と同じ方針: 秘密・状態・ログはターゲットに展開しない
+**/*credentials*
+**/auth.json
+**/.claude.json
+**/hosts.yml
+**/secrets.zsh
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.jsonl
+**/*.log
+.gitconfig.work
+.zsh_history

@@ -41,8 +41,7 @@ sudo systemctl enable --now docker
 systemctl is-active --quiet docker || { echo "docker が起動していない" >&2; exit 1; }
 echo "Docker Engine: $(docker --version)"
 
-# --- NVIDIA GPU（Windows 側に NVIDIA のドライバがあるときだけ）---
-# WSL は Windows のドライバがあると /usr/lib/wsl/lib/nvidia-smi を置く。それを判定に使う。
+# NVIDIA GPU: WSL は Windows のドライバがあると /usr/lib/wsl/lib/nvidia-smi を置く。それを判定に使う。
 if [ ! -x /usr/lib/wsl/lib/nvidia-smi ]; then
   echo "NVIDIA の GPU は無いので、NVIDIA Container Toolkit は入れない"
   exit 0

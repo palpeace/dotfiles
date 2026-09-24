@@ -29,7 +29,7 @@ cd "${cwd:-$HOME}"
 hold() {
   printf '%s\n' "$1" >&2
   # popup は閉じると跡が残らないので、読ませてから閉じる。
-  # 端末が繋がっていない時（CLIからの検証など）は待たない —— 待つと無言で固まる。
+  # 端末が無いとき（CLI からの確認など）は待たない。待つと無言で固まる。
   if [ -t 0 ]; then
     read -rsn1 -p 'press any key to close' _ || true
   fi
@@ -43,9 +43,7 @@ printf '%s tool=%s pane=%s cwd=%s env_cwd=%s\n' \
   "$(date -Is)" "$tool" "${pane_id:-?}" "$PWD" "${HERDR_ACTIVE_PANE_CWD:-<unset>}" \
   >>"$log_dir/herdr-here.log" 2>/dev/null || true
 
-# 実体の解決は、実体を必要とする分岐の中でだけ行う。
-# 先頭で無条件に走らせると `shell` のような「PATHに無いのが正しい」擬似ツールが
-# command not found に落ちる（実際に落ちた）。
+# 実体の解決は、必要な分岐の中でだけ行う（PATH に無いのが正しい `shell` を落とさないため）。
 launcher=()
 resolve_launcher() {
   command -v "$tool" >/dev/null 2>&1 && return 0

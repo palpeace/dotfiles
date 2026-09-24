@@ -1,29 +1,19 @@
 "$schema" = "https://starship.rs/config-schema.json"
 
-# ==========================================
-# 全体設定
-# ==========================================
 add_newline = true
 continuation_prompt = "▶▶ "
 scan_timeout = 30
 command_timeout = 1000
 
-# 必要なものだけ順序立てて表示
 format = """
 $username$hostname$directory$git_branch$git_status$docker_context$cmd_duration$status
 $line_break$character"""
 
-# ==========================================
-# コマンド実行時間
-# ==========================================
 [cmd_duration]
 min_time = 2_000
 format = "took [$duration]($style) "
 style = "yellow italic"
 
-# ==========================================
-# ディレクトリ
-# ==========================================
 [directory]
 style = "bold cyan"
 format = "[$path]($style)[$read_only]($read_only_style) "
@@ -33,17 +23,11 @@ truncation_symbol = "…/"
 read_only = " "
 read_only_style = "bold yellow"
 
-# ==========================================
-# 入力行
-# ==========================================
 [character]
 success_symbol = "[>](bold green) "
 error_symbol = "[>](bold red) "
 vicmd_symbol = "[<](bold yellow) "
 
-# ==========================================
-# Git
-# ==========================================
 [git_branch]
 symbol = " "
 style = "bold magenta"
@@ -64,19 +48,12 @@ staged = "+${count}"
 renamed = "»${count}"
 deleted = "✘${count}"
 
-# ==========================================
-# Docker
-# ==========================================
 [docker_context]
 symbol = " "
 format = "via [$symbol$context]($style) "
 style = "blue"
 only_with_files = true
 
-# ==========================================
-# 終了ステータス
-# 失敗時だけ出す
-# ==========================================
 [status]
 disabled = false
 format = "[✘ $status]($style) "
@@ -85,9 +62,6 @@ success_symbol = ""
 map_symbol = true
 recognize_signal_code = true
 
-# ==========================================
-# SSH時だけ出す
-# ==========================================
 [hostname]
 ssh_only = true
 format = "[@$hostname](dimmed green) "
@@ -100,9 +74,6 @@ style_root = "bold red"
 format = "[$user]($style)@"
 disabled = false
 
-# ==========================================
-# ノイズ抑制
-# ==========================================
 [package]
 disabled = true
 
@@ -117,5 +88,4 @@ disabled = true
 
 [azure]
 disabled = true
-
 

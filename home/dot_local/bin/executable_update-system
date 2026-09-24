@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# 環境をまとめて更新する。各段は失敗しても次へ進み、最後に失敗した段を一覧にする。
-#   1. dotfiles（chezmoi update = git pull + apply。宣言の変更もここで入る）
-#   2. OS パッケージ（apt）
-#   3. mise 本体と、mise で宣言したツール（latest のものが上がる。herdr もここ）
-#   4. zsh プラグイン（sheldon）
-#   5. 自己更新する AI エージェント CLI（claude / codex / agy）
+# 環境をまとめて更新する（dotfiles・apt・mise・zsh プラグイン・AI エージェント CLI）。
+# 各段は失敗しても次へ進み、最後に失敗した段を一覧にする。
 set -uo pipefail
 
 PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"

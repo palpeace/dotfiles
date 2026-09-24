@@ -46,11 +46,8 @@ switch_workspace = "prefix+shift+1..9"  # ワークスペースへ番号で移�
 focus_agent = "prefix+alt+1..9"         # エージェントへ番号で移動
 last_pane = "prefix+u"                  # 直前のペインへ戻る
 
-# --- popup で開くもの ---
-# 「新しいタブ → コマンド → 抜ける → タブを閉じる」を1打鍵にする。
-# cwd の解決、PATH の更新漏れ、yazi の cd 送り返しは herdr-here が受け持つ
-# （[[keys.command]] には cwd を指定する項目が無い）。
-# 98% は「popup だと分かる縁」を残すため。
+# popup で開くもの。「新しいタブ → コマンド → 抜ける → 閉じる」を1打鍵にする（起動は herdr-here）。
+# 98% は popup だと分かる縁を残すため。
 [[keys.command]]
 key = "prefix+enter"
 type = "popup"

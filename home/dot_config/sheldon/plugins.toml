@@ -1,15 +1,14 @@
 shell = "zsh"
 
-# 1. 補完の強化 (Tabキーを賢く)
+# 補完を増やす
 [plugins.zsh-completions]
 github = "zsh-users/zsh-completions"
 
-# 2. 爆速ハイライト (コマンドが正しいかリアルタイム色付け)
-# 標準の syntax-highlighting より高速な「fast」版を採用
+# 入力中のコマンドを色付けする（標準の syntax-highlighting より速い版）
 [plugins.fast-syntax-highlighting]
 github = "zdharma-continuum/fast-syntax-highlighting"
 
-# 3. 過去の履歴からの予測 (灰色のゴースト表示)
+# 履歴からの予測を灰色で出す
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
 use = ["{{ name }}.zsh"]

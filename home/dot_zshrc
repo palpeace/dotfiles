@@ -62,21 +62,25 @@ y() {
   command rm -f -- "$tmp"
 }
 
-# Claude Code をモデル指定で起動する。第1引数が effort（low〜max）なら --effort に渡す。
-#   例: opus xhigh "難しいタスク" / sonnet low / fable max
-# 権限モードは付けない（既定の auto のまま）。
+# Claude Code をモデル指定で起動する。第1引数が effort（low〜max）ならそれを使い、
+# 無ければモデルごとの既定を使う。権限モードは付けない（既定の auto のまま）。
+#   例: opus "タスク"（high） / opus xhigh "難しいタスク" / sonnet low
+# 既定の根拠（Claude Code 2.1.281 のモデル表）:
+#   sonnet medium: 速さと費用を優先する用途。xhigh 以上は費用が 2.4〜5.6 倍に跳ねる
+#   opus   high:   普段の本命。カタログ既定の medium から1段上げる
+#   fable  xhigh:  最難関の作業用。xhigh でも費用は 1.38 倍。max は考えすぎることがある
+#   haiku:         effort に対応していない
 _cc_model() {
-  local model="$1"
-  shift
-  local args=(--model "$model")
+  local model="$1" effort="$2"
+  shift 2
   case "${1:-}" in
-    low | medium | high | xhigh | max) args+=(--effort "$1"); shift ;;
+    low | medium | high | xhigh | max) effort="$1"; shift ;;
   esac
-  claude "${args[@]}" "$@"
+  claude --model "$model" --effort "$effort" "$@"
 }
-opus() { _cc_model opus "$@"; }
-sonnet() { _cc_model sonnet "$@"; }
-fable() { _cc_model fable "$@"; }
+sonnet() { _cc_model sonnet medium "$@"; }
+opus() { _cc_model opus high "$@"; }
+fable() { _cc_model fable xhigh "$@"; }
 haiku() { claude --model haiku "$@"; } # haiku は effort 非対応
 
 # 秘密（リポジトリ外。存在する場合のみ読む）

@@ -59,6 +59,7 @@ main() {
   2. gh auth login
   3. claude / codex / agy をそれぞれ一度起動してログインする
   4. 仕事用の git 設定が必要なら ~/.gitconfig.work を作る（リポジトリには入れない）
+  5. SSH で入るなら ~/.ssh/authorized_keys に公開鍵を置く（リポジトリには入れない）
 EOF
 }
 

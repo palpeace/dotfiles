@@ -23,9 +23,13 @@ install() { # <command> <installer URL> <shell>
   for f in $profiles; do
     [ -f "$HOME/$f" ] && cp -p "$HOME/$f" "$backup/$f"
   done
-  if ! curl -fsSL "$2" | "$3"; then
+  # curl | sh にしない。sh には pipefail が無く、curl が失敗しても空の入力を受けた sh が 0 で終わるので、
+  # 失敗が成功として記録され、run_onchange が再実行されなくなる。
+  # 標準入力は curl | sh のときと同じく端末にしない（インストーラが質問を出さないように）
+  if ! curl -fsSL "$2" -o "$backup/installer" || ! "$3" "$backup/installer" </dev/null || ! command -v "$1" >/dev/null 2>&1; then
     failures="$failures $1"
   fi
+  rm -f "$backup/installer"
   for f in $profiles; do
     if [ -f "$backup/$f" ]; then
       cat "$backup/$f" >"$HOME/$f"

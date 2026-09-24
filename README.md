@@ -40,17 +40,45 @@ Windows Terminal の `settings.json` に足すもの:
 端末を開くと `.zshrc` が herdr を起動するので、herdr 専用のプロファイルは要らない。
 WSL のプロファイルが指すディストリビューション名は、作り直したら合わせる。
 
-### 2. WSL の中
+### 2. WSL をインストール（PowerShell）
+
+```powershell
+wsl --install -d Ubuntu-24.04 --name main-wsl --no-launch
+wsl --set-default main-wsl
+wsl
+```
+
+- `--no-launch` を付けないとインストール直後に Ubuntu が起動し、抜けるまで2行目が実行されない。
+- 初回起動でユーザー名とパスワードを聞かれる。
+- `--name` が使えないと言われたら、先に `wsl --update` を実行する。
+
+### 3. GitHub のトークンを発行（ブラウザ）
+
+bootstrap は mise のツールなどを GitHub から取ってくる。未認証だと API のレートリミット（1時間に60回）に引っかかるので、読み取り専用のトークンを渡す。
+
+<https://github.com/settings/personal-access-tokens/new> で次のように作り、表示された `github_pat_...` をコピーする（画面を閉じると二度と表示されない）。
+
+| 項目 | 値 |
+|---|---|
+| Token name | `wsl-bootstrap` |
+| Expiration | 7 days |
+| Repository access | Public repositories のまま |
+| Permissions | 何も追加しない |
+
+### 4. bootstrap を実行（WSL の中）
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/bootstrap.sh | sh
+printf 'GitHub token: ' && read -rs GITHUB_TOKEN && echo && export GITHUB_TOKEN && curl -fsSL https://raw.githubusercontent.com/palpeace/dotfiles/main/bootstrap.sh | sh
 ```
+
+`GitHub token:` と出たらトークンを貼り付けて Enter を押す（画面には表示されない）。
+1行にしているのは意図的で、`read` と `curl` を別の行のまま貼り付けると `curl` の行がトークンとして読まれてしまう。
 
 zsh・mise・chezmoi を入れて dotfiles を展開し、`chezmoi apply` の中で残りを入れる
 （mise のツール、claude / codex / agy、Claude Code のプラグイン、Docker Engine、SSH サーバ、Google Chrome）。
 途中で sudo のパスワードを聞かれる。
 
-### 3. 認証（手作業）
+### 5. 認証（手作業）
 
 1. 新しい端末を開く（zsh で起動する）
 2. `gh auth login`

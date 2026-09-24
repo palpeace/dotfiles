@@ -19,6 +19,6 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !~/.local/share/mise/shims/gh auth git-credential
-# 仕事用の設定（メールアドレス等）はリポジトリ外の ~/.gitconfig.work に置く
-[includeIf "gitdir:~/work/"]
+# 仕事用の設定（メールアドレス等）はリポジトリ外の ~/.gitconfig.work に置き、~/repos/work/ の下でだけ読む
+[includeIf "gitdir:~/repos/work/"]
 	path = ~/.gitconfig.work

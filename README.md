@@ -83,7 +83,7 @@ zsh・mise・chezmoi を入れて dotfiles を展開し、`chezmoi apply` の中
 1. 新しい端末を開く（zsh で起動する）
 2. `gh auth login`
 3. `claude` / `codex` / `agy` をそれぞれ一度起動してログインする
-4. 仕事用の git 設定が要るなら `~/.gitconfig.work` を作る（リポジトリには入れない）
+4. 仕事用の git 設定が要るなら `~/.gitconfig.work` を作る（リポジトリには入れない）。`~/repos/work/` の下のリポジトリでだけ読まれる
 5. SSH で入るなら `~/.ssh/authorized_keys` に公開鍵を置く（リポジトリには入れない）
 
 ## 日常の操作

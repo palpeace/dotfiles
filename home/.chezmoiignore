@@ -31,3 +31,7 @@
 .codex/tmp
 .codex/*.sqlite*
 .codex/version.json
+
+# agy (~/.gemini): 管理するのは config/AGENTS.md の symlink だけ
+.gemini/antigravity-cli
+.gemini/*.json

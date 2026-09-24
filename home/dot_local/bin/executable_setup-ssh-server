@@ -10,7 +10,17 @@ if [ "${ID:-}" != "ubuntu" ]; then
   exit 1
 fi
 
-if ! dpkg -s openssh-server >/dev/null 2>&1; then
+# WSL2 では同じ PC のディストリビューションが1つのネットワークを共有するので、
+# 22 番を持てるのは1つだけ。別のディストリビューションが使っていたら入れずに終わる
+# （入れると postinst が待ち受けに失敗し、パッケージが half-configured で残る）。
+installed=0
+dpkg-query -W -f='${Status}' openssh-server 2>/dev/null | grep -q 'install ok installed' && installed=1
+if [ "$installed" -eq 0 ] && ss -tln | grep -qE ':22[[:space:]]'; then
+  echo "22 番は別のディストリビューション（か別のプロセス）が使っているので、SSH サーバは入れない"
+  exit 0
+fi
+
+if [ "$installed" -eq 0 ]; then
   echo "==> openssh-server を入れる"
   sudo apt-get -o DPkg::Lock::Timeout=300 update
   sudo apt-get -o DPkg::Lock::Timeout=300 install -y openssh-server

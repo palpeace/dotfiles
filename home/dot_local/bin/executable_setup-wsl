@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# WSL の設定と、WSL から Windows を使うための道具を入れる。何度実行してもよい。
+#  - /etc/wsl.conf の [interop] appendWindowsPath=false: Windows 側の PATH を混ぜない
+#    （コマンドの検索が速くなり、Windows 側の node などを誤って使わない）。
+#    反映は Windows 側で `wsl --shutdown` した後。
+#  - wslu: wslview で Windows のブラウザを開く（BROWSER は ~/.zshenv で設定する）
+set -euo pipefail
+
+if ! dpkg -s wslu >/dev/null 2>&1; then
+  echo "==> wslu を入れる"
+  sudo apt-get -o DPkg::Lock::Timeout=300 update
+  sudo apt-get -o DPkg::Lock::Timeout=300 install -y wslu
+fi
+
+conf=/etc/wsl.conf
+if ! grep -qE '^[[:space:]]*appendWindowsPath[[:space:]]*=[[:space:]]*false' "$conf" 2>/dev/null; then
+  echo "==> $conf に appendWindowsPath=false を書く（wsl --shutdown の後に効く）"
+  tmp="$(mktemp)"
+  trap 'rm -f "$tmp"' EXIT
+  cat "$conf" 2>/dev/null >"$tmp" || true  
+  # 既存の appendWindowsPath 行を消し、[interop] に足す（無ければ節ごと足す）
+  sed -i '/^[[:space:]]*appendWindowsPath[[:space:]]*=/d' "$tmp"
+  if grep -q '^\[interop\]' "$tmp"; then
+    sed -i '/^\[interop\]/a appendWindowsPath=false' "$tmp"
+  else
+    printf '\n[interop]\nappendWindowsPath=false\n' >>"$tmp"
+  fi
+  sudo install -m 0644 -o root -g root "$tmp" "$conf"
+fi

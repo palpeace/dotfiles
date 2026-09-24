@@ -80,3 +80,5 @@ push の前に gitleaks が秘密を検査する（`.githooks/pre-push`）。
 - [ ] **SSH サーバ**: 別の PC から鍵で入れること。
       WSL2 では同じ PC のディストリビューションが 22 番を共有するので、SSH サーバを持てるのは1つだけ。
 - [ ] **docker を sudo なしで使えること**（WSL を開き直した後）。
+- [ ] **Windows 側の PATH が混ざらないこと**（`wsl --shutdown` の後）。`echo $PATH` に `/mnt/c` が無く、
+      `gh auth login` などが wslview で Windows のブラウザを開けること。

@@ -6,3 +6,6 @@ typeset -U path PATH
 # Ubuntu の /etc/zsh/zshrc は ~/.zshrc より前に compinit を呼ぶ。
 # 二重に走って遅くなり、後から fpath に足した補完も拾われないので止める。
 skip_global_compinit=1
+
+# リンクを Windows のブラウザで開く（gh auth login などが使う）。wslview は setup-wsl が入れる
+export BROWSER=wslview

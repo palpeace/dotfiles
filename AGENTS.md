@@ -10,6 +10,7 @@
   - 既存キーを残したい JSON などは `modify_` スクリプトで必要なキーだけを書き換える。
 - **ブートストラップが終わったら、手で何もインストールしない。** 必要なものはここに書いてから `chezmoi apply` する。
   - OS の土台（ログインシェルの zsh、git、curl など）は apt で入れ、`bootstrap.sh` に書く。
+  - sudo が要るそれ以外のもの（WSL の設定、Docker、SSH サーバ、Chrome）は `home/dot_local/bin/setup-*` に書き、`run_onchange_after_30-system-services` から呼ぶ。
   - ユーザーのツール（chezmoi、gh、gitleaks など）は mise で入れ、`home/dot_config/mise/config.toml` に書く。
   - ログインシェルは mise で入れない（バージョン更新でパスが変わるとログインできなくなるため）。
 - **GitHub Actions は利用しない。** 検査はローカルの pre-push フック（gitleaks）で行う。
@@ -23,7 +24,7 @@
 
 ## 構成の要点
 
-- `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、補完（`20`）、yazi のプラグイン（`21`）、Docker と SSH サーバ（`30`、sudo が要る）。
+- `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、補完（`20`）、yazi のプラグイン（`21`）、WSL の設定・Docker・SSH サーバ・Chrome（`30`、sudo が要る）。
 - 更新は `update-system` にまとめる（dotfiles・apt・mise・sheldon・claude / codex / agy）。
 - AI エージェントのグローバル指示は `home/dot_config/ai-rules/global_rules.md` の1本で、各 CLI の読む場所へ symlink する（Claude Code: `~/.claude/CLAUDE.md`、codex: `~/.codex/AGENTS.md`、agy: `~/.gemini/config/AGENTS.md`）。Claude Code が CLAUDE.md の代わりに AGENTS.md を読むのはプロジェクトの階層だけで、`~/.claude/AGENTS.md` は読まない。CLI を足すときは symlink も足す。
 

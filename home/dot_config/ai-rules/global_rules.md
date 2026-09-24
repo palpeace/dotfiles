@@ -1,6 +1,6 @@
 # グローバル指示（AI エージェント共通）
 
-このファイルは複数の CLI から symlink で読まれる。実体は dotfiles の `home/dot_config/ai-rules/global_rules.md`。
+このファイルは複数の CLI から symlink で読まれる（`~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`、`~/.gemini/config/AGENTS.md`）。実体は dotfiles の `home/dot_config/ai-rules/global_rules.md`。
 
 ## 1. 返答
 - ユーザーへの返答は日本語で書く。コマンド、識別子、エラーメッセージは原文のまま。

@@ -25,7 +25,7 @@
 
 - `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、補完（`20`）、yazi のプラグイン（`21`）、Docker と SSH サーバ（`30`、sudo が要る）。
 - 更新は `update-system` にまとめる（dotfiles・apt・mise・sheldon・claude / codex / agy）。
-- AI エージェントのグローバル指示は `home/dot_config/ai-rules/global_rules.md` の1本で、各 CLI の読む場所へ symlink する（codex: `~/.codex/AGENTS.md`、agy: `~/.gemini/config/AGENTS.md`）。CLI を足すときは symlink も足す。
+- AI エージェントのグローバル指示は `home/dot_config/ai-rules/global_rules.md` の1本で、各 CLI の読む場所へ symlink する（Claude Code: `~/.claude/CLAUDE.md`、codex: `~/.codex/AGENTS.md`、agy: `~/.gemini/config/AGENTS.md`）。Claude Code が CLAUDE.md の代わりに AGENTS.md を読むのはプロジェクトの階層だけで、`~/.claude/AGENTS.md` は読まない。CLI を足すときは symlink も足す。
 
 ## 落とし穴
 

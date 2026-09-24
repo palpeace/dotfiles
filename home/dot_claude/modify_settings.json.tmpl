@@ -4,15 +4,23 @@
 #
 # 失敗しても apply を止めない。ここで非ゼロ終了すると、chezmoi apply は辞書順で
 # 早い .claude/ で中断し、.config/ 以降が配置されないまま終わる。
-# JSON が壊れているときや jq が無いときは、入力をそのまま返して警告だけ出す。
+# jq が動かないときや JSON が壊れているときは、入力をそのまま返して警告だけ出す。
 set -eu
 PATH="$HOME/.local/share/mise/shims:$PATH"
+# 新しいマシンの初回 apply では、辞書順で .claude/ が .config/ より先に処理されるので
+# ~/.config/mise/config.toml がまだ無く、jq の shim が版を決められない。ソースの設定を読ませる
+export MISE_GLOBAL_CONFIG_FILE={{ joinPath .chezmoi.sourceDir "dot_config/mise/config.toml" | quote }}
 
 input=$(cat)
 [ -n "$input" ] || input='{}'
 
-if ! command -v jq >/dev/null 2>&1; then
-  echo "warning: jq が無いため ~/.claude/settings.json を更新しませんでした" >&2
+if ! jq -n 1 >/dev/null 2>&1; then
+  echo "warning: jq が動かないため ~/.claude/settings.json を更新しなかった（次の chezmoi apply で入る）" >&2
+  printf '%s\n' "$input"
+  exit 0
+fi
+if ! printf '%s' "$input" | jq empty >/dev/null 2>&1; then
+  echo "warning: ~/.claude/settings.json が JSON として壊れているので、そのまま残した" >&2
   printf '%s\n' "$input"
   exit 0
 fi
@@ -36,6 +44,6 @@ if merged=$(printf '%s' "$input" | jq '. * {
 }' 2>/dev/null) && [ -n "$merged" ]; then
   printf '%s\n' "$merged"
 else
-  echo "warning: ~/.claude/settings.json を JSON として読めないため、そのまま残しました" >&2
+  echo "warning: ~/.claude/settings.json のマージに失敗したので、そのまま残した" >&2
   printf '%s\n' "$input"
 fi

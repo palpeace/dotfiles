@@ -32,6 +32,7 @@
 
 - スクリプトでテンプレート（`{{ }}`）が展開されるのは `.tmpl` 拡張子のときだけ。`run_onchange_` にハッシュを埋めるなら必ず `.tmpl` にする。
 - `chezmoi apply` は最初に失敗したところで全体が止まる。`modify_` スクリプトは失敗しても入力をそのまま返し、apply を止めない。
+- ファイルは辞書順に配置されるので、新しいマシンでは `.claude/` を処理する時点で `~/.config/mise/config.toml` がまだ無い。そこで mise のツールを使うなら、`MISE_GLOBAL_CONFIG_FILE` でソースの設定を読ませる（`modify_settings.json.tmpl`）。
 - `~/.claude.json` は Claude Code が実行時に書く大きなファイルなので、`modify_` で書かない。MCP やプラグインは公式 CLI（`claude mcp add` / `claude plugin install`）で入れる。
 - 公式インストーラはシェルの設定ファイルに PATH を書き足すことがある（agy は PATH が通っていても4ファイルに足す）。インストールと更新の前後で退避して戻す。
 - 標準コマンド（`ls` `cat` `rm` `cd`）を alias で上書きしない。Claude Code はシェルの alias を引き継いでコマンドを実行する。

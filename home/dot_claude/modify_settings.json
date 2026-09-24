@@ -1,9 +1,41 @@
-{{- /* chezmoi:modify-template */ -}}
-{{- /* 既存のキーは残し、ここで宣言したキーだけを上書きする */ -}}
-{{- $s := dict -}}
-{{- if .chezmoi.stdin | trim -}}
-{{-   $s = fromJson .chezmoi.stdin -}}
-{{- end -}}
-{{- $s = setValueAtPath "autoMemoryEnabled" false $s -}}
-{{- $s = setValueAtPath "cleanupPeriodDays" 365 $s -}}
-{{- toPrettyJson $s -}}
+#!/bin/sh
+# chezmoi が今の ~/.claude/settings.json を標準入力で渡す。
+# 宣言したキーだけを上書きし、Claude Code が実行時に書くキー（model、enabledPlugins など）は残す。
+#
+# 失敗しても apply を止めない。ここで非ゼロ終了すると、chezmoi apply は辞書順で
+# 早い .claude/ で中断し、.config/ 以降が配置されないまま終わる。
+# JSON が壊れているときや jq が無いときは、入力をそのまま返して警告だけ出す。
+set -eu
+PATH="$HOME/.local/share/mise/shims:$PATH"
+
+input=$(cat)
+[ -n "$input" ] || input='{}'
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "warning: jq が無いため ~/.claude/settings.json を更新しませんでした" >&2
+  printf '%s\n' "$input"
+  exit 0
+fi
+
+# terminalProgressBarEnabled: 長い処理の間、Windows Terminal のタブとタスクバーに進捗を出す
+# preferredNotifChannel:      入力待ちでベルを鳴らす（WT の bellStyle と組でタスクバーが点滅）
+# inputNeededNotifEnabled:    権限確認や質問で止まったらモバイルへ通知する
+# disableAgentView:           常駐の agent view を止める（WSL2 で重いため）
+# statusLine:                 ~/.local/bin/claude-statusline（dotfiles 管理）で状態を1行に出す
+if merged=$(printf '%s' "$input" | jq '. * {
+  autoMemoryEnabled: false,
+  cleanupPeriodDays: 365,
+  theme: "dark",
+  tui: "fullscreen",
+  skipDangerousModePermissionPrompt: true,
+  terminalProgressBarEnabled: true,
+  preferredNotifChannel: "terminal_bell",
+  inputNeededNotifEnabled: true,
+  disableAgentView: true,
+  statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
+}' 2>/dev/null) && [ -n "$merged" ]; then
+  printf '%s\n' "$merged"
+else
+  echo "warning: ~/.claude/settings.json を JSON として読めないため、そのまま残しました" >&2
+  printf '%s\n' "$input"
+fi

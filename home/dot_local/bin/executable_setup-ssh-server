@@ -44,6 +44,8 @@ if ! sudo cmp -s "$tmp" "$conf" 2>/dev/null; then
   echo "==> $conf を書く"
   sudo install -m 0644 -o root -g root "$tmp" "$conf"
 fi
+# ssh.socket 起動では sshd が動くまで /run/sshd が無く、sshd -t が失敗するので先に作る
+sudo install -d -m 0755 /run/sshd
 sudo sshd -t
 
 if [ "$(systemctl is-enabled ssh.socket 2>/dev/null || true)" = "enabled" ]; then

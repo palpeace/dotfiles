@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# LAN 内の別の PC から ssh で入るための OpenSSH サーバ。何度実行してもよい。
+# 誰が入れるか（~/.ssh/authorized_keys）は持たない。鍵は各マシンで手で置き、コミットしない。
+# Windows 側の portproxy やファイアウォールは、このリポジトリの対象外。
+set -euo pipefail
+
+. /etc/os-release
+if [ "${ID:-}" != "ubuntu" ]; then
+  echo "setup-ssh-server: Ubuntu だけに対応している" >&2
+  exit 1
+fi
+
+if ! dpkg -s openssh-server >/dev/null 2>&1; then
+  echo "==> openssh-server を入れる"
+  sudo apt-get -o DPkg::Lock::Timeout=300 update
+  sudo apt-get -o DPkg::Lock::Timeout=300 install -y openssh-server
+fi
+
+# sshd_config.d は先に読んだ値が勝つので、10- で始めて cloud-init の設定より先に効かせる。
+# Port は書かない。Ubuntu 24.04 は ssh.socket で起動し、sshd_config の Port は無視される。
+conf=/etc/ssh/sshd_config.d/10-dotfiles.conf
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+cat >"$tmp" <<CONF
+# setup-ssh-server が生成する。直接編集せず、スクリプトを直して再実行する。
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AllowUsers $(id -un)
+X11Forwarding no
+CONF
+if ! sudo cmp -s "$tmp" "$conf" 2>/dev/null; then
+  echo "==> $conf を書く"
+  sudo install -m 0644 -o root -g root "$tmp" "$conf"
+fi
+sudo sshd -t
+
+if [ "$(systemctl is-enabled ssh.socket 2>/dev/null || true)" = "enabled" ]; then
+  unit=ssh.socket
+else
+  unit=ssh.service
+fi
+sudo systemctl enable --now "$unit"
+sudo systemctl restart "$unit"
+
+# 設定を書いただけで終わらせない。待ち受けていなければ失敗にする
+if ss -tln | grep -qE ':22[[:space:]]'; then
+  echo "sshd: 22 番で待ち受け中（$unit）"
+else
+  echo "sshd が 22 番で待ち受けていない（$unit）" >&2
+  exit 1
+fi
+[ -s "$HOME/.ssh/authorized_keys" ] || echo "$HOME/.ssh/authorized_keys が空なので、公開鍵を置くまで誰もログインできない"

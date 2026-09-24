@@ -1,0 +1,14 @@
+[user]
+	name = palpeace
+	email = 47219060+palpeace@users.noreply.github.com
+[init]
+	defaultBranch = main
+[credential "https://github.com"]
+	helper =
+	helper = !~/.local/share/mise/shims/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !~/.local/share/mise/shims/gh auth git-credential
+# 仕事用の設定（メールアドレス等）はリポジトリ外の ~/.gitconfig.work に置く
+[includeIf "gitdir:~/work/"]
+	path = ~/.gitconfig.work

@@ -62,6 +62,23 @@ y() {
   command rm -f -- "$tmp"
 }
 
+# Claude Code をモデル指定で起動する。第1引数が effort（low〜max）なら --effort に渡す。
+#   例: opus xhigh "難しいタスク" / sonnet low / fable max
+# 権限モードは付けない（既定の auto のまま）。
+_cc_model() {
+  local model="$1"
+  shift
+  local args=(--model "$model")
+  case "${1:-}" in
+    low | medium | high | xhigh | max) args+=(--effort "$1"); shift ;;
+  esac
+  claude "${args[@]}" "$@"
+}
+opus() { _cc_model opus "$@"; }
+sonnet() { _cc_model sonnet "$@"; }
+fable() { _cc_model fable "$@"; }
+haiku() { claude --model haiku "$@"; } # haiku は effort 非対応
+
 # 秘密（リポジトリ外。存在する場合のみ読む）
 [[ -r "$HOME/.config/zsh/secrets.zsh" ]] && source "$HOME/.config/zsh/secrets.zsh"
 

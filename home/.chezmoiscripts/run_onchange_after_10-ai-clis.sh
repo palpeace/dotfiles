@@ -9,6 +9,8 @@
 set -eu
 PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 export PATH
+# codex のインストーラの質問（「Start Codex now?」など）を出さない。答えはすべて「いいえ」になる
+export CODEX_NON_INTERACTIVE=1
 
 failures=""
 profiles=".bashrc .profile .zprofile .zshrc"

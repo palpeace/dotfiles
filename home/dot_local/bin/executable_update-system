@@ -5,6 +5,7 @@ set -uo pipefail
 
 PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 export PATH
+export CODEX_NON_INTERACTIVE=1 # codex update が質問を出さないように
 mise="$HOME/.local/bin/mise"
 failures=()
 

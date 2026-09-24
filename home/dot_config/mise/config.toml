@@ -1,4 +1,30 @@
+# ユーザースコープの CLI。ランタイム（node / python / rust）は置かない。
+# 開発は Docker に寄せ、ホストで必要になった時に足す。
+# バージョンは latest にして update-system の `mise upgrade` で上げる。
 [tools]
+# dotfiles の運用
 chezmoi = "latest"
 gh = "latest"
-gitleaks = "latest"
+gitleaks = "latest"   # pre-push で秘密を検査する
+
+# シェル
+starship = "latest"   # プロンプト
+sheldon = "latest"    # zsh プラグイン管理
+fzf = "latest"        # あいまい検索（Ctrl+R など）
+zoxide = "latest"     # よく行くディレクトリへ移動
+
+# 日常の CLI
+ripgrep = "latest"
+fd = "latest"
+bat = "latest"
+eza = "latest"
+jq = "latest"         # settings.json のマージ、statusline、プラグイン確認でも使う
+delta = "latest"      # git の diff 表示
+
+# TUI（AI の作業を見る・直す）
+herdr = "latest"      # 複数の AI エージェントを並べて監督する
+yazi = "latest"       # ファイラ
+micro = "latest"      # 軽量エディタ
+gitui = "latest"      # git TUI
+oxker = "latest"      # Docker TUI
+glow = "latest"       # Markdown の端末描画

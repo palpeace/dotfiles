@@ -1,0 +1,9 @@
+#!/bin/sh
+# 宣言した mise のツールを入れる。ファイル配置より前に走らせる
+# （modify_settings.json などが jq を使うため）。
+# 配置前なので ~/.config/mise/config.toml はまだ古い可能性があり、ソースの方を読ませる。
+# mise/config.toml hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+set -eu
+cd "$HOME"
+MISE_GLOBAL_CONFIG_FILE={{ joinPath .chezmoi.sourceDir "dot_config/mise/config.toml" | quote }} \
+  "$HOME/.local/bin/mise" install -y

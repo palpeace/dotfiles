@@ -1,0 +1,14 @@
+# mise（対話シェルではフル機能で有効化）
+eval "$("$HOME/.local/bin/mise" activate zsh)"
+
+# 補完
+autoload -Uz compinit && compinit
+
+# 履歴
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt share_history hist_ignore_dups hist_ignore_space
+
+# 秘密（リポジトリ外。存在する場合のみ読む）
+[[ -r "$HOME/.config/zsh/secrets.zsh" ]] && source "$HOME/.config/zsh/secrets.zsh"

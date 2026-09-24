@@ -1,0 +1,9 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* 既存のキーは残し、ここで宣言したキーだけを上書きする */ -}}
+{{- $s := dict -}}
+{{- if .chezmoi.stdin | trim -}}
+{{-   $s = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $s = setValueAtPath "autoMemoryEnabled" false $s -}}
+{{- $s = setValueAtPath "cleanupPeriodDays" 365 $s -}}
+{{- toPrettyJson $s -}}

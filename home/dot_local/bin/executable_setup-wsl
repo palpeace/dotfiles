@@ -17,7 +17,7 @@ if ! grep -qE '^[[:space:]]*appendWindowsPath[[:space:]]*=[[:space:]]*false' "$c
   echo "==> $conf に appendWindowsPath=false を書く（wsl --shutdown の後に効く）"
   tmp="$(mktemp)"
   trap 'rm -f "$tmp"' EXIT
-  cat "$conf" 2>/dev/null >"$tmp" || true  
+  cat "$conf" 2>/dev/null >"$tmp" || true # wsl.conf は誰でも読める
   # 既存の appendWindowsPath 行を消し、[interop] に足す（無ければ節ごと足す）
   sed -i '/^[[:space:]]*appendWindowsPath[[:space:]]*=/d' "$tmp"
   if grep -q '^\[interop\]' "$tmp"; then

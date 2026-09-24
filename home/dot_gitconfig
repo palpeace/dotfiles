@@ -6,6 +6,13 @@
 [core]
 	# 日本語のファイル名をエスケープせずに表示する
 	quotepath = false
+	editor = micro
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
 [credential "https://github.com"]
 	helper =
 	helper = !~/.local/share/mise/shims/gh auth git-credential

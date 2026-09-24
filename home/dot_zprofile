@@ -1,2 +1,1 @@
-# ログイン時: mise の shims を PATH に通す（非対話プロセスからも gh 等を使えるように）
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+# PATH は ~/.zshenv で通している（ログインかどうかに関係なく読まれるため）

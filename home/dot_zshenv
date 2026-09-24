@@ -1,0 +1,8 @@
+# すべての zsh（対話・非対話・スクリプト）が読む。
+# PATH はここで通す。Claude Code などが起動する非対話の zsh からも mise のツールが見える。
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+typeset -U path PATH
+
+# Ubuntu の /etc/zsh/zshrc は ~/.zshrc より前に compinit を呼ぶ。
+# 二重に走って遅くなり、後から fpath に足した補完も拾われないので止める。
+skip_global_compinit=1

@@ -1,15 +1,66 @@
-# mise（対話シェルではフル機能で有効化）
-eval "$("$HOME/.local/bin/mise" activate zsh)"
+# --- 環境 ---
+export EDITOR='micro'
+export LESS='-FRX'
+export BAT_THEME='ansi'
+export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border=rounded --info=inline'
 
-# 補完
-autoload -Uz compinit && compinit
-setopt print_eight_bit  # 日本語のファイル名を化けさせない
+# --- 基本の挙動 ---
+setopt interactive_comments          # コマンドラインで # 以降をコメントにする
+setopt auto_cd auto_pushd pushd_ignore_dups pushd_minus
+setopt print_eight_bit               # 日本語のファイル名を化けさせない
 
-# 履歴
+# --- 履歴 ---
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
 SAVEHIST=100000
-setopt share_history hist_ignore_dups hist_ignore_space
+setopt share_history inc_append_history hist_ignore_all_dups hist_ignore_space hist_reduce_blanks
+
+# --- ツール ---
+eval "$("$HOME/.local/bin/mise" activate zsh)"
+command -v sheldon >/dev/null && eval "$(sheldon source)"
+command -v starship >/dev/null && eval "$(starship init zsh)"
+[[ -t 0 && -t 1 ]] && command -v fzf >/dev/null && source <(fzf --zsh)
+
+# ツールが生成する補完の置き場（chezmoi のスクリプトが作る）
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
+# --- 補完 ---
+autoload -Uz compinit
+zmodload zsh/complist
+compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+
+# 履歴からの予測（灰色の候補）を Ctrl+F で確定する
+bindkey '^F' autosuggest-accept
+
+# --- 別名 ---
+# 標準コマンド（ls, cat, rm, cd）は上書きしない。
+# Claude Code はシェルの alias を引き継いで実行するので、意味が変わると結果も変わる。
+alias ll='eza -ahl --icons --git'
+alias lt='eza --tree --icons --git-ignore'
+alias gu='gitui'
+alias ox='oxker'
+alias mi='micro'
+
+# yazi を抜けたとき、最後にいたディレクトリへシェルも移動する
+y() {
+  local tmp cwd
+  tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  command rm -f -- "$tmp"
+}
 
 # 秘密（リポジトリ外。存在する場合のみ読む）
 [[ -r "$HOME/.config/zsh/secrets.zsh" ]] && source "$HOME/.config/zsh/secrets.zsh"
+
+# zoxide は chpwd フックを最後に登録する必要があるので末尾で初期化する（z で移動）
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"

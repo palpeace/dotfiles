@@ -4,7 +4,18 @@
 #    （コマンドの検索が速くなり、Windows 側の node などを誤って使わない）。
 #    反映は Windows 側で `wsl --shutdown` した後。
 #  - wslu: wslview で Windows のブラウザを開く（BROWSER は ~/.zshenv で設定する）
+#  - WSLInterop の binfmt 登録を systemd に持たせる。apt が systemd-binfmt を再起動すると
+#    WSL が起動時に入れた登録が消え、wsl.exe や wslview（Windows の exe）が動かなくなるため
 set -euo pipefail
+
+binfmt=/etc/binfmt.d/WSLInterop.conf
+if [ ! -f "$binfmt" ]; then
+  echo "==> $binfmt を書く"
+  echo ':WSLInterop:M::MZ::/init:PF' | sudo tee "$binfmt" >/dev/null
+fi
+if [ ! -e /proc/sys/fs/binfmt_misc/WSLInterop ]; then
+  sudo systemctl restart systemd-binfmt
+fi
 
 if ! dpkg -s wslu >/dev/null 2>&1; then
   echo "==> wslu を入れる"

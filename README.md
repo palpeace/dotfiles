@@ -82,5 +82,6 @@ push の前に gitleaks が秘密を検査する（`.githooks/pre-push`）。
 - [ ] **SSH サーバ**: 別の PC から鍵で入れること（WSL 内で 22 番の待ち受けまでは確認済み）。
       WSL2 では同じ PC のディストリビューションが 22 番を共有するので、SSH サーバを持てるのは1つだけ。
 - [ ] **docker を sudo なしで使えること**（WSL を開き直した後）。
+- [ ] **Windows 連携が消えないこと**: bootstrap の後も `ls /proc/sys/fs/binfmt_misc/WSLInterop` があり、`wsl.exe --version` が動くこと。
 - [ ] **Windows 側の PATH が混ざらないこと**（`wsl --shutdown` の後）。`echo $PATH` に `/mnt/c` が無く、
       `gh auth login` などが wslview で Windows のブラウザを開けること。

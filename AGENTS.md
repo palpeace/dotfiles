@@ -35,4 +35,5 @@
 - ファイルは辞書順に配置されるので、新しいマシンでは `.claude/` を処理する時点で `~/.config/mise/config.toml` がまだ無い。そこで mise のツールを使うなら、`MISE_GLOBAL_CONFIG_FILE` でソースの設定を読ませる（`modify_settings.json.tmpl`）。
 - `~/.claude.json` は Claude Code が実行時に書く大きなファイルなので、`modify_` で書かない。MCP やプラグインは公式 CLI（`claude mcp add` / `claude plugin install`）で入れる。
 - 公式インストーラはシェルの設定ファイルに PATH を書き足すことがある（agy は PATH が通っていても4ファイルに足す）。インストールと更新の前後で退避して戻す。
+- apt が `systemd-binfmt` を再起動すると WSL の Windows 連携（`WSLInterop`）の登録が消え、`wsl.exe` や `wslview` が動かなくなる。`setup-wsl` が `/etc/binfmt.d/WSLInterop.conf` を置いて防ぐ。
 - 標準コマンド（`ls` `cat` `rm` `cd`）を alias で上書きしない。Claude Code はシェルの alias を引き継いでコマンドを実行する。

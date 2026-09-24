@@ -23,6 +23,8 @@ bat = "latest"
 eza = "latest"
 jq = "latest"         # settings.json のマージ、statusline、プラグイン確認でも使う
 delta = "latest"      # git の diff 表示
+just = "latest"       # タスクランナー
+dust = "latest"       # ディスク使用量の可視化（WSL の仮想ディスクが膨らんだとき）
 
 # TUI（AI の作業を見る・直す）
 herdr = "latest"      # 複数の AI エージェントを並べて監督する

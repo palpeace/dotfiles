@@ -18,9 +18,10 @@ main() {
   done
   if [ -n "$pkgs" ]; then
     log "apt install:$pkgs"
-    sudo apt-get update </dev/null
+    # 新しい WSL は起動直後に自動更新が apt を掴んでいることがあるので、ロックを最大5分待つ
+    sudo apt-get -o DPkg::Lock::Timeout=300 update </dev/null
     # shellcheck disable=SC2086
-    sudo apt-get install -y $pkgs </dev/null
+    sudo apt-get -o DPkg::Lock::Timeout=300 install -y $pkgs </dev/null
   fi
 
   # 2. ログインシェルを zsh に
@@ -43,25 +44,17 @@ main() {
     curl -fsSL https://mise.run | sh
   fi
 
-  # 5. chezmoi で dotfiles を展開（mise の設定もここで入る）
+  # 5. chezmoi で dotfiles を展開する。
+  #    mise のツール、AI エージェント CLI（claude / codex / agy）、補完なども
+  #    apply の中のスクリプトが入れる（宣言を書いて apply すれば揃う形にするため）。
   log "chezmoi init --apply $REPO"
   "$MISE" exec chezmoi@latest -- chezmoi init --apply "$REPO" </dev/null
-
-  # 6. mise で宣言したツール（chezmoi, gh, gitleaks など）
-  log "mise install"
-  "$MISE" install </dev/null
-
-  # 7. Claude Code（公式ネイティブインストーラ）
-  if [ ! -x "$HOME/.local/bin/claude" ]; then
-    log "install Claude Code"
-    curl -fsSL https://claude.ai/install.sh | bash
-  fi
 
   log "done. 残りは認証だけ（手で行う）:"
   cat <<'EOF'
   1. 新しい端末を開く（zsh で起動する）
   2. gh auth login
-  3. claude            # 初回ログイン
+  3. claude / codex / agy をそれぞれ一度起動してログインする
   4. 仕事用の git 設定が必要なら ~/.gitconfig.work を作る（リポジトリには入れない）
 EOF
 }

@@ -8,7 +8,10 @@
   - 秘密や固有の値はリポジトリ外のファイルに置き、ここからは読み込むだけにする（例: `~/.gitconfig.work`、`~/.config/zsh/secrets.zsh`）。
 - **ユーザースコープ（`~/.claude`、`~/.codex`、`~/.gemini`）に入るものは、すべてこのリポジトリで宣言する。**
   - 既存キーを残したい JSON などは `modify_` スクリプトで必要なキーだけを書き換える。
-- **ブートストラップが終わったら、手で何もインストールしない。** 必要なものはここ（mise の設定など）に書いてから `chezmoi apply` する。
+- **ブートストラップが終わったら、手で何もインストールしない。** 必要なものはここに書いてから `chezmoi apply` する。
+  - OS の土台（ログインシェルの zsh、git、curl など）は apt で入れ、`bootstrap.sh` に書く。
+  - ユーザーのツール（chezmoi、gh、gitleaks など）は mise で入れ、`home/dot_config/mise/config.toml` に書く。
+  - ログインシェルは mise で入れない（バージョン更新でパスが変わるとログインできなくなるため）。
 - **GitHub Actions は利用しない。** 検査はローカルの pre-push フック（gitleaks）で行う。
 
 ## 変更の手順

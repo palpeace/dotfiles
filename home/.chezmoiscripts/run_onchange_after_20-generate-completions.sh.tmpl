@@ -1,0 +1,16 @@
+#!/bin/sh
+# ツールが自分で出力する zsh 補完を生成する。生成物はツールの版に縛られるので
+# リポジトリには入れず、mise の宣言が変わった時に作り直す。
+# 自己更新する CLI（codex など）の追随は update-system が受け持つ。
+# mise/config.toml hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+set -eu
+PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+dir="$HOME/.local/share/zsh/site-functions"
+mkdir -p "$dir"
+
+command -v herdr >/dev/null 2>&1 && herdr completion zsh >"$dir/_herdr"
+command -v codex >/dev/null 2>&1 && codex completion zsh >"$dir/_codex"
+
+# 古い補完のダンプを捨て、次のシェルで作り直させる
+rm -f "$HOME"/.zcompdump*
+exit 0

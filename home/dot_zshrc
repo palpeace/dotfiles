@@ -47,6 +47,9 @@ alias lt='eza --tree --icons --git-ignore'
 alias gu='gitui'
 alias ox='oxker'
 alias mi='micro'
+# herdr（hd は hexdump と被るので hr）。alias には補完が引き継がれないので compdef する
+alias hr='herdr'
+(( $+functions[compdef] )) && compdef hr=herdr
 
 # yazi を抜けたとき、最後にいたディレクトリへシェルも移動する
 y() {

@@ -1,0 +1,76 @@
+onboarding = false
+
+[ui]
+agent_panel_sort = "spaces"
+show_agent_labels_on_pane_borders = true
+# タブを作るたびに名前を聞かれないようにする（prefix+c を1手にする）
+prompt_new_tab_name = false
+# サイドバーの3行目に各エージェントの作業内容（端末タイトル）を出すため、既定より広くする
+sidebar_width = 32
+sidebar_max_width = 44
+# 入力待ち（blocked）と作業中（working）を、色だけでなく形で見分ける
+status_indicators = "symbols"
+
+# エージェント一覧。2行目の種別だけでは情報が無いので、端末タイトルを足す
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  ["state_icon", { token = "workspace", bold = true }, "tab"],
+  ["agent", "state_text"],
+  [{ token = "terminal_title_stripped", dim = true }],
+]
+
+# claude は種別の行を落とす（全部 claude なら冗長）
+[ui.sidebar.agents.rows_by_agent]
+claude = [
+  ["state_icon", { token = "workspace", bold = true }, "tab"],
+  [{ token = "terminal_title_stripped", dim = true }],
+]
+
+# ワークスペース一覧。git_status を目立たせる
+[ui.sidebar.spaces]
+row_gap = 0
+rows = [
+  ["state_icon", { token = "workspace", bold = true }],
+  [{ token = "branch", dim = true }, "git_status"],
+]
+
+[ui.toast]
+delivery = "system"
+
+[keys]
+# ctrl+b は隣のキーの押し間違いで ctrl+c を送りかねないので ctrl+space にする
+prefix = "ctrl+space"
+# ここから下は既定に無い動作だけ。既定の動作は別のキーへ移さない（ヘルプと食い違うため）
+switch_workspace = "prefix+shift+1..9"  # ワークスペースへ番号で移動
+focus_agent = "prefix+alt+1..9"         # エージェントへ番号で移動
+last_pane = "prefix+u"                  # 直前のペインへ戻る
+
+# --- popup で開くもの ---
+# 「新しいタブ → コマンド → 抜ける → タブを閉じる」を1打鍵にする。
+# cwd の解決、PATH の更新漏れ、yazi の cd 送り返しは herdr-here が受け持つ
+# （[[keys.command]] には cwd を指定する項目が無い）。
+# 98% は「popup だと分かる縁」を残すため。
+[[keys.command]]
+key = "prefix+enter"
+type = "popup"
+command = "herdr-here shell"
+width = "98%"
+height = "98%"
+description = "Scratch shell"
+
+[[keys.command]]
+key = "prefix+d"
+type = "popup"
+command = "herdr-here gitui"
+width = "98%"
+height = "98%"
+description = "Git diff (gitui)"
+
+[[keys.command]]
+key = "prefix+f"
+type = "popup"
+command = "herdr-here yazi"
+width = "98%"
+height = "98%"
+description = "File tree (yazi)"

@@ -72,8 +72,8 @@ push の前に gitleaks が秘密を検査する（`.githooks/pre-push`）。
       1段目の sudo の後、`chezmoi apply` の中の sudo が止まらずに進むこと。
 - [ ] **NVIDIA の GPU がある端末**で `docker run --rm --gpus all ubuntu nvidia-smi` が GPU を表示すること。
       NVIDIA の無い端末では Toolkit を入れずに終わること。
-- [ ] **ブラウザ操作**: Chrome を入れた後、`browse open https://example.com --local` と `browse screenshot` が動くこと。
-      Claude Code から browse プラグインのスキルが使われること。
+- [ ] **ブラウザ操作**: Claude Code から browse プラグインのスキルが使われること
+      （CLI の `browse open --local`・`snapshot`・`screenshot` は確認済み）。
 - [ ] **`update-system` の初回実行**: すべての段が成功すること。`agy update` が `~/.bashrc` などを書き換えないこと。
 - [ ] **codex と agy がグローバル指示を読むこと**（ログイン後）。`~/.codex/AGENTS.md` と `~/.gemini/config/AGENTS.md`。
 - [ ] **codex プラグイン**: `codex login` の後、Claude Code から codex を呼べること。

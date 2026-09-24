@@ -5,7 +5,7 @@ set -eu
 mise="$HOME/.local/bin/mise"
 zero=0000000000000000000000000000000000000000
 
-while read -r local_ref local_sha remote_ref remote_sha; do
+while read -r local_ref local_sha _remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue # ブランチ削除
   if [ "$remote_sha" = "$zero" ]; then
     range="$local_sha" # 新規ブランチ: 到達可能な全コミット

@@ -9,17 +9,19 @@ WSL2（Ubuntu 24.04）の環境を [chezmoi](https://www.chezmoi.io/) で宣言�
 
 `.wslconfig` と Windows Terminal の設定は Windows 側のファイルなので、このリポジトリでは管理しない。
 
-`%USERPROFILE%\.wslconfig`（`wsl --install` の前に作る）:
+`%USERPROFILE%\.wslconfig`（`wsl --install` の前に作る）に、少なくとも次を書く:
 
 ```ini
-# memory / swap は既定（ホスト RAM の 50% / その 25%）のまま。絞ると OOM を招く
 [experimental]
-autoMemoryReclaim=gradual   # 解放したメモリを段階的に Windows へ返す
-sparseVhd=true              # 新しく作る VHD を使用量に応じて縮める
+# 解放したメモリを段階的に Windows へ返す
+autoMemoryReclaim=gradual
+# 新しく作る VHD を使用量に応じて縮める
+sparseVhd=true
 ```
 
 - `autoMemoryReclaim` と `sparseVhd` は `[wsl2]` ではなく `[experimental]` に書く（`[wsl2]` では無視される）。
-- 不正な値が1つでもあると、ファイル全体が無視される（例: `memory=50%`）。
+- `[wsl2]` の `memory`・`processors`・`swap` は、マシンの RAM・コア数・ディスクに合わせて決める。
+- 不正な値が1つでもあると、ファイル全体が無視される（例: `memory=50%`）。コメントは行末ではなく別の行に書く。
 
 Windows Terminal の `settings.json` に足すもの:
 
@@ -35,6 +37,8 @@ Windows Terminal の `settings.json` に足すもの:
 ```
 
 フォントは Nerd Font（starship・eza のアイコン用）にする。
+端末を開くと `.zshrc` が herdr を起動するので、herdr 専用のプロファイルは要らない。
+WSL のプロファイルが指すディストリビューション名は、作り直したら合わせる。
 
 ### 2. WSL の中
 

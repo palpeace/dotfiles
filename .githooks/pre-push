@@ -1,5 +1,6 @@
 #!/bin/sh
 # push される範囲のコミットを gitleaks で検査し、検出したら push を止める
+# 検査できなかった場合も push を止める（素通りさせない）
 set -eu
 
 mise="$HOME/.local/bin/mise"
@@ -7,14 +8,30 @@ zero=0000000000000000000000000000000000000000
 
 while read -r local_ref local_sha _remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue # ブランチ削除
-  if [ "$remote_sha" = "$zero" ]; then
-    range="$local_sha" # 新規ブランチ: 到達可能な全コミット
-  else
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
     range="$remote_sha..$local_sha"
+  else
+    # 新規ブランチ、または push 先のコミットが手元に無い（force push など）: 到達可能な全コミット
+    range="$local_sha"
   fi
-  echo "gitleaks: scanning $local_ref ($range)" >&2
-  "$mise" exec -- gitleaks git --no-banner --redact --log-opts="$range" . || {
-    echo "gitleaks: secrets detected, push aborted" >&2
+  git rev-list "$range" >/dev/null 2>&1 || {
+    echo "gitleaks: invalid range $range, push aborted" >&2
     exit 1
   }
+  echo "gitleaks: scanning $local_ref ($range)" >&2
+  report="$(mktemp)"
+  if ! "$mise" exec -- gitleaks git --no-banner --redact --log-opts="$range" . 2>"$report"; then
+    cat "$report" >&2
+    rm -f "$report"
+    echo "gitleaks: secrets detected or scan failed, push aborted" >&2
+    exit 1
+  fi
+  cat "$report" >&2
+  # gitleaks は git のエラーでも 0 で終わることがあるため、ERR を見たら止める
+  if grep -q 'ERR' "$report"; then
+    rm -f "$report"
+    echo "gitleaks: scan error, push aborted" >&2
+    exit 1
+  fi
+  rm -f "$report"
 done

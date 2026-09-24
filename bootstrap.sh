@@ -38,13 +38,16 @@ main() {
       || sudo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
   fi
 
-  # 4. mise
+  # 4. 作業場所（global_rules.md が ~/repos を指定している）
+  mkdir -p "$HOME/repos"
+
+  # 5. mise
   if [ ! -x "$MISE" ]; then
     log "install mise"
     curl -fsSL https://mise.run | sh
   fi
 
-  # 5. chezmoi で dotfiles を展開する。
+  # 6. chezmoi で dotfiles を展開する。
   #    mise のツール、AI エージェント CLI（claude / codex / agy）、補完なども
   #    apply の中のスクリプトが入れる（宣言を書いて apply すれば揃う形にするため）。
   log "chezmoi init --apply $REPO"

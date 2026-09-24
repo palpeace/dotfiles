@@ -1,0 +1,4 @@
+[tools]
+chezmoi = "latest"
+gh = "latest"
+gitleaks = "latest"

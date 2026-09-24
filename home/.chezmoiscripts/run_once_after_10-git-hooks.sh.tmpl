@@ -1,0 +1,4 @@
+#!/bin/sh
+# ソースリポジトリの pre-push フック（gitleaks）を有効にする
+set -eu
+git -C {{ joinPath .chezmoi.sourceDir ".." | quote }} config core.hooksPath .githooks

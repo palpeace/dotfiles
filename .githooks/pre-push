@@ -1,0 +1,20 @@
+#!/bin/sh
+# push される範囲のコミットを gitleaks で検査し、検出したら push を止める
+set -eu
+
+mise="$HOME/.local/bin/mise"
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue # ブランチ削除
+  if [ "$remote_sha" = "$zero" ]; then
+    range="$local_sha" # 新規ブランチ: 到達可能な全コミット
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  echo "gitleaks: scanning $local_ref ($range)" >&2
+  "$mise" exec -- gitleaks git --no-banner --redact --log-opts="$range" . || {
+    echo "gitleaks: secrets detected, push aborted" >&2
+    exit 1
+  }
+done

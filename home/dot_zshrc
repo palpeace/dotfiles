@@ -88,3 +88,10 @@ haiku() { claude --model haiku "$@"; } # haiku は effort 非対応
 
 # zoxide は chpwd フックを最後に登録する必要があるので末尾で初期化する（z で移動）
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# 端末を開いたら herdr に入る（抜ければ普通の zsh に戻る。セッションは herdr サーバに残る）。
+# 入らないとき: ログインでないシェル（zsh と打った時など）、端末でない時、herdr の中、SSH、NO_HERDR=1
+if [[ -o interactive && -o login && -t 0 && -t 1 && -z ${HERDR_PANE_ID:-} && -z ${HERDR_ACTIVE_PANE_ID:-} \
+      && -z ${SSH_CONNECTION:-} && -z ${NO_HERDR:-} ]] && command -v herdr >/dev/null; then
+  herdr
+fi

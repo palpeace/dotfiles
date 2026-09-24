@@ -30,21 +30,28 @@ main() {
     sudo chsh -s "$zsh_path" "$(id -un)"
   fi
 
-  # 3. mise
+  # 3. タイムゾーン（新しい WSL でも日本時間にする）
+  if [ "$(readlink -f /etc/localtime)" != "/usr/share/zoneinfo/Asia/Tokyo" ]; then
+    log "timezone -> Asia/Tokyo"
+    sudo timedatectl set-timezone Asia/Tokyo 2>/dev/null \
+      || sudo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  fi
+
+  # 4. mise
   if [ ! -x "$MISE" ]; then
     log "install mise"
     curl -fsSL https://mise.run | sh
   fi
 
-  # 4. chezmoi で dotfiles を展開（mise の設定もここで入る）
+  # 5. chezmoi で dotfiles を展開（mise の設定もここで入る）
   log "chezmoi init --apply $REPO"
   "$MISE" exec chezmoi@latest -- chezmoi init --apply "$REPO" </dev/null
 
-  # 5. mise で宣言したツール（chezmoi, gh, gitleaks など）
+  # 6. mise で宣言したツール（chezmoi, gh, gitleaks など）
   log "mise install"
   "$MISE" install </dev/null
 
-  # 6. Claude Code（公式ネイティブインストーラ）
+  # 7. Claude Code（公式ネイティブインストーラ）
   if [ ! -x "$HOME/.local/bin/claude" ]; then
     log "install Claude Code"
     curl -fsSL https://claude.ai/install.sh | bash

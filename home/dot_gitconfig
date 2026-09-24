@@ -3,6 +3,9 @@
 	email = 47219060+palpeace@users.noreply.github.com
 [init]
 	defaultBranch = main
+[core]
+	# 日本語のファイル名をエスケープせずに表示する
+	quotepath = false
 [credential "https://github.com"]
 	helper =
 	helper = !~/.local/share/mise/shims/gh auth git-credential

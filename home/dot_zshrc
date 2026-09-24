@@ -3,6 +3,7 @@ eval "$("$HOME/.local/bin/mise" activate zsh)"
 
 # 補完
 autoload -Uz compinit && compinit
+setopt print_eight_bit  # 日本語のファイル名を化けさせない
 
 # 履歴
 HISTFILE="$HOME/.zsh_history"

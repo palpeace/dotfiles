@@ -1,13 +1,15 @@
 #!/bin/sh
-# Docker Engine と SSH サーバを入れる。どちらも sudo が要る。
+# Docker Engine、SSH サーバ、Google Chrome を入れる。どれも sudo が要る。
 # スクリプトが変わった時に再実行する:
 # setup-docker-engine hash: {{ include "dot_local/bin/executable_setup-docker-engine" | sha256sum }}
 # setup-ssh-server hash: {{ include "dot_local/bin/executable_setup-ssh-server" | sha256sum }}
+# setup-chrome hash: {{ include "dot_local/bin/executable_setup-chrome" | sha256sum }}
 set -eu
 if ! sudo -n true 2>/dev/null && ! [ -t 0 ] && ! { true </dev/tty; } 2>/dev/null; then
-  echo "sudo のパスワードを入力できる端末が無いので、Docker と SSH サーバの導入を飛ばした。" >&2
+  echo "sudo のパスワードを入力できる端末が無いので、Docker・SSH サーバ・Chrome の導入を飛ばした。" >&2
   echo "端末で chezmoi apply をもう一度実行する。" >&2
   exit 1
 fi
 "$HOME/.local/bin/setup-docker-engine"
 "$HOME/.local/bin/setup-ssh-server"
+"$HOME/.local/bin/setup-chrome"

@@ -34,6 +34,12 @@ install_plugin() { # <id>
 add_marketplace openai-codex openai/codex-plugin-cc
 install_plugin codex@openai-codex
 
+# browse（Browserbase 公式、Stagehand の CLI）: ブラウザ操作のスキル。
+# 本体の browse CLI は mise の npm:browse、ブラウザは setup-chrome が入れる Google Chrome。
+# ローカルで動かす分には API キーは不要（BROWSERBASE_API_KEY はクラウド用）
+add_marketplace browserbase browserbase/browse-plugin
+install_plugin browse@browserbase
+
 if [ -n "$failures" ]; then
   echo "warning: 失敗:$failures" >&2
   exit 1

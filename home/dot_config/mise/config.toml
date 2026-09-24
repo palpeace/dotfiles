@@ -3,7 +3,7 @@
 # バージョンは latest にして update-system の `mise upgrade` で上げる。
 [tools]
 # ランタイム（例外）
-node = "lts"          # Stagehand（ブラウザ操作プラグイン）を npx で起動するため。開発には使わない
+node = "lts"          # browse（下）を動かすため。開発には使わない
 
 # dotfiles の運用
 chezmoi = "latest"
@@ -31,3 +31,6 @@ micro = "latest"      # 軽量エディタ
 gitui = "latest"      # git TUI
 oxker = "latest"      # Docker TUI
 glow = "latest"       # Markdown の端末描画
+
+# AI の道具
+"npm:browse" = "latest"  # ブラウザ操作（Stagehand の CLI）。Claude Code の browse プラグインが使う

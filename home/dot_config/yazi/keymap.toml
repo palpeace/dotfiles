@@ -1,10 +1,5 @@
-# ファイラで探し当てたその場で、AI や git を起動する。
+# ファイラで探し当てたその場で git を起動する。
 # shell は sh -c で動くので、.zshrc の別名や関数は使えない。
-
-[[mgr.prepend_keymap]]
-on   = "C"
-run  = "shell \"claude --permission-mode auto --model 'opus[1m]'\" --block"
-desc = "このディレクトリで Claude Code を起動"
 
 [[mgr.prepend_keymap]]
 on   = [ "<C-g>" ]

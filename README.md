@@ -72,8 +72,6 @@ push の前に gitleaks が秘密を検査する（`.githooks/pre-push`）。
 
 まだ実機で確かめていないもの。確かめたら、この一覧から消す。
 
-- [ ] **bootstrap を新しい WSL で通しで実行する**（Docker・SSH サーバ・Chrome を足した後の版）。
-      1段目の sudo の後、`chezmoi apply` の中の sudo が止まらずに進むこと。
 - [ ] **NVIDIA の GPU がある端末**で `docker run --rm --gpus all ubuntu nvidia-smi` が GPU を表示すること。
       NVIDIA の無い端末では Toolkit を入れずに終わること。
 - [ ] **ブラウザ操作**: Claude Code から browse プラグインのスキルが使われること
@@ -81,7 +79,7 @@ push の前に gitleaks が秘密を検査する（`.githooks/pre-push`）。
 - [ ] **`update-system` の初回実行**: すべての段が成功すること。`agy update` が `~/.bashrc` などを書き換えないこと。
 - [ ] **codex と agy がグローバル指示を読むこと**（ログイン後）。`~/.codex/AGENTS.md` と `~/.gemini/config/AGENTS.md`。
 - [ ] **codex プラグイン**: `codex login` の後、Claude Code から codex を呼べること。
-- [ ] **SSH サーバ**: 別の PC から鍵で入れること。
+- [ ] **SSH サーバ**: 別の PC から鍵で入れること（WSL 内で 22 番の待ち受けまでは確認済み）。
       WSL2 では同じ PC のディストリビューションが 22 番を共有するので、SSH サーバを持てるのは1つだけ。
 - [ ] **docker を sudo なしで使えること**（WSL を開き直した後）。
 - [ ] **Windows 側の PATH が混ざらないこと**（`wsl --shutdown` の後）。`echo $PATH` に `/mnt/c` が無く、

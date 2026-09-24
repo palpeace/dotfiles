@@ -9,7 +9,7 @@
 ## 2. 環境（chezmoi で管理している）
 - ドットファイルやツールの設定を変えるときは、`$HOME` の実ファイルではなく dotfiles の `home/...` を編集し、`chezmoi diff` → `chezmoi apply` する。
 - 手でツールをインストールしない。mise のツールは `~/.config/mise/config.toml`（dotfiles 側）に、OS のパッケージは `bootstrap.sh` に書いてから apply する。
-- 開発は Docker に寄せる。言語ランタイム（node / python / rust など）はホストのグローバルに置かず、プロジェクトのコンテナか `mise.toml` に置く。
+- 開発は Docker に寄せる。言語ランタイム（node / python / rust など）はホストのグローバルに置かず、プロジェクトのコンテナか `mise.toml` に置く。例外はホストで動く AI の道具が要求するものだけで、今は node（Stagehand 用）がそれにあたる。
 - シェルの TUI や CLI（starship、zoxide、fzf、eza、bat、delta、yazi、gitui、micro、herdr など）は、人が AI を監督するための道具。不要と判断して削除を提案しない。
 - 自己更新する AI エージェント CLI（`claude` / `codex` / `agy`）は mise に載せず `~/.local/bin` に置き、各 CLI の `update` に任せる。
 

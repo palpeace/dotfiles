@@ -1,7 +1,10 @@
-# ユーザースコープの CLI。ランタイム（node / python / rust）は置かない。
-# 開発は Docker に寄せ、ホストで必要になった時に足す。
+# ユーザースコープの CLI。開発は Docker に寄せるので、言語ランタイムは原則置かない。
+# 例外は、ホストで動く AI の道具が要求するものだけ（下の node）。
 # バージョンは latest にして update-system の `mise upgrade` で上げる。
 [tools]
+# ランタイム（例外）
+node = "lts"          # Stagehand（ブラウザ操作プラグイン）を npx で起動するため。開発には使わない
+
 # dotfiles の運用
 chezmoi = "latest"
 gh = "latest"

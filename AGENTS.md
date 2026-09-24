@@ -20,3 +20,17 @@
 2. `chezmoi diff` で差分を確認する
 3. `chezmoi apply` する
 4. コミットする（push 時に gitleaks が自動で走る）
+
+## 構成の要点
+
+- `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、補完（`20`）、yazi のプラグイン（`21`）、Docker と SSH サーバ（`30`、sudo が要る）。
+- 更新は `update-system` にまとめる（dotfiles・apt・mise・sheldon・claude / codex / agy）。
+- AI エージェントのグローバル指示は `home/dot_config/ai-rules/global_rules.md` の1本で、各 CLI の読む場所へ symlink する（codex: `~/.codex/AGENTS.md`、agy: `~/.gemini/config/AGENTS.md`）。CLI を足すときは symlink も足す。
+
+## 落とし穴
+
+- スクリプトでテンプレート（`{{ }}`）が展開されるのは `.tmpl` 拡張子のときだけ。`run_onchange_` にハッシュを埋めるなら必ず `.tmpl` にする。
+- `chezmoi apply` は最初に失敗したところで全体が止まる。`modify_` スクリプトは失敗しても入力をそのまま返し、apply を止めない。
+- `~/.claude.json` は Claude Code が実行時に書く大きなファイルなので、`modify_` で書かない。MCP やプラグインは公式 CLI（`claude mcp add` / `claude plugin install`）で入れる。
+- 公式インストーラはシェルの設定ファイルに PATH を書き足すことがある（agy は PATH が通っていても4ファイルに足す）。インストールと更新の前後で退避して戻す。
+- 標準コマンド（`ls` `cat` `rm` `cd`）を alias で上書きしない。Claude Code はシェルの alias を引き継いでコマンドを実行する。

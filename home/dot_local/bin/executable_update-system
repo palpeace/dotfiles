@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# 環境をまとめて更新する。各段は失敗しても次へ進み、最後に失敗した段を一覧にする。
+#   1. dotfiles（chezmoi update = git pull + apply。宣言の変更もここで入る）
+#   2. OS パッケージ（apt）
+#   3. mise 本体と、mise で宣言したツール（latest のものが上がる。herdr もここ）
+#   4. zsh プラグイン（sheldon）
+#   5. 自己更新する AI エージェント CLI（claude / codex / agy）
+set -uo pipefail
+
+PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+export PATH
+mise="$HOME/.local/bin/mise"
+failures=()
+
+step() { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
+run() { # <段の名前> <コマンド...>
+  local name="$1"
+  shift
+  "$@" || failures+=("$name")
+}
+
+# agy の更新はシェルの設定ファイルに PATH の行を書き足しうる（インストーラと同じ処理を持つ）。
+# chezmoi の run_onchange_after_10-ai-clis.sh と同じく、前後で退避して戻す。
+keep_profiles() {
+  local backup f
+  backup="$(mktemp -d)"
+  for f in .bashrc .profile .zprofile .zshrc; do
+    [ -f "$HOME/$f" ] && cp -p "$HOME/$f" "$backup/$f"
+  done
+  "$@"
+  local status=$?
+  for f in .bashrc .profile .zprofile .zshrc; do
+    if [ -f "$backup/$f" ]; then
+      cat "$backup/$f" >"$HOME/$f"
+    else
+      rm -f "$HOME/$f"
+    fi
+  done
+  rm -rf "$backup"
+  return "$status"
+}
+
+step "dotfiles"
+run "chezmoi update" chezmoi update
+
+step "apt"
+export DEBIAN_FRONTEND=noninteractive
+apt_opts=(-o DPkg::Lock::Timeout=300 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
+run "apt" bash -c 'sudo apt-get "$@" update && sudo apt-get "$@" upgrade -y && sudo apt-get "$@" autoremove -y' _ "${apt_opts[@]}"
+
+step "mise"
+herdr_before="$(herdr --version 2>/dev/null || true)"
+run "mise self-update" "$mise" self-update -y
+run "mise upgrade" "$mise" upgrade
+# mise prune は実行しても消さないことがあるので、消し残りを見せるだけにする
+prunable="$("$mise" ls --prunable 2>/dev/null || true)"
+if [ -n "$prunable" ]; then
+  echo "未使用の版が残っている（消すなら mise uninstall <tool>@<version>）:"
+  printf '%s\n' "$prunable"
+fi
+
+step "zsh plugins"
+run "sheldon" sheldon lock --update
+
+step "AI agent CLIs"
+command -v claude >/dev/null 2>&1 && run "claude update" claude update
+command -v codex >/dev/null 2>&1 && run "codex update" codex update
+command -v agy >/dev/null 2>&1 && run "agy update" keep_profiles agy update
+
+# codex は mise の外で版が変わるので、補完はここで作り直す
+comp_dir="$HOME/.local/share/zsh/site-functions"
+mkdir -p "$comp_dir"
+completion() { "$1" completion zsh >"$comp_dir/_$1"; }
+command -v codex >/dev/null 2>&1 && run "codex completion" completion codex
+command -v herdr >/dev/null 2>&1 && run "herdr completion" completion herdr
+rm -f "$HOME"/.zcompdump*
+
+herdr_after="$(herdr --version 2>/dev/null || true)"
+if [ -n "$herdr_before" ] && [ "$herdr_before" != "$herdr_after" ]; then
+  echo
+  echo "herdr が更新された（$herdr_before → $herdr_after）。"
+  echo "動いている herdr サーバは古い実体のままなので、再起動すると新しい版になる。"
+fi
+
+if [ ${#failures[@]} -gt 0 ]; then
+  echo >&2
+  echo "失敗した段: ${failures[*]}（もう一度 update-system を実行すると再試行する）" >&2
+  exit 1
+fi
+echo
+echo "すべて更新した。新しい設定は新しいシェルから効く。"

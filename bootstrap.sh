@@ -16,6 +16,11 @@ main() {
   for p in zsh git curl; do
     command -v "$p" >/dev/null 2>&1 || pkgs="$pkgs $p"
   done
+  # ライブラリのようにコマンドを入れないパッケージは、command -v では見えないので dpkg に入っているか聞く
+  #   python3-yaml: 知識リポジトリの lint が PyYAML を使う
+  for p in python3-yaml; do
+    dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || pkgs="$pkgs $p"
+  done
   if [ -n "$pkgs" ]; then
     log "apt install:$pkgs"
     # 新しい WSL は起動直後に自動更新が apt を掴んでいることがあるので、ロックを最大5分待つ

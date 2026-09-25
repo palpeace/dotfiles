@@ -39,7 +39,7 @@ main() {
   fi
 
   # 4. 作業場所（global_rules.md が ~/repos を指定している。仕事用は work/ の下に置くと ~/.gitconfig.work が読まれる）
-  mkdir -p "$HOME/repos/personal" "$HOME/repos/work"
+  mkdir -p "$HOME/repos/self" "$HOME/repos/work"
 
   # 5. mise
   if [ ! -x "$MISE" ]; then

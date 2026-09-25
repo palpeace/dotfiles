@@ -25,5 +25,5 @@
 - ファイルを編集しただけで完了にしない。ビルド・テスト・実行で確かめる。
 
 ## 5. WSL2 と Git
-- 作業は Windows 側（`/mnt/c/`）ではなく WSL2 側（`~/repos/`）で行う。
+- 作業は Windows 側（`/mnt/c/`）ではなく WSL2 側で行う。開発リポジトリは `~/repos/self/`（個人）と `~/repos/work/`（仕事）に置き、知識リポジトリは `~/repos` の外に置く。
 - コミットメッセージは Prefix 形式（`feat:` `fix:` `docs:` `refactor:` `test:`）で簡潔に書く。

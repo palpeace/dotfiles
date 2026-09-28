@@ -37,4 +37,5 @@
 - `~/.claude.json` は Claude Code が実行時に書く大きなファイルなので、`modify_` で書かない。MCP やプラグインは公式 CLI（`claude mcp add` / `claude plugin install`）で入れる。
 - 公式インストーラはシェルの設定ファイルに PATH を書き足すことがある（agy は PATH が通っていても4ファイルに足す）。インストールと更新の前後で退避して戻す。
 - apt が `systemd-binfmt` を再起動すると WSL の Windows 連携（`WSLInterop`）の登録が消え、`wsl.exe` や `wslview` が動かなくなる。`setup-wsl` が `/etc/binfmt.d/WSLInterop.conf` を置いて防ぐ。
+- Codex の TUI は既定で共有のデーモンにつなぎ、フックはデーモンの環境で動く。デーモンは最初に起動したペインの `HERDR_PANE_ID` を持ち続けるので、herdr の連携が別のペインに記録してしまう。`run_onchange_after_12` が `daemon_auto_start` を切っている。
 - 標準コマンド（`ls` `cat` `rm` `cd`）を alias で上書きしない。Claude Code はシェルの alias を引き継いでコマンドを実行する。

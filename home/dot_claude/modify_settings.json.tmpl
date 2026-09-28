@@ -32,7 +32,7 @@ fi
 # statusLine:                 ~/.local/bin/claude-statusline（dotfiles 管理）で状態を1行に出す
 # permissions.deny:           claude.ai の Artifact と Claude Docs を読み書きともに使わない（Codex など
 #                             ほかのエージェントから読めないため）。ほかの deny の行には触れない
-# skillOverrides:             その道具にしか使わないスキルを一覧から外し、文脈を使わせない
+# skillOverrides:             その道具にしか使わないスキル（朝のまとめを含む）を一覧から外し、文脈を使わせない
 #                             （プラグインから来たスキルには効かない）
 #
 # block_claude_ai_publish: true なら下の道具を deny に足してスキルを off にし、false なら両方を消す
@@ -42,7 +42,7 @@ if merged=$(printf '%s' "$input" | jq --argjson block "$block_claude_ai_publish"
   "ArtifactComments",
   "ArtifactData",
   "mcp__claude_ai_Claude_Docs"] as $publish
-  | ["artifact-design", "artifact-diagramming", "artifact-capabilities", "anthropic-skills:docs"] as $skills
+  | ["artifact-design", "artifact-diagramming", "artifact-capabilities", "anthropic-skills:docs", "anthropic-skills:morning"] as $skills
   | (. * {
   autoMemoryEnabled: false,
   cleanupPeriodDays: 365,

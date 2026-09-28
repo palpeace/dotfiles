@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 環境をまとめて更新する（dotfiles・apt・mise・zsh プラグイン・AI エージェント CLI）。
+# 環境をまとめて更新する（dotfiles・apt・mise・zsh プラグイン・AI エージェント CLI・herdr の連携）。
 # 各段は失敗しても次へ進み、最後に失敗した段を一覧にする。
 set -uo pipefail
 
@@ -72,11 +72,24 @@ command -v codex >/dev/null 2>&1 && run "codex completion" completion codex
 command -v herdr >/dev/null 2>&1 && run "herdr completion" completion herdr
 rm -f "$HOME"/.zcompdump*
 
+step "herdr"
+# 版が上がると連携（エージェントのフック）の版も上がりうるので、古いものだけ入れ直す
 herdr_after="$(herdr --version 2>/dev/null || true)"
-if [ -n "$herdr_before" ] && [ "$herdr_before" != "$herdr_after" ]; then
-  echo
-  echo "herdr が更新された（$herdr_before → $herdr_after）。"
-  echo "動いている herdr サーバは古い実体のままなので、再起動すると新しい版になる。"
+if [ -n "$herdr_after" ] && [ "$herdr_before" != "$herdr_after" ]; then
+  herdr_status="$(herdr integration status 2>/dev/null || true)"
+  for pair in claude:claude codex:codex antigravity-cli:agy; do
+    target="${pair%%:*}"
+    command -v "${pair#*:}" >/dev/null 2>&1 || continue
+    printf '%s\n' "$herdr_status" | grep -q "^$target: current " && continue
+    run "herdr integration $target" herdr integration install "$target"
+  done
+fi
+# 動いているサーバは古い版のままだが、新しいクライアントと通信できる間は再起動しなくてよい。
+# 通信できなくなったときだけ herdr が restart_needed を立てる
+if [ "$(herdr status --json 2>/dev/null | jq -r '.update.restart_needed' 2>/dev/null)" = "true" ]; then
+  echo "herdr のサーバを再起動する必要がある（新しい版のクライアントと通信できない）。"
+  echo "作業の区切りで herdr server stop を実行し、herdr で入り直す。"
+  echo "ペインのプロセスは終わるが、配置は戻り、Claude Code・Codex・agy の会話は再開される。"
 fi
 
 if [ ${#failures[@]} -gt 0 ]; then

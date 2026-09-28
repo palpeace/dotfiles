@@ -24,8 +24,8 @@
 
 ## 構成の要点
 
-- `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、補完（`20`）、yazi のプラグイン（`21`）、WSL の設定・Docker・SSH サーバ・Chrome（`30`、sudo が要る）。
-- 更新は `update-system` にまとめる（dotfiles・apt・mise・sheldon・claude / codex / agy）。
+- `chezmoi apply` の中で入れるもの: mise のツール（`run_onchange_before_10`）、AI エージェント CLI（`run_onchange_after_10`）、Claude Code のプラグイン（`11`）、herdr の連携（`12`、サーバを再起動してもエージェントの会話が再開される）、補完（`20`）、yazi のプラグイン（`21`）、WSL の設定・Docker・SSH サーバ・Chrome（`30`、sudo が要る）。
+- 更新は `update-system` にまとめる（dotfiles・apt・mise・sheldon・claude / codex / agy・herdr の連携）。herdr サーバの再起動は、herdr が必要と判定したとき（`restart_needed`）だけ案内する。
 - AI エージェントのグローバル指示は `home/dot_config/ai-rules/global_rules.md` の1本で、各 CLI の読む場所へ symlink する（Claude Code: `~/.claude/CLAUDE.md`、codex: `~/.codex/AGENTS.md`、agy: `~/.gemini/config/AGENTS.md`）。Claude Code が CLAUDE.md の代わりに AGENTS.md を読むのはプロジェクトの階層だけで、`~/.claude/AGENTS.md` は読まない。CLI を足すときは symlink も足す。
 - Claude Code のスキルは `home/dot_claude/skills/` に置く。毎回守らせたい規則はスキルではなく `global_rules.md` に書く（スキルは必要になったときにしか読まれない）。
 

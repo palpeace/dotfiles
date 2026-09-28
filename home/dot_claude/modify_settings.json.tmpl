@@ -32,14 +32,18 @@ fi
 # statusLine:                 ~/.local/bin/claude-statusline（dotfiles 管理）で状態を1行に出す
 # permissions.deny:           claude.ai の Artifact と Claude Docs を読み書きともに使わない（Codex など
 #                             ほかのエージェントから読めないため）。ほかの deny の行には触れない
+# skillOverrides:             その道具にしか使わないスキルを一覧から外し、文脈を使わせない
+#                             （プラグインから来たスキルには効かない）
 #
-# block_claude_ai_publish: true なら下の道具を deny に足し、false なら deny から消す
-# （Artifact で始まる行と mcp__claude_ai_Claude_Docs で始まる行を消す）。
+# block_claude_ai_publish: true なら下の道具を deny に足してスキルを off にし、false なら両方を消す
+# （deny は Artifact で始まる行と mcp__claude_ai_Claude_Docs で始まる行、skillOverrides は下の名前を消す）。
 block_claude_ai_publish=true
 if merged=$(printf '%s' "$input" | jq --argjson block "$block_claude_ai_publish" '["Artifact",
   "ArtifactComments",
   "ArtifactData",
-  "mcp__claude_ai_Claude_Docs"] as $publish | (. * {
+  "mcp__claude_ai_Claude_Docs"] as $publish
+  | ["artifact-design", "artifact-diagramming", "artifact-capabilities", "anthropic-skills:docs"] as $skills
+  | (. * {
   autoMemoryEnabled: false,
   cleanupPeriodDays: 365,
   theme: "dark",
@@ -52,7 +56,10 @@ if merged=$(printf '%s' "$input" | jq --argjson block "$block_claude_ai_publish"
   statusLine: { type: "command", command: "$HOME/.local/bin/claude-statusline" }
 }) | .permissions.deny = ((.permissions.deny // []) | map(select((startswith("Artifact") or startswith("mcp__claude_ai_Claude_Docs")) | not)) + (if $block then $publish else [] end) | unique)
   | if .permissions.deny == [] then del(.permissions.deny) else . end
-  | if .permissions == {} then del(.permissions) else . end' 2>/dev/null) && [ -n "$merged" ]; then
+  | if .permissions == {} then del(.permissions) else . end
+  | .skillOverrides = ((.skillOverrides // {}) | with_entries(select(.key as $k | $skills | index($k) | not))
+      + (if $block then ($skills | map({key: ., value: "off"}) | from_entries) else {} end))
+  | if .skillOverrides == {} then del(.skillOverrides) else . end' 2>/dev/null) && [ -n "$merged" ]; then
   printf '%s\n' "$merged"
 else
   echo "warning: ~/.claude/settings.json のマージに失敗したので、そのまま残した" >&2

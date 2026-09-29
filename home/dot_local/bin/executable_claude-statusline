@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 # Claude Code statusLine。~/.claude/settings.json の statusLine.command から呼ばれる。
-# 表示例: ~/repos/app (main) Opus 5 (1M context, high effort) │ CTX 1% │ 5H 1% (18:23) │ 1W 36% (木18:23) │ TTL 17:23
-# CTX/5H/1W は 70%未満=dim(控えめ) 70-89%=黄 90%以上=赤 で警告表示する。
-# 通常値をdimにして黄/赤だけを目立たせることで、項目が増えても警告箇所が一目でわかるようにする。
+# 表示例: ~/repos/app (main) Opus 5 1M high │ CTX 1% │ TTL 17:23 │ CC 5H 75% (18:23) 1W 36% │ CX 5H 48% 1W 30%
+# CC は Claude Code、CX は Codex の 5時間枠(5H)と週枠(1W)の使用率。CX は Codex のセッションログに残った最後の値を読む。
+# 項目名(CTX/TTL/CC/CX)は白。状態で変わる値は 灰(通常)・黄・赤 の3色だけを使う。
+# CTX/CC/CX は 70%未満=灰 70-89%=黄 90%以上=赤、TTL は残り30分以下=黄 10分以下=赤。CC/CX は黄/赤の枠にだけリセット時刻を付ける。
+# 通常値を灰にして黄/赤だけを目立たせることで、項目が増えても警告箇所が一目でわかるようにする。
+# 黄/赤は警告専用なので、モデル名の色(Fable=マゼンタ Opus=シアン Sonnet=青 Haiku=緑)には使わない。
 # TTL はプロンプトキャッシュ(サブスク課金では1h固定)の失効予定時刻。transcript の最終送信から1h後を計算する。
-# 呼ばれる回数が多いので fork を減らす（jq は1回だけ、時刻の整形は bash の組み込み）。
+# 呼ばれる回数が多いので fork を減らす（入力の jq は1回だけ、時刻の整形は bash の組み込み）。
 set -euo pipefail
 
-DIM='\033[2m'
+WHITE='\033[97m'
+GRAY='\033[90m'
 YELLOW='\033[33m'
 RED='\033[31m'
-BLUE='\033[34m'
-MAGENTA='\033[35m'
 RESET='\033[0m'
+# モデル名の色。黄/赤は警告に取っておくので使わない。
+MAGENTA='\033[35m'
+CYAN='\033[36m'
+BLUE='\033[34m'
+GREEN='\033[32m'
 
 input="$(cat)"
 
@@ -72,24 +79,48 @@ fmt_remaining() {
   fi
 }
 
+pct_color() {
+  if [ "$1" -ge 90 ]; then
+    printf '%s' "$RED"
+  elif [ "$1" -ge 70 ]; then
+    printf '%s' "$YELLOW"
+  else
+    printf '%s' "$GRAY"
+  fi
+}
+
 colorize() {
-  local label="$1" pct_raw="$2" resets_at="${3:-}"
+  local label="$1" pct_raw="$2"
   [ -z "$pct_raw" ] && return
   local pct
-  pct=$(printf '%.0f' "$pct_raw")
-  local color="$DIM"
-  if [ "$pct" -ge 90 ]; then
-    color="$RED"
-  elif [ "$pct" -ge 70 ]; then
-    color="$YELLOW"
-  fi
-  local remaining
-  remaining=$(fmt_remaining "$resets_at")
-  if [ -n "$remaining" ]; then
-    printf '%b%s %s%% (%s)%b' "$color" "$label" "$pct" "$remaining" "$RESET"
-  else
-    printf '%b%s %s%%%b' "$color" "$label" "$pct" "$RESET"
-  fi
+  printf -v pct '%.0f' "$pct_raw"
+  printf '%b%s %b%s%%%b' "$WHITE" "$label" "$(pct_color "$pct")" "$pct" "$RESET"
+}
+
+# 5時間枠と週枠を "CC 5H 75% (18:23) 1W 36%" の形で出す。引数は ラベル 5H% 5Hリセット 1W% 1Wリセット。
+# 枠ごとに色を付け、黄/赤の枠にだけリセット時刻を付ける。
+# resets_at を過ぎた枠は古い値なので "5H -" にし、両方とも出せなければ何も出さない。
+fmt_limits() {
+  local label="$1" out="" shown=0 i name pct reset color
+  for i in 2 4; do
+    if [ "$i" -eq 2 ]; then name=5H; else name=1W; fi
+    pct="${!i}" reset="$(( i + 1 ))"
+    reset="${!reset}"
+    case "$reset" in
+      ''|*[!0-9]*) reset=0 ;;
+    esac
+    if [ -z "$pct" ] || [ "$reset" -le "$EPOCHSECONDS" ]; then
+      out="$out $GRAY$name -"
+      continue
+    fi
+    printf -v pct '%.0f' "$pct"
+    color=$(pct_color "$pct")
+    out="$out $color$name $pct%"
+    [ "$color" != "$GRAY" ] && out="$out ($(fmt_remaining "$reset"))"
+    shown=1
+  done
+  [ "$shown" -eq 0 ] && return 0
+  printf '%b%s%b%b' "$WHITE" "$label" "$out" "$RESET"
 }
 
 # transcript(JSONL)の最終エントリの timestamp + 1h = プロンプトキャッシュTTL失効予定時刻。
@@ -119,7 +150,7 @@ fmt_cache_ttl() {
   if [ "$remaining" -le 0 ]; then
     return 0
   fi
-  local color="$DIM"
+  local color="$GRAY"
   if [ "$remaining" -le 600 ]; then
     color="$RED"
   elif [ "$remaining" -le 1800 ]; then
@@ -127,16 +158,33 @@ fmt_cache_ttl() {
   fi
   local expiry_hm
   printf -v expiry_hm '%(%H:%M)T' "$expiry"
-  printf '%bTTL %s%b' "$color" "$expiry_hm" "$RESET"
+  printf '%bTTL %b%s%b' "$WHITE" "$color" "$expiry_hm" "$RESET"
 }
 
-model_color() {
-  local name="$1"
-  case "$name" in
-    *Opus*) printf '%s' "$RED" ;;
-    *Sonnet*) printf '%s' "$BLUE" ;;
-    *) printf '%s' "$MAGENTA" ;;
-  esac
+# Codex の 5時間枠/週枠。~/.codex/sessions/ の rollout(JSONL) の token_count に残った最後の rate_limits を読む。
+# Codex を最後に動かした時点の値なので、枠が古いかどうかは fmt_limits が resets_at で判断する。
+fmt_codex() {
+  local days=("${CODEX_HOME:-$HOME/.codex}"/sessions/*/*/*/)
+  [ -d "${days[-1]}" ] || return 0
+  # 日をまたいで続いているセッションもあるので、直近2日の中で最後に書かれたファイルを使う。
+  # 要素が1つのとき ${days[@]: -2} は空になるので、始まりの位置を 0 で止める。
+  local from=$(( ${#days[@]} > 2 ? ${#days[@]} - 2 : 0 ))
+  local f="" d c
+  for d in "${days[@]:from}"; do
+    for c in "$d"rollout-*.jsonl; do
+      [ -f "$c" ] || continue
+      if [ -z "$f" ] || [ "$c" -nt "$f" ]; then
+        f="$c"
+      fi
+    done
+  done
+  [ -n "$f" ] || return 0
+  local p_pct="" p_reset="" s_pct="" s_reset=""
+  IFS=$'\x1f' read -r p_pct p_reset s_pct s_reset < <(
+    grep -F '"rate_limits":{"' "$f" 2>/dev/null | tail -n 1 |
+      jq -r '.payload.rate_limits | [.primary.used_percent, .primary.resets_at, .secondary.used_percent, .secondary.resets_at] | map(. // "" | tostring) | join("\u001f")' 2>/dev/null
+  ) || true
+  fmt_limits CX "$p_pct" "$p_reset" "$s_pct" "$s_reset"
 }
 
 size_fmt=$(fmt_size "$size")
@@ -144,17 +192,8 @@ size_fmt=$(fmt_size "$size")
 # display_name が将来 "(1M context)" 等を自前で付与してきても二重表示にならないよう、
 # 既存の末尾括弧書きは一旦剥がしてから size/effort を付け直す。
 model="${model%% (*}"
-
-info_parts=()
-[ -n "$size_fmt" ] && info_parts+=("$size_fmt context")
-[ -n "$effort" ] && info_parts+=("$effort effort")
-if [ ${#info_parts[@]} -gt 0 ]; then
-  joined=$(printf ', %s' "${info_parts[@]}")
-  model="$model (${joined#, })"
-fi
-
-mcolor=$(model_color "$model")
-model_fmt=$(printf '%b%s%b' "$mcolor" "$model" "$RESET")
+[ -n "$size_fmt" ] && model="$model $size_fmt"
+[ -n "$effort" ] && model="$model $effort"
 
 # dir が空だと git が statusline プロセスの cwd を見て無関係なブランチを表示する。
 branch=""
@@ -162,8 +201,16 @@ branch=""
 
 line="$dir"
 [ -n "$branch" ] && line="$line ($branch)"
+case "$model" in
+  *Fable*) mcolor="$MAGENTA" ;;
+  *Opus*) mcolor="$CYAN" ;;
+  *Sonnet*) mcolor="$BLUE" ;;
+  *Haiku*) mcolor="$GREEN" ;;
+  *) mcolor="" ;;
+esac
+printf -v model_fmt '%b%s%b' "$mcolor" "$model" "$RESET"
 line="$line $model_fmt"
-for part in "$(colorize CTX "$ctx")" "$(colorize 5H "$five_h" "$five_h_resets")" "$(colorize 1W "$week" "$week_resets")" "$(fmt_cache_ttl "$transcript_path")"; do
+for part in "$(colorize CTX "$ctx")" "$(fmt_cache_ttl "$transcript_path")" "$(fmt_limits CC "$five_h" "$five_h_resets" "$week" "$week_resets")" "$(fmt_codex)"; do
   [ -n "$part" ] && line="$line │ $part"
 done
 

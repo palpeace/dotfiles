@@ -73,6 +73,14 @@ height = "98%"
 description = "File tree (yazi)"
 
 [[keys.command]]
+key = "prefix+a"
+type = "popup"
+command = "herdr-here oxker"
+width = "98%"
+height = "98%"
+description = "Docker (oxker)"
+
+[[keys.command]]
 key = "prefix+m"
 type = "popup"
 command = "herdr-here memo"

@@ -161,28 +161,31 @@ fmt_cache_ttl() {
   printf '%bTTL %b%s%b' "$WHITE" "$color" "$expiry_hm" "$RESET"
 }
 
-# Codex の 5時間枠/週枠。~/.codex/sessions/ の rollout(JSONL) の token_count に残った最後の rate_limits を読む。
+# Codex の 5時間枠/週枠。~/.codex/sessions/ の rollout(JSONL) の token_count に残った最後の Codex の rate_limits を読む。
 # Codex を最後に動かした時点の値なので、枠が古いかどうかは fmt_limits が resets_at で判断する。
 fmt_codex() {
   local days=("${CODEX_HOME:-$HOME/.codex}"/sessions/*/*/*/)
   [ -d "${days[-1]}" ] || return 0
-  # 日をまたいで続いているセッションもあるので、直近2日の中で最後に書かれたファイルを使う。
+  # 日をまたいで続いているセッションもあるので、直近2日のファイルを新しく書かれた順に見る。
   # 要素が1つのとき ${days[@]: -2} は空になるので、始まりの位置を 0 で止める。
   local from=$(( ${#days[@]} > 2 ? ${#days[@]} - 2 : 0 ))
-  local f="" d c
+  local d files=()
   for d in "${days[@]:from}"; do
-    for c in "$d"rollout-*.jsonl; do
-      [ -f "$c" ] || continue
-      if [ -z "$f" ] || [ "$c" -nt "$f" ]; then
-        f="$c"
-      fi
-    done
+    files+=("$d"rollout-*.jsonl)
   done
-  [ -n "$f" ] || return 0
+  local -a sorted
+  mapfile -t sorted < <(ls -t -- "${files[@]}" 2>/dev/null) || true
+  # 枠を使い切ると、primary/secondary が null の limit_id "premium"(クレジット)の行が後に書かれる。
+  # それを読むと CX が消えるので、limit_id "codex" の行だけを読み、無ければ1つ前のファイルを見る。
+  local f line=""
+  for f in "${sorted[@]}"; do
+    line=$(grep -F '"rate_limits":{"limit_id":"codex"' "$f" 2>/dev/null | tail -n 1) || true
+    [ -n "$line" ] && break
+  done
+  [ -n "$line" ] || return 0
   local p_pct="" p_reset="" s_pct="" s_reset=""
   IFS=$'\x1f' read -r p_pct p_reset s_pct s_reset < <(
-    grep -F '"rate_limits":{"' "$f" 2>/dev/null | tail -n 1 |
-      jq -r '.payload.rate_limits | [.primary.used_percent, .primary.resets_at, .secondary.used_percent, .secondary.resets_at] | map(. // "" | tostring) | join("\u001f")' 2>/dev/null
+    jq -r '.payload.rate_limits | [.primary.used_percent, .primary.resets_at, .secondary.used_percent, .secondary.resets_at] | map(. // "" | tostring) | join("\u001f")' <<<"$line" 2>/dev/null
   ) || true
   fmt_limits CX "$p_pct" "$p_reset" "$s_pct" "$s_reset"
 }

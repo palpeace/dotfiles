@@ -74,6 +74,31 @@ case "$tool" in
       || hold "not a git work tree: $PWD"
     exec "${launcher[@]}" gitui "$@"
     ;;
+  memo)
+    # 思いついたことを受信箱の末尾に書き足す。時刻の見出しを足し、空行の下にカーソルを置く
+    # （micro は読むときに末尾の改行を1つ落とすので、改行は3つ足す）。
+    tool=micro
+    resolve_launcher
+    inbox="${XDG_DATA_HOME:-$HOME/.local/share}/memo/inbox.md"
+    # 受信箱はリンクのこともあるので、リンク先のディレクトリを作る
+    mkdir -p "$(dirname "$(readlink -f "$inbox")")"
+    touch "$inbox"
+    size="$(wc -c <"$inbox")"
+    {
+      # 前の追記とのあいだに空行を1つ置く
+      if [[ "$size" -gt 0 ]]; then
+        [[ -z "$(tail -c 1 "$inbox")" ]] || printf '\n'
+        printf '\n'
+      fi
+      printf '## %s\n\n\n' "$(date '+%Y-%m-%d %H:%M')"
+    } >>"$inbox"
+    added="$(tail -c +"$((size + 1))" "$inbox")"
+    "${launcher[@]}" micro "$inbox" "+$(wc -l <"$inbox"):1"
+    # 何も書かずに閉じたら、足した見出しを消す（空の見出しを溜めない）
+    if [[ "$(tail -c +"$((size + 1))" "$inbox")" == "$added" ]]; then
+      truncate -s "$size" "$inbox"
+    fi
+    ;;
   yazi)
     resolve_launcher
     tmp="$(mktemp -t herdr-yazi-cwd.XXXXXX)"

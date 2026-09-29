@@ -71,3 +71,11 @@ command = "herdr-here yazi"
 width = "98%"
 height = "98%"
 description = "File tree (yazi)"
+
+[[keys.command]]
+key = "prefix+m"
+type = "popup"
+command = "herdr-here memo"
+width = "98%"
+height = "98%"
+description = "Memo (inbox)"

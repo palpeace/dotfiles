@@ -3,8 +3,8 @@ onboarding = false
 [ui]
 agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = true
-# タブを作るたびに名前を聞かれないようにする（prefix+c を1手にする）
-prompt_new_tab_name = false
+# タブを作るときに名前を聞く（半分以上のタブに名前を付けるため）
+prompt_new_tab_name = true
 # サイドバーの3行目に各エージェントの作業内容（端末タイトル）を出すため、既定より広くする
 sidebar_width = 32
 sidebar_max_width = 44

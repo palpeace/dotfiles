@@ -1,0 +1,6 @@
+[Unit]
+Description=Rebuild herdr agent detection overrides from the latest manifests
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/herdr-manifest-overlay

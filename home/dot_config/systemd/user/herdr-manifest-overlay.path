@@ -1,0 +1,12 @@
+# herdr が判定表を取ってきたとき（remote のキャッシュが変わったとき）と、足す規則を変えたときに、
+# 上書きを作り直す（herdr-manifest-overlay.service）。
+[Unit]
+Description=Rebuild herdr agent detection overrides when manifests change
+
+[Path]
+PathChanged=%h/.local/state/herdr/agent-detection/remote
+PathChanged=%h/.config/herdr/agent-overlays
+Unit=herdr-manifest-overlay.service
+
+[Install]
+WantedBy=default.target

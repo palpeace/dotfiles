@@ -1,0 +1,26 @@
+# herdr の Claude Code の判定表に足す規則。herdr-manifest-overlay が、herdr の取ってきた最新の表の末尾に
+# これを足して ~/.config/herdr/agent-detection/claude.toml（上書き）を作る。上書きは表を丸ごと置き換えるので、
+# 上書きを直接書かず、ここに足す規則だけを書く。
+
+# 背景の shell（Bash の run_in_background）と Monitor が動いているあいだは working にする。
+# Claude Code はターンを終えると、背景の処理が残っていても端末タイトルを ✳ に戻すので、元の表では idle になる
+# （背景のサブエージェントのときはタイトルがスピナーのままなので working になる）。
+# 見るのは入力欄の下のフッター（例: "⏸ manual mode on · 1 shell, 1 monitor"）だけ。最後の横線より後に絞り、
+# 入力欄やスクロールの中の文が紛れないようにする。許可や質問の画面では当たらないようにする。
+[[rules]]
+id = "background_shell_working"
+state = "working"
+priority = 960
+region = "after_last_horizontal_rule"
+visible_working = true
+any = [
+  { line_regex = ['^\s*[⏸⏵].*·\s+(?:[^·]*,\s+)?[1-9]\d*\s+(?:shells?|monitors?)(?:,|…|\s*$)'] },
+]
+not = [
+  { contains = ["do you want to proceed?"] },
+  { contains = ["esc to cancel"] },
+  { contains = ["waiting for permission"] },
+  { contains = ["do you want to allow this connection?"] },
+  { contains = ["tab to amend"] },
+  { contains = ["ctrl+e to explain"] },
+]

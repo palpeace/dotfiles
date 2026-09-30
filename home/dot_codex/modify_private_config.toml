@@ -1,0 +1,30 @@
+#!/bin/sh
+# chezmoi が今の ~/.codex/config.toml を標準入力で渡す。
+# Codex が実行時に書くキー（projects の trust、案内の回数、hooks の状態など）はそのまま残し、
+# [features] の fast_mode だけを false にする。Fast（priority の層）はサブスクの枠を
+# Standard の 2.5 倍の速さで使うので、既定で切る。
+#
+# 失敗しても apply を止めない。awk が失敗したら入力をそのまま返して警告だけ出す。
+set -u
+input=$(cat)
+out=$(printf '%s\n' "$input" | awk '
+  # [features] の中の空行は貯めておき、fast_mode を書いてから出す（節の最後の行のすぐ下に入れる）
+  function emit() { if (!done) { print "fast_mode = false"; done = 1 } }
+  function flush() { for (i = 0; i < nblank; i++) print ""; nblank = 0 }
+  /^[[:space:]]*\[/ {
+    if (infeat) emit()
+    flush()
+    infeat = ($0 ~ /^[[:space:]]*\[features\][[:space:]]*(#.*)?$/) && !seen
+    if (infeat) seen = 1
+    print; next
+  }
+  infeat && /^[[:space:]]*$/ { nblank++; next }
+  infeat && /^[[:space:]]*fast_mode[[:space:]]*=/ { flush(); emit(); next }
+  { flush(); print }
+  END {
+    if (infeat) emit()
+    flush()
+    if (!seen) { print ""; print "[features]"; print "fast_mode = false" }
+  }
+') || { echo "warning: ~/.codex/config.toml の fast_mode を書けなかったので、そのまま残した" >&2; printf '%s\n' "$input"; exit 0; }
+printf '%s\n' "$out"

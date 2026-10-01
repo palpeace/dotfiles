@@ -56,6 +56,31 @@ function preInsertNewline(bp)
     return false
 end
 
+-- リストの項目で Tab を押したら、カーソルの位置にかかわらず項目ごと1段下げる。
+-- 番号の項目は、入れ子の最初として 1 から振り直す。
+-- リストでなければ false を返し、Tab の既定の動き（補完・字下げ）に任せる
+-- （1段上げるのは既定の Shift-Tab のままで足りる）。
+function indentListItem(bp)
+    if not isMarkdown(bp) or bp.Cursor:HasSelection() then
+        return false
+    end
+    local y = bp.Cursor.Y
+    local indent, mark = splitListItem(bp.Buf:Line(y))
+    if not mark then
+        return false
+    end
+    local n = mark:match("^%d+")
+    if n then
+        bp.Buf:Replace(buffer.Loc(#indent, y), buffer.Loc(#indent + #n, y), "1")
+    end
+    local unit = "\t"
+    if bp.Buf.Settings["tabstospaces"] then
+        unit = string.rep(" ", bp.Buf.Settings["tabsize"])
+    end
+    bp.Buf:Insert(buffer.Loc(0, y), unit)
+    return true
+end
+
 -- 今の行のチェックを入れ外しする。チェックの無い項目には [ ] を付ける
 function toggleCheckbox(bp)
     if not isMarkdown(bp) then

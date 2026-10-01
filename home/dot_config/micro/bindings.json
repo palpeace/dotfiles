@@ -1,5 +1,6 @@
 {
     "Alt-/": "lua:comment.comment",
+    "Tab": "lua:initlua.indentListItem|Autocomplete|IndentSelection|InsertTab",
     "Ctrl-a": "StartOfLine",
     "Ctrl-e": "EndOfLine",
     "Ctrl-k": "lua:initlua.killToEnd",

@@ -93,7 +93,8 @@ case "$tool" in
       printf '## %s\n\n\n' "$(date '+%Y-%m-%d %H:%M')"
     } >>"$inbox"
     added="$(tail -c +"$((size + 1))" "$inbox")"
-    "${launcher[@]}" micro "$inbox" "+$(wc -l <"$inbox"):1"
+    # popup を閉じても書きかけが消えないように、5秒ごとに保存する（memo のときだけ）
+    "${launcher[@]}" micro -autosave 5 "$inbox" "+$(wc -l <"$inbox"):1"
     # 何も書かずに閉じたら、足した見出しを消す（空の見出しを溜めない）
     if [[ "$(tail -c +"$((size + 1))" "$inbox")" == "$added" ]]; then
       truncate -s "$size" "$inbox"

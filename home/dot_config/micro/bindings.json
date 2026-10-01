@@ -1,4 +1,20 @@
 {
     "Alt-/": "lua:comment.comment",
-    "CtrlUnderscore": "lua:comment.comment"
+    "Ctrl-a": "StartOfLine",
+    "Ctrl-e": "EndOfLine",
+    "Ctrl-k": "lua:initlua.killToEnd",
+    "Ctrl-u": "lua:initlua.killToStart",
+    "Ctrl-w": "lua:initlua.killWordLeft",
+    "Ctrl-y": "lua:initlua.yank",
+    "Alt-d": "lua:initlua.killWordRight",
+    "CtrlUnderscore": "Undo",
+    "Alt-a": "SelectAll",
+    "Alt-e": "CommandMode",
+    "Alt-z": "Redo",
+    "Alt-u": "ToggleMacro",
+    "Alt-w": "NextSplit|FirstSplit",
+    "Alt-t": "lua:initlua.toggleCheckbox",
+    "Alt-j": "lua:initlua.nextHeading",
+    "Alt-k": "lua:initlua.prevHeading",
+    "Alt-v": "lua:initlua.preview"
 }

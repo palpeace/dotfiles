@@ -6,5 +6,9 @@
     "tabstospaces": true,
     "softwrap": true,
     "autoindent": true,
-    "diffgutter": true
+    "diffgutter": true,
+    "ft:markdown": {
+        "tabsize": 2,
+        "saveundo": true
+    }
 }

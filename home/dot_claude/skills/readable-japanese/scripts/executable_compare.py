@@ -13,6 +13,9 @@ import os
 import re
 import sys
 
+# 文末に付いた補足のカッコ。文末の種類を見る前に外す
+TRAIL_PAREN = re.compile(r"\s*[(（][^()（）]*[)）]\s*$")
+
 sys.dont_write_bytecode = True  # スキルの置き場所に __pycache__ を作らない
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from measure import classify, sentences, strip_inline  # noqa: E402
@@ -36,7 +39,7 @@ NUMBER = re.compile(r"[0-9０-９][0-9０-９,.]*(?:[%％]|件|回|秒|分|時�
 def ending_kind(s):
     """文末の働き。直したときに変わると、文の働き（依頼・評価・推量など）が変わる。"""
     t = re.sub(r"[。．！？!?\s]+$", "", s)
-    t = re.sub(r"[（(][^（）()]*[）)]$", "", t).strip()
+    t = TRAIL_PAREN.sub("", t)
     if not t:
         return ""
     rules = [

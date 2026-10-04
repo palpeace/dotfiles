@@ -190,6 +190,24 @@ fmt_codex() {
   fmt_limits CX "$p_pct" "$p_reset" "$s_pct" "$s_reset"
 }
 
+# CC の 5時間枠と週枠の最後の値を JSON に残す。この値は statusLine の入力にしか来ないので、
+# ほかの道具（使用量に余裕があるかの判定など）はこのファイルを読む。値が数でなければ null にする。
+save_limits() {
+  local dir="${XDG_STATE_HOME:-$HOME/.local/state}/claude-statusline" v out=()
+  [ -n "$week" ] || return 0
+  for v in "$five_h" "$five_h_resets" "$week" "$week_resets"; do
+    case "$v" in
+      ''|*[!0-9.]*|*.*.*|.*|*.) out+=(null) ;;
+      *) out+=("$v") ;;
+    esac
+  done
+  [ -d "$dir" ] || mkdir -p "$dir" || return 0
+  printf '{"five_hour":{"used_percentage":%s,"resets_at":%s},"seven_day":{"used_percentage":%s,"resets_at":%s},"updated_at":%s}\n' \
+    "${out[@]}" "$EPOCHSECONDS" >"$dir/rate-limits.json.$$" 2>/dev/null &&
+    mv -f "$dir/rate-limits.json.$$" "$dir/rate-limits.json" 2>/dev/null || true
+}
+save_limits
+
 size_fmt=$(fmt_size "$size")
 
 # display_name が将来 "(1M context)" 等を自前で付与してきても二重表示にならないよう、

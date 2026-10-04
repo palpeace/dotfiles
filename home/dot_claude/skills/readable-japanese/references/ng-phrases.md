@@ -12,6 +12,8 @@
 ~/.claude/skills/readable-japanese/scripts/compare.py before.md after.md     # 直す前と後を比べる
 ```
 
+どれも `.html` をそのまま渡せる。script・style・コメントを外した本文だけを見て、行番号は元の HTML のものを出す。
+
 `hard` はほぼ常に誤り、`soft` は文脈で判断する候補である。拾えるのは文字列の一致だけなので、判断は必ず自分で行う。
 
 `measure.py` は語ではなく形を見て、次の箇所を出す。長さと読点はカッコの中を数えない。

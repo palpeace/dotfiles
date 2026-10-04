@@ -19,6 +19,7 @@ TRAIL_PAREN = re.compile(r"\s*[(（][^()（）]*[)）]\s*$")
 sys.dont_write_bytecode = True  # スキルの置き場所に __pycache__ を作らない
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from measure import classify, sentences, strip_inline  # noqa: E402
+from html_text import read_text  # noqa: E402
 
 # 言い回しの種類。書き直しで増えたら足した、減ったら消したことになる
 MARKERS = [
@@ -60,8 +61,7 @@ def ending_kind(s):
 
 
 def load(path):
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
+    text = read_text(path)
     rows = classify(text.split("\n"))
     sents = [s for _, s, _, _ in sentences(rows)]
     plain = "\n".join(strip_inline(t) for _, k, t in rows if k in ("body", "list", "heading", "table", "quote"))

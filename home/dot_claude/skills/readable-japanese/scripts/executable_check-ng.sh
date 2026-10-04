@@ -4,7 +4,7 @@
 #   check-ng.sh [--all] FILE...
 #     既定は hard（ほぼ常に誤りの型）だけを出す。--all で soft（文脈で判断する候補）も出す。
 #     hard が1件以上あれば終了コード 1、それ以外は 0。
-#     パターン表は同じディレクトリの ng-patterns.tsv。
+#     パターン表は同じディレクトリの ng-patterns.tsv。.html は本文だけを見る（行番号は元の HTML のもの）。
 set -uo pipefail
 
 self_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -27,19 +27,25 @@ done
 [ -f "$patterns" ] || { echo "パターン表が無い: $patterns" >&2; exit 2; }
 
 hits=$(mktemp)
-trap 'rm -f "$hits"' EXIT
+plain=$(mktemp)
+trap 'rm -f "$hits" "$plain"' EXIT
 
 for f in "${files[@]}"; do
   if [ ! -f "$f" ]; then
     echo "$f: 読めない" >&2
     continue
   fi
+  # HTML は本文だけを、行番号を保ったテキストにしてから見る
+  src="$f"
+  case "$f" in
+    *.html|*.htm|*.HTML|*.HTM) src="$plain"; python3 "$self_dir/html_text.py" "$f" > "$plain" ;;
+  esac
   while IFS=$'\t' read -r sev re hint; do
     [ -z "${sev:-}" ] && continue
     case "$sev" in \#*) continue ;; esac
     [ -z "${re:-}" ] && continue
     if [ "$show_all" -eq 0 ] && [ "$sev" != hard ]; then continue; fi
-    grep -noE -- "$re" "$f" 2>/dev/null | while IFS=: read -r ln m; do
+    grep -noE -- "$re" "$src" 2>/dev/null | while IFS=: read -r ln m; do
       [ -z "${ln:-}" ] && continue
       printf '%s\t%s\t%s\t%s\t%s\n' "$f" "$ln" "$sev" "$m" "$hint"
     done

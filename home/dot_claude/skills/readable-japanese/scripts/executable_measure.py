@@ -8,8 +8,13 @@
   拾えるのは形だけで、直すかどうかは人が決める。
   --stats は数の要約だけを出す。指摘が1件以上あれば終了コード 1、無ければ 0。
 """
+import os
 import re
 import sys
+
+sys.dont_write_bytecode = True  # スキルの置き場所に __pycache__ を作らない
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from html_text import read_text  # noqa: E402
 
 # 文末に付いた補足のカッコ。文末の種類を見る前に外す
 TRAIL_PAREN = re.compile(r"\s*[(（][^()（）]*[)）]\s*$")
@@ -153,8 +158,7 @@ def check_spacing(rows):
 
 
 def analyze(path):
-    with open(path, encoding="utf-8") as f:
-        lines = f.read().split("\n")
+    lines = read_text(path).split("\n")
     rows = classify(lines)
     sents = sentences(rows)
     findings = []

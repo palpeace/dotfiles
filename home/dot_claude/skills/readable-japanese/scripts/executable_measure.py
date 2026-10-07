@@ -3,7 +3,7 @@
 
   measure.py [--stats] FILE...
 
-  文の長さ・読点・太字・箇条書きの比率・文末の種類を数え、目安を外れた箇所と、
+  文の長さ・似た長さの文の連続・読点・太字・箇条書きの比率・文末の種類を数え、目安を外れた箇所と、
   形で拾える型（文末のコロン、和欧文の空白の不揃い、予告だけの文など）を出す。
   拾えるのは形だけで、直すかどうかは人が決める。
   --stats は数の要約だけを出す。指摘が1件以上あれば終了コード 1、無ければ 0。
@@ -25,6 +25,11 @@ MANY_COMMAS = 4         # 1文の読点。これ以上あると、どこで区�
 BOLD_PER_1000 = 4.0     # 本文1000字あたりの太字。超えると強調が強調でなくなる
 LIST_RATIO = 0.5        # 本文の行に占める箇条書きの行。超えると論の筋が切れていないかを見る
 MIN_CHARS_FOR_RATIO = 400  # これより短い文書では比率を見ない（数行の PR 説明などで振れるため）
+# 文長の揃い。本文の閉じた文が、長さの平均の ±25% に収まったまま6文続いたら、拍が単調でないかを見る。
+# 2026-10 に設計文書と報告書・スライドの49本で測り、6文以上続いたのは6本で、どれも 55〜67 字の文が並ぶ箇所だった。
+# 文書全体のばらつき（変動係数）は 0.26〜0.74 に散り、単調な箇所を指せなかったので使わない。
+EVEN_RUN = 6
+EVEN_BAND = 0.25
 
 JP = r"[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f々〆ー]"  # かな・漢字・半角カナ
 LATIN = r"[A-Za-z]"  # 数字は数えない。「9月28日 20:05」のように日付と時刻のあいだは空けるのがふつうなため
@@ -180,7 +185,18 @@ def analyze(path):
         elif c >= MANY_COMMAS:
             findings.append((ln, "読点が多い", f"読点{c}", s, "並列なら箇条書きか「AとBとC」に、従属が重なっているなら文を分ける"))
 
-    # 文末の種類（文として閉じたものだけ。箇条書きの断片は数えない）
+    # 文長の揃い（本文の閉じた文だけ。箇条書きの項は長さがそろうのがふつうなので数えない）
+    even = [(ln, s, n) for (ln, s, _, kind), n in zip(sents, lens) if kind == "body" and s.endswith("。")]
+    start = 0
+    for i in range(1, len(even) + 1):
+        window = [n for _, _, n in even[start:i + 1]] if i < len(even) else None
+        if window and all(abs(x - sum(window) / len(window)) <= EVEN_BAND * sum(window) / len(window) for x in window):
+            continue
+        if i - start >= EVEN_RUN:
+            run = [n for _, _, n in even[start:i]]
+            findings.append((even[start][0], "文長の揃い", f"{len(run)}文が{min(run)}〜{max(run)}字", even[start][1],
+                             "似た長さの文が続いて拍が単調になる。要点を短い1文で言い切るか、補足を前の文に入れて長さに差をつける"))
+        start = i
     kinds = {}
     closed = [(ln, s) for ln, s, _, _ in sents if s.endswith("。")]
     for ln, s in closed:

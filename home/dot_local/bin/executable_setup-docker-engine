@@ -41,6 +41,32 @@ sudo systemctl enable --now docker
 systemctl is-active --quiet docker || { echo "docker が起動していない" >&2; exit 1; }
 echo "Docker Engine: $(docker --version)"
 
+# Docker が自動で作るネットワークの範囲を 10.201.0.0/16 の中の /24 に決める。
+# 既定では 172.17〜172.31 を使い切ると 192.168.x を /20 ずつ使い始め、
+# LAN の 192.168.x と重なると、WSL からその宛先に届かなくなる。
+# 範囲を変えても、作り済みのネットワークはそのまま残る（docker network prune で消す）。
+pools='[{"base":"10.201.0.0/16","size":24}]'
+if sudo python3 - "$pools" <<'PY'
+import json, os, sys
+path = "/etc/docker/daemon.json"
+want = json.loads(sys.argv[1])
+cur = {}
+if os.path.exists(path):
+    with open(path) as f:
+        cur = json.load(f)
+if cur.get("default-address-pools") == want:
+    sys.exit(1)
+cur["default-address-pools"] = want
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w") as f:
+    json.dump(cur, f, indent=2)
+    f.write("\n")
+PY
+then
+  echo "==> Docker のネットワークの範囲を 10.201.0.0/16 にした。Docker を再起動する（動いているコンテナは止まる）"
+  sudo systemctl restart docker
+fi
+
 # NVIDIA GPU: WSL は Windows のドライバがあると /usr/lib/wsl/lib/nvidia-smi を置く。それを判定に使う。
 if [ ! -x /usr/lib/wsl/lib/nvidia-smi ]; then
   echo "NVIDIA の GPU は無いので、NVIDIA Container Toolkit は入れない"

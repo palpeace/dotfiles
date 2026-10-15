@@ -6,6 +6,7 @@
 # CTX/CC/CX は 70%未満=灰 70-89%=黄 90%以上=赤、TTL は残り30分以下=黄 10分以下=赤。CC/CX は黄/赤の枠にだけリセット時刻を付ける。
 # 通常値を灰にして黄/赤だけを目立たせることで、項目が増えても警告箇所が一目でわかるようにする。
 # 黄/赤は警告専用なので、モデル名の色(Fable=マゼンタ Opus=シアン Sonnet=青 Haiku=緑)には使わない。
+# ただしセーフガードで選んだモデルから別のモデルに切り替えられているあいだは、モデル名を赤にする。
 # TTL はプロンプトキャッシュ(サブスク課金では1h固定)の失効予定時刻。transcript の最終送信から1h後を計算する。
 # 呼ばれる回数が多いので fork を減らす（入力の jq は1回だけ、時刻の整形は bash の組み込み）。
 set -euo pipefail
@@ -23,10 +24,11 @@ GREEN='\033[32m'
 
 input="$(cat)"
 
-IFS=$'\x1f' read -r dir model size ctx five_h week five_h_resets week_resets transcript_path effort < <(
+IFS=$'\x1f' read -r dir model model_id size ctx five_h week five_h_resets week_resets transcript_path effort < <(
   jq -r '[
     (.workspace.current_dir // .cwd // ""),
     (.model.display_name // ""),
+    (.model.id // ""),
     (.context_window.context_window_size // ""),
     (.context_window.used_percentage // ""),
     (.rate_limits.five_hour.used_percentage // ""),
@@ -161,6 +163,22 @@ fmt_cache_ttl() {
   printf '%bTTL %b%s%b' "$WHITE" "$color" "$expiry_hm" "$RESET"
 }
 
+# セーフガードで別のモデルに切り替えられたままか。切り替えると transcript に
+# subtype "model_refusal_fallback" の行が fallbackModel（例: claude-opus-4-8）付きで残る。
+# 最後のその行の fallbackModel が、今のモデルか最後の応答のモデルと同じなら、切り替えられたままとみなす。
+# /model で戻せば今のモデルが変わり、次の応答で最後の応答のモデルも変わるので、赤が消える。
+is_fallback() {
+  local path="$1" fb last
+  if [ -z "$path" ] || [ ! -f "$path" ]; then
+    return 1
+  fi
+  fb=$(grep -F '"model_refusal_fallback"' "$path" 2>/dev/null | tail -n 1 | jq -r '.fallbackModel // empty' 2>/dev/null) || true
+  [ -n "$fb" ] || return 1
+  [ "$model_id" = "$fb" ] && return 0
+  last=$(tail -c 65536 "$path" 2>/dev/null | grep -oE '"message":\{"model":"claude-[^"]+"' | tail -n 1) || true
+  [ "$last" = "\"message\":{\"model\":\"$fb\"" ]
+}
+
 # Codex の 5時間枠/週枠。~/.codex/sessions/ の rollout(JSONL) の token_count に残った最後の Codex の rate_limits を読む。
 # Codex を最後に動かした時点の値なので、枠が古いかどうかは fmt_limits が resets_at で判断する。
 fmt_codex() {
@@ -229,6 +247,9 @@ case "$model" in
   *Haiku*) mcolor="$GREEN" ;;
   *) mcolor="" ;;
 esac
+if is_fallback "$transcript_path"; then
+  mcolor="$RED"
+fi
 printf -v model_fmt '%b%s%b' "$mcolor" "$model" "$RESET"
 line="$line $model_fmt"
 for part in "$(colorize CTX "$ctx")" "$(fmt_cache_ttl "$transcript_path")" "$(fmt_limits CC "$five_h" "$five_h_resets" "$week" "$week_resets")" "$(fmt_codex)"; do

@@ -1,5 +1,9 @@
 onboarding = false
 
+# 状態のアイコンの色をくっきりさせる（既定の catppuccin は淡く、完了と待機がほぼ同じ色に見える）
+[theme]
+name = "dracula"
+
 [ui]
 agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = true
@@ -11,20 +15,22 @@ sidebar_max_width = 44
 # 入力待ち（blocked）と作業中（working）を、色だけでなく形で見分ける
 status_indicators = "symbols"
 
-# エージェント一覧。2行目の種別だけでは情報が無いので、端末タイトルを足す
+# エージェント一覧。2行目の種別だけでは情報が無いので、端末タイトルを足す。
+# 端末タイトルは dim にすると、選択中の行の背景（dracula の active_row_bg）に沈んで読めないので、
+# dim を使わず、既定の色（overlay0）より少し明るい色で控えめにする
 [ui.sidebar.agents]
 row_gap = 0
 rows = [
   [{ token = "state_icon", bold = true }, { token = "workspace", bold = true }, "tab"],
   ["agent", "state_text"],
-  [{ token = "terminal_title_stripped", dim = true }],
+  [{ token = "terminal_title_stripped", fg = "#828cb4" }],
 ]
 
 # claude は種別の行を落とす（全部 claude なら冗長）
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   [{ token = "state_icon", bold = true }, { token = "workspace", bold = true }, "tab"],
-  [{ token = "terminal_title_stripped", dim = true }],
+  [{ token = "terminal_title_stripped", fg = "#828cb4" }],
 ]
 
 # ワークスペース一覧。git_status を目立たせる

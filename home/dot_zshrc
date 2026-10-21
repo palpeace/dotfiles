@@ -83,6 +83,15 @@ opus() { _cc_model opus high "$@"; }
 fable() { _cc_model fable xhigh "$@"; }
 haiku() { claude --model haiku "$@"; } # haiku は effort 非対応
 
+# agy の残りの枠を、群と枠（週・5時間）ごとに表で出す。戻る時刻は手元の時刻。
+# /usage はエージェントを起動せず、枠も使わない。
+agy-usage() {
+  agy -p "/usage" --output-format json |
+    jq -r '.command.data.groups[] | .name as $n | .buckets[] |
+      "\($n)\t\(.window)\t残り \((.remaining_fraction * 100 | floor))%\t戻り \(.reset_time | fromdateiso8601 | localtime | strftime("%m/%d %H:%M"))"' |
+    column -t -s $'\t'
+}
+
 # 秘密（リポジトリ外。存在する場合のみ読む）
 [[ -r "$HOME/.config/zsh/secrets.zsh" ]] && source "$HOME/.config/zsh/secrets.zsh"
 

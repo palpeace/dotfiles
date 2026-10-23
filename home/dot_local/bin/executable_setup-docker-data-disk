@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+# Docker のイメージ・コンテナ・ビルドのキャッシュを、WSL の外の別の仮想ディスク（例: D: の VHDX）に置く。
+# C: が小さい端末で、WSL の VHDX が Docker で膨らんで C: を埋め、WSL ごと落ちるのを防ぐため。
+# 名前付きボリューム（DB のデータなど）は、速さのために WSL の元のディスクに残す。
+# 別のディスクが回転するディスクだと、コンテナの起動・イメージの取得とビルドは遅くなる。
+#
+# 端末ごとに選んで使う。/etc/docker-data-disk.conf が無い端末では、引数なしで呼んでも何もしない。
+#
+# 初回（端末ごとに1回）:
+#   1. setup-docker-data-disk windows <VHDX の Windows のパス> [最大の GB]
+#      → Windows の管理者の PowerShell で打つ1行を出す。VHDX と、それを WSL につなぐタスクを作り、つなぐ。
+#   2. sudo なしで setup-docker-data-disk init <つないだディスク（/dev/sdX）> <VHDX の Windows のパス>
+#      → ディスクを初期化し、Docker を止めて中身を移し、起動し直す。元の中身は *.old-on-wsl に残す。
+#   3. 動きを確かめたら setup-docker-data-disk cleanup → 残した元の中身を消す。
+# 以後: 引数なし（chezmoi apply から呼ぶ）で systemd の単位を保つ。WSL の起動のたびに
+#   docker-data-disk.service が Windows のタスクを動かしてディスクをつなぎ、containerd と docker より先にマウントする。
+#   つなげなければ containerd と docker は起動しない（空の置き場で動き出さないため）。
+set -euo pipefail
+
+conf=/etc/docker-data-disk.conf
+label=docker-data
+task=WSL-docker-data-disk
+base=/mnt/docker-data
+vols=/var/lib/docker-volumes
+helper=/usr/local/libexec/docker-data-disk
+unit=/etc/systemd/system/docker-data-disk.service
+
+helper_body='#!/bin/sh
+# docker-data-disk.service から呼ぶ。setup-docker-data-disk が書く（手で直さない）。
+set -eu
+. /etc/docker-data-disk.conf
+base=/mnt/docker-data
+case "$1" in
+start)
+  if ! blkid -c /dev/null -L "$LABEL" >/dev/null 2>&1; then
+    echo "ディスク $LABEL がつながっていないので、Windows のタスク $TASK を動かす"
+    /mnt/c/Windows/System32/schtasks.exe /run /tn "$TASK" >/dev/null
+    i=0
+    until blkid -c /dev/null -L "$LABEL" >/dev/null 2>&1; do
+      i=$((i+1)); [ $i -le 60 ] || { echo "ディスク $LABEL が 60 秒待っても出ない"; exit 1; }
+      sleep 1
+    done
+  fi
+  mkdir -p "$base"
+  mountpoint -q "$base" || mount -L "$LABEL" "$base"
+  mkdir -p "$base/containerd" "$base/docker" /var/lib/containerd /var/lib/docker /var/lib/docker-volumes
+  mountpoint -q /var/lib/containerd || mount --bind "$base/containerd" /var/lib/containerd
+  mountpoint -q /var/lib/docker || mount --bind "$base/docker" /var/lib/docker
+  mkdir -p /var/lib/docker/volumes
+  mountpoint -q /var/lib/docker/volumes || mount --bind /var/lib/docker-volumes /var/lib/docker/volumes
+  ;;
+stop)
+  for m in /var/lib/docker/volumes /var/lib/docker /var/lib/containerd "$base"; do
+    mountpoint -q "$m" && umount "$m" || true
+  done
+  ;;
+esac
+'
+
+unit_body='[Unit]
+Description=Attach and mount the Docker data disk
+After=systemd-binfmt.service local-fs.target
+Before=containerd.service docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/libexec/docker-data-disk start
+ExecStop=/usr/local/libexec/docker-data-disk stop
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
+'
+
+dropin_body='[Unit]
+Requires=docker-data-disk.service
+After=docker-data-disk.service
+'
+
+changed=0
+write_file() { # $1: パス、$2: 中身、$3: モード。違うときだけ書く
+  if [ "$(sudo cat "$1" 2>/dev/null)" != "$(printf '%s' "$2")" ]; then
+    echo "==> $1 を書く"
+    sudo install -d -m 0755 "$(dirname "$1")"
+    printf '%s' "$2" | sudo tee "$1" >/dev/null
+    sudo chmod "$3" "$1"
+    changed=1
+  fi
+}
+
+install_units() {
+  write_file "$helper" "$helper_body" 0755
+  write_file "$unit" "$unit_body" 0644
+  write_file /etc/systemd/system/containerd.service.d/docker-data-disk.conf "$dropin_body" 0644
+  write_file /etc/systemd/system/docker.service.d/docker-data-disk.conf "$dropin_body" 0644
+  if [ "$changed" = 1 ]; then
+    sudo systemctl daemon-reload
+  fi
+  sudo systemctl enable docker-data-disk.service >/dev/null 2>&1
+}
+
+cmd="${1:-}"
+case "$cmd" in
+"")
+  if [ ! -f "$conf" ]; then
+    echo "setup-docker-data-disk: $conf が無いので何もしない（Docker の置き場は WSL のディスクのまま）"
+    exit 0
+  fi
+  install_units
+  ;;
+
+windows)
+  vhdx="${2:?VHDX の Windows のパス（例: D:\\wsl\\docker.vhdx）}"
+  gb="${3:-300}"
+  dir="${vhdx%\\*}"
+  echo "Windows の管理者の PowerShell で次の1行を打つ（${gb}GB は上限で、使った分だけ膨らむ）:"
+  echo
+  printf '%s\n' "New-Item -ItemType Directory -Force '$dir' | Out-Null; New-VHD -Path '$vhdx' -SizeBytes ${gb}GB -Dynamic | Out-Null; \$a = New-ScheduledTaskAction -Execute \"\$env:WINDIR\\System32\\wsl.exe\" -Argument '--mount --vhd \"$vhdx\" --bare'; \$p = New-ScheduledTaskPrincipal -UserId \"\$env:USERDOMAIN\\\$env:USERNAME\" -LogonType Interactive -RunLevel Highest; Register-ScheduledTask -TaskName $task -Action \$a -Principal \$p -Force | Out-Null; Start-ScheduledTask -TaskName $task; Start-Sleep 5; wsl -e lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINTS"
+  echo
+  echo "出た一覧で、${gb}G の FSTYPE が空のディスク（/dev/sdX）を init に渡す。"
+  ;;
+
+init)
+  dev="${2:?つないだディスク（/dev/sdX）}"
+  vhdx="${3:?VHDX の Windows のパス}"
+  [ ! -f "$conf" ] || { echo "STOP: $conf がもうある（初期化は済んでいる）"; exit 1; }
+  [ -b "$dev" ] || { echo "STOP: $dev はブロックデバイスではない"; exit 1; }
+  [ -z "$(lsblk -no FSTYPE "$dev" | tr -d ' \n')" ] || { echo "STOP: $dev にはもうファイルシステムがある"; exit 1; }
+  [ -z "$(lsblk -no MOUNTPOINTS "$dev" | tr -d ' \n')" ] || { echo "STOP: $dev はマウントされている"; exit 1; }
+  [ "$(lsblk -bdno SIZE "$dev")" -ge $((100 * 1024 * 1024 * 1024)) ] || { echo "STOP: $dev が 100GB より小さい"; exit 1; }
+  if [ -e /var/lib/containerd.old-on-wsl ] || [ -e /var/lib/docker.old-on-wsl ] || [ -e "$vols" ]; then
+    echo "STOP: 前の移し替えの残り（*.old-on-wsl か $vols）がある"; exit 1
+  fi
+
+  running=$(docker ps -q)
+  echo "==> 動いているコンテナ（移し替えのあとで起動し直す）:"
+  docker ps --format '  {{.Names}}'
+  before=$(docker images -q | sort -u | wc -l)
+
+  echo "==> $dev を ext4（ラベル $label）で初期化する"
+  sudo mkfs.ext4 -q -L "$label" "$dev"
+
+  echo "==> Docker と containerd を止める"
+  sudo systemctl stop docker.socket docker.service containerd.service
+  if pgrep -f containerd-shim >/dev/null; then
+    echo "STOP: containerd-shim がまだ動いている。止まってから init をやり直す（ディスクは初期化済みなので、作り直すか mkfs を飛ばす）"
+    exit 1
+  fi
+
+  echo "==> 中身を移す（ボリュームは WSL のディスクの $vols に残す）"
+  sudo mkdir -p "$base"
+  sudo mount "$dev" "$base"
+  sudo rsync -aHAX --numeric-ids /var/lib/containerd/ "$base/containerd/"
+  sudo rsync -aHAX --numeric-ids --exclude=/volumes /var/lib/docker/ "$base/docker/"
+  sudo mv /var/lib/docker/volumes "$vols"
+  sudo mv /var/lib/containerd /var/lib/containerd.old-on-wsl
+  sudo mv /var/lib/docker /var/lib/docker.old-on-wsl
+  sudo umount "$base"
+
+  printf 'LABEL=%s\nTASK=%s\nVHDX=%s\n' "$label" "$task" "$vhdx" | sudo tee "$conf" >/dev/null
+  install_units
+
+  echo "==> つないで起動する"
+  sudo systemctl start docker-data-disk.service containerd.service docker.socket docker.service
+  after=$(docker images -q | sort -u | wc -l)
+  echo "イメージ: 移す前 $before / 移したあと $after"
+  # --rm で動かしていたコンテナは止めたときに消えるので、起動し直せなくても続ける
+  for c in $running; do
+    docker start "$c" >/dev/null 2>&1 || echo "起動し直せなかった: $c（--rm で消えたもの）"
+  done
+  docker info --format '置き場: {{.DockerRootDir}}'
+  for m in "$base" /var/lib/containerd /var/lib/docker /var/lib/docker/volumes; do
+    findmnt -no SOURCE,TARGET "$m"
+  done
+  echo "確かめたら: setup-docker-data-disk cleanup（WSL のディスクに残した元の中身を消す）"
+  ;;
+
+cleanup)
+  systemctl is-active --quiet docker-data-disk.service || { echo "STOP: docker-data-disk.service が動いていない"; exit 1; }
+  mountpoint -q /var/lib/containerd && mountpoint -q /var/lib/docker || { echo "STOP: 置き場がマウントされていない"; exit 1; }
+  for d in /var/lib/containerd.old-on-wsl /var/lib/docker.old-on-wsl; do
+    if [ -e "$d" ]; then
+      echo "==> $d を消す"
+      sudo rm -rf --one-file-system "$d"
+    fi
+  done
+  echo "C: に返すには fstrim が要る（週1回のタイマーか sudo fstrim -v /）"
+  ;;
+
+*)
+  echo "使い方: setup-docker-data-disk [windows <VHDX> [GB] | init <dev> <VHDX> | cleanup]" >&2
+  exit 1
+  ;;
+esac

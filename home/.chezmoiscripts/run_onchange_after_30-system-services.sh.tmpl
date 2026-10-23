@@ -3,6 +3,7 @@
 # スクリプトが変わった時に再実行する:
 # setup-wsl hash: {{ include "dot_local/bin/executable_setup-wsl" | sha256sum }}
 # setup-docker-engine hash: {{ include "dot_local/bin/executable_setup-docker-engine" | sha256sum }}
+# setup-docker-data-disk hash: {{ include "dot_local/bin/executable_setup-docker-data-disk" | sha256sum }}
 # setup-ssh-server hash: {{ include "dot_local/bin/executable_setup-ssh-server" | sha256sum }}
 # setup-chrome hash: {{ include "dot_local/bin/executable_setup-chrome" | sha256sum }}
 set -eu
@@ -13,5 +14,6 @@ if ! sudo -n true 2>/dev/null && ! [ -t 0 ] && ! { true </dev/tty; } 2>/dev/null
 fi
 "$HOME/.local/bin/setup-wsl"
 "$HOME/.local/bin/setup-docker-engine"
+"$HOME/.local/bin/setup-docker-data-disk"
 "$HOME/.local/bin/setup-ssh-server"
 "$HOME/.local/bin/setup-chrome"

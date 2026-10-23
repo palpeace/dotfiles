@@ -51,6 +51,9 @@ wsl
 - `--no-launch` を付けないとインストール直後に Ubuntu が起動し、抜けるまで2行目が実行されない。
 - 初回起動でユーザー名とパスワードを聞かれる。
 - `--name` が使えないと言われたら、先に `wsl --update` を実行する。
+- `.wslconfig` の `sparseVhd=true` があっても、`wsl --install` で作った VHD はスパースにならなかった（WSL 3.0.3）。
+  `wsl --shutdown; wsl --manage main-wsl --set-sparse true` で付け、
+  `fsutil sparse queryflag <VHD のパス>` で確かめる。付けないと、中で消した分が C: に返らない。
 
 ### 3. GitHub のトークンを発行（ブラウザ）
 

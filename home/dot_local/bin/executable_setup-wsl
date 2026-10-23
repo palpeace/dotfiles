@@ -38,3 +38,25 @@ if ! grep -qE '^[[:space:]]*appendWindowsPath[[:space:]]*=[[:space:]]*false' "$c
   fi
   sudo install -m 0644 -o root -g root "$tmp" "$conf"
 fi
+
+# 週1回の fstrim を WSL でも動かす。Ubuntu の fstrim.timer と fstrim.service は
+# ConditionVirtualization=!container を持ち、WSL はコンテナと判定されて黙って飛ばされる。
+# 条件を空にする drop-in で外す（空の Condition は、その単位の条件をすべて消す）。
+# VHD がスパースなら、fstrim で空いた場所が Windows の C: に返る。
+trim_dropin='[Unit]
+ConditionVirtualization=
+'
+trim_changed=0
+for unit in fstrim.timer fstrim.service; do
+  f="/etc/systemd/system/$unit.d/wsl.conf"
+  if [ "$(cat "$f" 2>/dev/null)" != "$(printf '%s' "$trim_dropin")" ]; then
+    echo "==> $f を書く（WSL でも fstrim を動かす）"
+    sudo install -d -m 0755 "$(dirname "$f")"
+    printf '%s' "$trim_dropin" | sudo tee "$f" >/dev/null
+    trim_changed=1
+  fi
+done
+if [ "$trim_changed" = 1 ]; then
+  sudo systemctl daemon-reload
+fi
+sudo systemctl enable --now fstrim.timer

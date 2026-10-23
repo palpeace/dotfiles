@@ -67,6 +67,49 @@ then
   sudo systemctl restart docker
 fi
 
+# 週1回、確実に要らないものだけを消す: 名前の無いイメージ（dangling）、どのイメージからも
+# 指されないビルドのキャッシュ、どのコンテナも使っていない名前の無いボリューム。
+# 名前の付いたイメージとボリュームは消さない（止めているプロジェクトの物を取り直さないため）。
+# 空いた場所が Windows の C: に返るのは、次の fstrim の後（setup-wsl が週1回動かす）。
+prune_unit=/etc/systemd/system/docker-prune.service
+prune_timer=/etc/systemd/system/docker-prune.timer
+prune_unit_body='[Unit]
+Description=Remove dangling Docker images, build cache and anonymous volumes
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker image prune -f
+ExecStart=/usr/bin/docker builder prune -f
+ExecStart=/usr/bin/docker volume prune -f
+'
+prune_timer_body='[Unit]
+Description=Weekly Docker prune
+
+[Timer]
+OnCalendar=Sun 12:00
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target
+'
+prune_changed=0
+write_unit() { # $1: パス、$2: 中身。違うときだけ書く
+  if [ "$(cat "$1" 2>/dev/null)" != "$(printf '%s' "$2")" ]; then
+    echo "==> $1 を書く"
+    printf '%s' "$2" | sudo tee "$1" >/dev/null
+    prune_changed=1
+  fi
+}
+write_unit "$prune_unit" "$prune_unit_body"
+write_unit "$prune_timer" "$prune_timer_body"
+if [ "$prune_changed" = 1 ]; then
+  sudo systemctl daemon-reload
+fi
+sudo systemctl enable --now docker-prune.timer
+
 # NVIDIA GPU: WSL は Windows のドライバがあると /usr/lib/wsl/lib/nvidia-smi を置く。それを判定に使う。
 if [ ! -x /usr/lib/wsl/lib/nvidia-smi ]; then
   echo "NVIDIA の GPU は無いので、NVIDIA Container Toolkit は入れない"

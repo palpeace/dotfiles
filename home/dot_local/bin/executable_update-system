@@ -48,7 +48,32 @@ run "apt" bash -c 'sudo apt-get "$@" update && sudo apt-get "$@" upgrade -y && s
 step "mise"
 herdr_before="$(herdr --version 2>/dev/null || true)"
 run "mise self-update" "$mise" self-update -y
-run "mise upgrade" "$mise" upgrade
+mise_log="$(mktemp)"
+upgrade_mise() { "$mise" upgrade 2>&1 | tee "$mise_log"; }
+run "mise upgrade" upgrade_mise
+# 新しい版が OS に無い共有ライブラリを要ることがある（node 26 の libatomic.so.1）。
+# mise は入れたあとの試し実行に落ちた版を消すので、upgrade の出力と、入っている版の ldd の両方から拾う
+missing_libs() { # <mise upgrade の出力のファイル>
+  local dir f
+  {
+    grep -oE 'error while loading shared libraries: [^:]+' "$1" 2>/dev/null | sed 's/.*: //'
+    "$mise" ls --current --json 2>/dev/null | jq -r '.[][] | select(.installed) | .install_path' |
+      while IFS= read -r dir; do
+        find "$dir" -maxdepth 3 -type f -perm -u+x -size +100k 2>/dev/null
+      done |
+      while IFS= read -r f; do
+        [ "$(head -c4 "$f" | tr -d '\0')" = $'\x7fELF' ] || continue
+        ldd "$f" 2>/dev/null | awk '/=> not found/ {print $1}'
+      done
+  } | sort -u
+}
+libs="$(missing_libs "$mise_log")"
+rm -f "$mise_log"
+if [ -n "$libs" ]; then
+  echo "OS に足りない共有ライブラリがある（apt で入れ、dotfiles の bootstrap.sh の一覧にも足す。libatomic.so.1 なら libatomic1）:"
+  printf '  %s\n' $libs
+  failures+=("共有ライブラリ")
+fi
 # mise prune は実行しても消さないことがあるので、消し残りを見せるだけにする
 prunable="$("$mise" ls --prunable 2>/dev/null || true)"
 if [ -n "$prunable" ]; then

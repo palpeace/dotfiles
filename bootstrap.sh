@@ -18,7 +18,8 @@ main() {
   done
   # ライブラリのようにコマンドを入れないパッケージは、command -v では見えないので dpkg に入っているか聞く
   #   python3-yaml: 知識リポジトリの lint が PyYAML を使う
-  for p in python3-yaml; do
+  #   libatomic1: node 26 以降の公式バイナリが libatomic.so.1 を読む（mise の node = "lts"）
+  for p in python3-yaml libatomic1; do
     dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || pkgs="$pkgs $p"
   done
   if [ -n "$pkgs" ]; then

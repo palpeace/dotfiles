@@ -85,10 +85,14 @@ haiku() { claude --model haiku "$@"; } # haiku は effort 非対応
 
 # agy の残りの枠を、群と枠（週・5時間）ごとに表で出す。戻る時刻は手元の時刻。
 # /usage はエージェントを起動せず、枠も使わない。
+# 週の枠を使い切ると 5時間の枠は disabled になり reset_time が無いので「適用外」と出す。
 agy-usage() {
   agy -p "/usage" --output-format json |
     jq -r '.command.data.groups[] | .name as $n | .buckets[] |
-      "\($n)\t\(.window)\t残り \((.remaining_fraction * 100 | floor))%\t戻り \(.reset_time | fromdateiso8601 | localtime | strftime("%m/%d %H:%M"))"' |
+      "\($n)\t\(.window)\t" +
+      (if .disabled then "適用外\t-"
+       else "残り \((.remaining_fraction * 100 | floor))%\t戻り \(if .reset_time then (.reset_time | fromdateiso8601 | localtime | strftime("%m/%d %H:%M")) else "-" end)"
+       end)' |
     column -t -s $'\t'
 }
 

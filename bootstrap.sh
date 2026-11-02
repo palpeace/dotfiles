@@ -13,9 +13,11 @@ log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 main() {
   # 1. apt パッケージ（zsh と前提コマンド）
   pkgs=""
-  for p in zsh git curl; do
+  for p in zsh git curl socat; do
     command -v "$p" >/dev/null 2>&1 || pkgs="$pkgs $p"
   done
+  # Claude Code のサンドボックス（Linux）は bubblewrap と socat を使う。bubblewrap のコマンド名は bwrap
+  command -v bwrap >/dev/null 2>&1 || pkgs="$pkgs bubblewrap"
   # ライブラリのようにコマンドを入れないパッケージは、command -v では見えないので dpkg に入っているか聞く
   #   python3-yaml: 知識リポジトリの lint が PyYAML を使う
   #   libatomic1: node 26 以降の公式バイナリが libatomic.so.1 を読む（mise の node = "lts"）

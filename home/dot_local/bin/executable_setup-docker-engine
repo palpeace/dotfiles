@@ -41,12 +41,34 @@ sudo systemctl enable --now docker
 systemctl is-active --quiet docker || { echo "docker が起動していない" >&2; exit 1; }
 echo "Docker Engine: $(docker --version)"
 
+# すべてのコンテナを docker-limited.slice の中で動かし、合わせて使えるメモリに上限を付ける。
+# WSL の VM にはスワップが無く、コンテナがメモリを使い切ると、OOM で落ちる前に WSL 全体が固まる。
+# 上限を超えると、カーネルはこの slice の中のプロセスだけを落とし、WSL とほかのプロセスは残る。
+# 70% は、VM のメモリの3割を、コンテナの外（エディタ、AI エージェントの CLI など）に残す値。
+# 新しい cgroup-parent は、作り済みのコンテナにも、次に起動したときから効く。
+slice_unit=/etc/systemd/system/docker-limited.slice
+slice_body='[Unit]
+Description=Shared memory cap for Docker containers
+Before=slices.target
+
+[Slice]
+MemoryAccounting=yes
+MemoryMax=70%
+'
+slice_changed=0
+if [ "$(cat "$slice_unit" 2>/dev/null)" != "$(printf '%s' "$slice_body")" ]; then
+  echo "==> $slice_unit を書く"
+  printf '%s' "$slice_body" | sudo tee "$slice_unit" >/dev/null
+  sudo systemctl daemon-reload
+  slice_changed=1
+fi
+
 # Docker が自動で作るネットワークの範囲を 10.201.0.0/16 の中の /24 に決める。
 # 既定では 172.17〜172.31 を使い切ると 192.168.x を /20 ずつ使い始め、
 # LAN の 192.168.x と重なると、WSL からその宛先に届かなくなる。
 # 範囲を変えても、作り済みのネットワークはそのまま残る（docker network prune で消す）。
-pools='[{"base":"10.201.0.0/16","size":24}]'
-if sudo python3 - "$pools" <<'PY'
+want='{"default-address-pools":[{"base":"10.201.0.0/16","size":24}],"cgroup-parent":"docker-limited.slice"}'
+if sudo python3 - "$want" <<'PY'
 import json, os, sys
 path = "/etc/docker/daemon.json"
 want = json.loads(sys.argv[1])
@@ -54,16 +76,19 @@ cur = {}
 if os.path.exists(path):
     with open(path) as f:
         cur = json.load(f)
-if cur.get("default-address-pools") == want:
+if all(cur.get(k) == v for k, v in want.items()):
     sys.exit(1)
-cur["default-address-pools"] = want
+cur.update(want)
 os.makedirs(os.path.dirname(path), exist_ok=True)
 with open(path, "w") as f:
     json.dump(cur, f, indent=2)
     f.write("\n")
 PY
 then
-  echo "==> Docker のネットワークの範囲を 10.201.0.0/16 にした。Docker を再起動する（動いているコンテナは止まる）"
+  slice_changed=1
+fi
+if [ "$slice_changed" = 1 ]; then
+  echo "==> Docker の設定（ネットワークの範囲、メモリの上限の slice）を変えた。Docker を再起動する（動いているコンテナは止まる）"
   sudo systemctl restart docker
 fi
 

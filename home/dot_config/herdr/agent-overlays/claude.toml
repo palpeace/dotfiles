@@ -5,7 +5,8 @@
 # 背景の shell（Bash の run_in_background）と Monitor が動いているあいだは working にする。
 # Claude Code はターンを終えると、背景の処理が残っていても端末タイトルを ✳ に戻すので、元の表では idle になる
 # （背景のサブエージェントのときはタイトルがスピナーのままなので working になる）。
-# 見るのは入力欄の下のフッター（例: "⏸ manual mode on · 1 shell, 1 monitor"）だけ。最後の横線より後に絞り、
+# 見るのは入力欄の下のフッター（例: "⏸ manual mode on · 1 shell, 1 monitor"、2.1.326 では
+# "⏵⏵ auto mode on · 1 monitor · ↓ to manage" のように後ろに " · " が続く）だけ。最後の横線より後に絞り、
 # 入力欄やスクロールの中の文が紛れないようにする。許可や質問の画面では当たらないようにする。
 [[rules]]
 id = "background_shell_working"
@@ -14,7 +15,7 @@ priority = 960
 region = "after_last_horizontal_rule"
 visible_working = true
 any = [
-  { line_regex = ['^\s*[⏸⏵].*·\s+(?:[^·]*,\s+)?[1-9]\d*\s+(?:shells?|monitors?)(?:,|…|\s*$)'] },
+  { line_regex = ['^\s*[⏸⏵].*·\s+(?:[^·]*,\s+)?[1-9]\d*\s+(?:shells?|monitors?)(?:,|…|\s+·|\s*$)'] },
 ]
 not = [
   { contains = ["do you want to proceed?"] },

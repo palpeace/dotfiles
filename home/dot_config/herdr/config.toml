@@ -86,6 +86,15 @@ width = "98%"
 height = "98%"
 description = "Docker (oxker)"
 
+# WSL が重いときに CPU・メモリ・プロセスを見る。t は top の t（b・p は既定で使われている）
+[[keys.command]]
+key = "prefix+t"
+type = "popup"
+command = "herdr-here btop"
+width = "98%"
+height = "98%"
+description = "Resources (btop)"
+
 [[keys.command]]
 key = "prefix+m"
 type = "popup"
